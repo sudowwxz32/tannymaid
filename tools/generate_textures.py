@@ -45,35 +45,36 @@ def head_base(face, x, y, w, h):
     return SKIN
 
 def draw_face(img, expr):
+    """Ojos estilo anime: alargados (3 px), oscuros, con párpado marcado y brillo."""
     fx, fy = 8, 8
     P = lambda x, y, c: img.putpixel((fx+x, fy+y), c + (255,))
     for y in range(3, 8):
         for x in range(1, 7):
             P(x, y, SKIN if y < 7 else SKIN_SH)
-    if expr in ("normal", "focused", "surprised"):
-        if expr == "focused":
-            P(1, 3, LASH); P(2, 3, LASH); P(5, 3, LASH); P(6, 3, LASH)
-            P(1, 4, EYE_DK); P(2, 4, EYE); P(5, 4, EYE); P(6, 4, EYE_DK)
-            P(1, 5, SKIN); P(2, 5, SKIN); P(5, 5, SKIN); P(6, 5, SKIN)
-        else:
-            P(1, 3, LASH); P(2, 3, LASH); P(5, 3, LASH); P(6, 3, LASH)
-            P(1, 4, EYE_HI); P(2, 4, EYE_DK); P(5, 4, EYE_DK); P(6, 4, EYE_HI)
-            P(1, 5, EYE); P(2, 5, EYE); P(5, 5, EYE); P(6, 5, EYE)
-            if expr == "surprised":
-                P(1, 2, LASH); P(6, 2, LASH)
-    elif expr == "happy":      # ojos cerrados sonriendo ^ ^
-        P(1, 5, LASH); P(2, 4, LASH); P(5, 4, LASH); P(6, 5, LASH)
+    L, R = (1, 2), (5, 6)          # columnas de cada ojo
+    if expr in ("normal", "surprised"):
+        for (a, b), inner, outer in ((L, 2, 1), (R, 5, 6)):
+            P(a, 4, LASH); P(b, 4, LASH)                  # párpado superior
+            P(outer, 5, EYE_DK); P(inner, 5, EYE_HI if expr == "normal" else EYE_DK)
+            P(a, 6, EYE); P(b, 6, EYE)
+        if expr == "surprised":
+            P(1, 3, LASH); P(6, 3, LASH)
+    elif expr == "focused":        # mirada seria: ojos entrecerrados
+        for (a, b) in (L, R):
+            P(a, 5, LASH); P(b, 5, LASH)
+            P(a, 6, EYE_DK); P(b, 6, EYE_DK)
+        P(2, 4, LASH); P(5, 4, LASH)
+    elif expr == "happy":          # ^ ^
+        P(1, 6, LASH); P(2, 5, LASH); P(5, 5, LASH); P(6, 6, LASH)
     elif expr in ("blink", "tired"):
-        P(1, 5, LASH); P(2, 5, LASH); P(5, 5, LASH); P(6, 5, LASH)
-    P(1, 6, BLUSH); P(6, 6, BLUSH)
+        P(1, 6, LASH); P(2, 6, LASH); P(5, 6, LASH); P(6, 6, LASH)
+    P(1, 7, BLUSH); P(6, 7, BLUSH)
     if expr == "surprised":
-        P(3, 6, LIP); P(4, 6, LIP); P(3, 7, (120, 50, 56)); P(4, 7, (120, 50, 56))
-    elif expr == "tired":
+        P(3, 7, (90, 40, 46)); P(4, 7, (90, 40, 46))
+    elif expr in ("tired", "focused"):
+        P(3, 7, LIP)
+    else:                          # sonrisa pequeña
         P(3, 7, LIP); P(4, 7, LIP)
-    elif expr == "focused":
-        P(3, 7, LIP); P(4, 7, LIP)
-    else:  # sonrisa
-        P(2, 6, SKIN_SH); P(3, 7, LIP); P(4, 7, LIP); P(5, 6, SKIN_SH)
 
 def hat_overlay(face, x, y, w, h):
     # El volumen del cabello y la cofia ahora son 3D (hair.png + TannyHairLayer)
@@ -192,6 +193,59 @@ def hair_texture():
             img.putpixel((x, y), c + (255,))
     return img
 
+def outfit_texture():
+    """Textura de los accesorios 3D (TannyOutfitModel). Cada caja usa su propia región."""
+    img = Image.new("RGBA", (64, 64), T)
+    def box(u, v, w, h, d, fn):
+        paint(img, u, v, w, h, d, fn)
+    solid = lambda c: (lambda f, x, y, fw, fh: c)
+    def white_fn(f, x, y, fw, fh):
+        return WHITE if (x + y) % 5 else WHITE_SH
+    def red_fn(f, x, y, fw, fh):
+        return RED if (x + y) % 4 else (176, 40, 60)
+    # busto: vestido negro con la pechera blanca del delantal al centro
+    def bust_fn(f, x, y, fw, fh):
+        if f == "front": return WHITE if 2 <= x <= 4 else BLACK
+        if f == "top": return WHITE if 2 <= x <= 4 else BLACK
+        return BLACK
+    box(0, 0, 7, 3, 1, bust_fn)
+    box(0, 8, 1, 1, 1, red_fn)
+    box(0, 11, 2, 2, 1, red_fn)
+    box(8, 11, 2, 2, 1, red_fn)
+    box(16, 0, 2, 2, 1, white_fn)
+    box(24, 0, 4, 3, 1, white_fn)
+    box(24, 4, 4, 3, 1, white_fn)
+    box(36, 0, 2, 6, 1, white_fn)
+    box(42, 0, 2, 6, 1, white_fn)
+    # falda: negra con encaje blanco abajo; el frente lleva el delantal blanco
+    def lace(x):
+        return WHITE if x % 2 == 0 else (236, 214, 220)
+    def skirt_front(f, x, y, fw, fh):
+        if f in ("top", "bottom"): return BLACK
+        last = y == fh - 1
+        if f == "front" and 1 <= x <= fw - 2:
+            if last: return PINK if x % 2 else WHITE
+            return WHITE if y < fh - 2 else WHITE_SH
+        if last: return lace(x)
+        return BLACK_HI if (x + y) % 4 == 0 else BLACK
+    def skirt_plain(f, x, y, fw, fh):
+        if f in ("top", "bottom"): return BLACK
+        if y == fh - 1: return lace(x)
+        return BLACK_HI if (x + y) % 4 == 0 else BLACK
+    box(0, 32, 9, 8, 1, skirt_front)
+    box(20, 32, 9, 8, 1, skirt_plain)
+    box(40, 32, 1, 8, 5, skirt_plain)
+    box(52, 32, 1, 8, 5, skirt_plain)
+    # mangas abullonadas con puño blanco
+    def puff(f, x, y, fw, fh):
+        if f == "top": return BLACK_HI
+        if f == "bottom": return WHITE
+        if y == fh - 1: return WHITE
+        return BLACK_HI if (x + y) % 3 == 0 else BLACK
+    box(0, 48, 4, 4, 5, puff)
+    box(18, 48, 4, 4, 5, puff)
+    return img
+
 def contract():
     img = Image.new("RGBA", (16, 16), T)
     PAPER = (238, 222, 184); PAPER_SH = (214, 192, 148); INK = (92, 70, 56); GOLD = (232, 186, 52); GOLD_DK = (170, 120, 30)
@@ -217,6 +271,7 @@ names = {"normal": "tanny", "blink": "tanny_blink", "happy": "tanny_happy",
 for expr, name in names.items():
     random.seed(7)  # misma textura base en todas las expresiones
     skin(expr).save(f"{OUT}/entity/tanny/{name}.png")
+outfit_texture().save(f"{OUT}/entity/tanny/outfit.png")
 hair_texture().save(f"{OUT}/entity/tanny/hair.png")
 contract().save(f"{OUT}/item/tanny_contract.png")
 print("ok")

@@ -48,7 +48,7 @@ Solo puedes tener una Tanny; si usas otro contrato estando ella cargada, simplem
 
 | Acción | Resultado |
 |---|---|
-| Clic derecho | Abre su inventario (27 espacios) |
+| Clic derecho | Abre su inventario: su vida, su modelo 3D, la barra de herramientas (pico, pala, hacha, espada, escudo) y su mochila de 27 espacios. La espada y el escudo se ven en sus manos; el escudo bloquea la mitad de los golpes |
 | Shift + clic derecho | Cambia de modo: Seguir → Quedarse → Defensa → Granja |
 | Clic derecho con comida / poción | La cura (si está debilitada, la reanima) |
 
@@ -69,7 +69,12 @@ Solo puedes tener una Tanny; si usas otro contrato estando ella cargada, simplem
 | `/tanny lucario` | Saca o guarda a Lucario |
 | `/tanny collect` | Activa/desactiva recoger objetos del suelo |
 | `/tanny status` | Vida, modo, estado de Lucario y posición |
-| `/tanny dismiss` | La despide: te devuelve su inventario y el contrato |
+| `/tanny dismiss` | La despide: te devuelve su inventario, herramientas y el contrato |
+| `/tanny recolectar <madera\|piedra\|carbon\|hierro\|tierra> [1-64]` | Busca y pica esos bloques cerca (máx. 64 por pedido). Piedra, carbón y hierro necesitan un pico en su barra |
+| `/tanny craftear <objeto> [cantidad]` | Fabrica con lo que tenga en su mochila: `palos`, `tablones`, `pico_piedra`, `hacha_hierro`, `espada_diamante`, `escudo`, `pokebola`, `superball`, `ultraball`… Si faltan cosas: "Amo, requiero de más materiales para lo que me pidió." |
+| `/tanny pan` | Te da 24 panes (cada 5 minutos) |
+| `/tanny seguro` | Te lleva al lugar seguro más cercano: la superficie si estás bajo tierra, tu cama, su casa o el punto de aparición |
+| `/tanny parar` | Deja de recolectar |
 
 ## 6. Mecánicas
 

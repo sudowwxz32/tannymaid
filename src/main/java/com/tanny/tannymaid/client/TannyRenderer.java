@@ -20,6 +20,7 @@ public class TannyRenderer extends HumanoidMobRenderer<TannyEntity, TannyModel> 
 
     public TannyRenderer(EntityRendererProvider.Context context) {
         super(context, new TannyModel(context.bakeLayer(ModelLayers.PLAYER_SLIM)), 0.45F);
+        this.addLayer(new TannyOutfitLayer(this, context.getModelSet()));
         this.addLayer(new TannyHairLayer(this, context.getModelSet()));
     }
 
