@@ -1,0 +1,137 @@
+# TannyMaid Adventures — Forge 1.20.1 (compatible con Cobblemon 1.5.2)
+
+Tanny es una maid de aventuras: dulce, leal y un poco coqueta. Te sigue, te defiende,
+cosecha, ordena cofres, carga tus cosas y pelea junto a su único Pokémon: **Lucario**.
+
+- Minecraft **1.20.1** · Forge **47.x**
+- Cobblemon **1.5.2 (Forge)**: opcional pero recomendado. Sin Cobblemon, Tanny funciona igual pero pelea sola.
+
+---
+
+## 1. Cómo convertir este proyecto en el archivo .jar
+
+Necesitas internet y un **JDK 17** (por ejemplo Temurin 17: https://adoptium.net).
+
+**Windows**
+1. Descomprime el ZIP.
+2. Abre la carpeta `tannymaid`, escribe `cmd` en la barra de direcciones y presiona Enter.
+3. Ejecuta: `gradlew build`
+
+**Linux / macOS**
+```
+cd tannymaid
+chmod +x gradlew
+./gradlew build
+```
+
+La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
+
+```
+build/libs/tannymaid-forge-1.20.1-1.0.0.jar
+```
+
+## 2. Instalación
+
+Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
+- `tannymaid-forge-1.20.1-1.0.0.jar`
+- `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
+
+Para un servidor, el mod va tanto en el servidor como en los clientes.
+
+## 3. Invocar a Tanny
+
+Crafteo **sin forma**: `1 lingote de oro + 1 mapa vacío` → **Contrato de Tanny Maid**.
+Usa el contrato (clic derecho en el suelo o al aire) y Tanny aparece vinculada a ti.
+Solo puedes tener una Tanny; si usas otro contrato estando ella cargada, simplemente viene a ti.
+
+## 4. Controles
+
+| Acción | Resultado |
+|---|---|
+| Clic derecho | Abre su inventario (27 espacios) |
+| Shift + clic derecho | Cambia de modo: Seguir → Quedarse → Defensa → Granja |
+| Clic derecho con comida / poción | La cura (si está debilitada, la reanima) |
+
+## 5. Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `/tanny` | Lista de órdenes |
+| `/tanny follow` | Te sigue y te defiende (radio 10) |
+| `/tanny stay` | Se queda en el punto actual |
+| `/tanny sethome` | Marca tu posición como su casa |
+| `/tanny home` | Va a casa y se queda ahí (se teletransporta si está lejos o en otra dimensión) |
+| `/tanny tp` | Se teletransporta a ti (también entre dimensiones) |
+| `/tanny organize` | Ordena todos los cofres y barriles en un radio de 8 bloques alrededor de ella |
+| `/tanny farm` | Cosecha cultivos maduros y vuelve a sembrar en un radio de 8 bloques |
+| `/tanny defend` | Defensa activa: te sigue y ataca hostiles en radio 16 |
+| `/tanny inventory` | Abre su inventario desde cualquier lugar |
+| `/tanny lucario` | Saca o guarda a Lucario |
+| `/tanny collect` | Activa/desactiva recoger objetos del suelo |
+| `/tanny status` | Vida, modo, estado de Lucario y posición |
+| `/tanny dismiss` | La despide: te devuelve su inventario y el contrato |
+
+## 6. Mecánicas
+
+**No puede morir.** Al llegar a 0 de vida queda *debilitada*: se sienta, no recibe daño y se
+recupera sola en 60 segundos. Si está en lava, fuego o el vacío, se teletransporta a casa o
+contigo. Puedes reanimarla al instante con una poción, manzana dorada, botella de miel, pastel
+o con pociones, bayas y revivir de Cobblemon. La comida normal acorta el tiempo de descanso.
+
+**Defensa.** Ataca a mobs hostiles cerca de ti, a quien te lastime y a los hostiles que tú
+golpees. Prioriza a quien te está atacando. Deja en paz a endermans y piglins zombificados
+que no estén enojados. No te ataca a ti ni a otros Pokémon.
+
+**Lucario (nivel 50).** Es un Lucario real de Cobblemon. Sale solo cuando Tanny entra en
+combate y vuelve a su Poké Ball unos 15 segundos después de terminar la pelea. Golpea cuerpo
+a cuerpo y lanza *Esfera Aural* a distancia. Si se debilita, descansa 60 segundos antes de
+volver a salir. No se puede capturar (la Poké Ball rebota y te la devuelve), no se puede
+cambiar ni liberar, y nunca se guarda en tu equipo.
+
+**Permanencia.** Su posición, modo, casa, vida e inventario se guardan con el mundo. Si cambias
+de dimensión o reapareces tras morir estando en modo seguir/defensa, viaja contigo.
+
+**Expresiones y animaciones.** Parpadeo natural, respiración, gestos de cabeza al hablar,
+sonrisa al hablar, cara de sorpresa al recibir daño, mirada concentrada en combate y pose
+sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
+
+## 7. Notas y límites conocidos
+
+- **Modelo.** Cuerpo humanoide de brazos delgados con textura propia (falda con vuelo, mangas
+  abullonadas, delantal, lazo rojo, calcetas) y **cabello 3D**: bob corto con volumen,
+  flequillo en 4 mechones, mechones que enmarcan la cara, pelitos desordenados arriba y la
+  cofia de maid en 3D. El cabello se mece al caminar y respirar. No es un modelo Bedrock
+  hecho en Blockbench. La forma del cabello está en `client/TannyHairModel.java` (cada pieza
+  tiene posición y tamaño en píxeles) y su textura en `textures/entity/tanny/hair.png`.
+  Las texturas se regeneran con `python3 tools/generate_textures.py`.
+- **Integración con Cobblemon** por reflexión: el mod compila sin Cobblemon. Si alguna versión de
+  Cobblemon cambia sus clases internas, Lucario no saldrá (se registra un error en el log) y
+  Tanny seguirá peleando sola.
+- Lucario aparece como Pokémon salvaje controlado por Tanny. Un jugador podría iniciarle una
+  batalla Pokémon por turnos; si pierde, se debilita y vuelve a salir más tarde.
+- `/tanny tp` solo funciona si la zona donde está Tanny está cargada. Si no, el comando te dice
+  sus últimas coordenadas conocidas.
+- La granja trabaja con cultivos tipo trigo/zanahoria/papa/remolacha (y los de otros mods que
+  usen `CropBlock`). No corta calabazas, sandías ni caña de azúcar.
+- Este proyecto no se pudo compilar en el entorno donde se escribió (sin acceso a los
+  servidores de Forge). Si `gradlew build` muestra algún error, cópialo y se corrige.
+
+---
+
+## 8. Obtener el .jar SIN instalar nada (GitHub lo compila por ti)
+
+1. Crea una cuenta gratis en https://github.com e inicia sesión.
+2. Arriba a la derecha: **+ → New repository**. Ponle un nombre (ej. `tannymaid`),
+   márcalo **Public** o **Private** y pulsa **Create repository**.
+3. En la página del repositorio vacío, pulsa **uploading an existing file**.
+4. Abre la carpeta `tannymaid` del ZIP, selecciona **todo su contenido** (incluida la carpeta
+   `.github`) y arrástralo a la página. Pulsa **Commit changes**.
+   - Si tu sistema oculta la carpeta `.github`: en el repositorio pulsa **Add file → Create new file**,
+     escribe como nombre `.github/workflows/build.yml` y pega el contenido de ese archivo.
+5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
+   Si no arranca solo, entra en él y pulsa **Run workflow**.
+6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.0.0.jar`.
+7. Copia ese `.jar` a tu carpeta `mods`.
+
+Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.

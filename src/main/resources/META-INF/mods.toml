@@ -1,0 +1,34 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="tannymaid"
+version="1.0.0"
+displayName="TannyMaid Adventures"
+authors="Tanny"
+description='''
+Tanny, una maid de aventuras leal que te acompaña en tu viaje Pokémon junto a su Lucario.
+Compatible con Cobblemon (Forge) 1.5.2 para Minecraft 1.20.1.
+'''
+
+[[dependencies.tannymaid]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.tannymaid]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.tannymaid]]
+    modId="cobblemon"
+    mandatory=false
+    versionRange="[1.5.0,)"
+    ordering="AFTER"
+    side="BOTH"
