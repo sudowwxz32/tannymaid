@@ -57,8 +57,17 @@ import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import com.tanny.tannymaid.util.TannyChat;
 
 /**
  * Tanny: maid de aventuras. No puede morir (se debilita), tiene inventario propio,
@@ -86,6 +95,17 @@ public class TannyEntity extends PathfinderMob {
     private boolean collecting = true;
     private int weakenedTimer;
     private long lastCombatSpeech = -10000L;
+
+    // ---- conversación
+    private record Pending(int at, String text) {}
+    private final Deque<Pending> pendingLines = new ArrayDeque<>();
+    private final Map<String, Integer> lastPicks = new HashMap<>();
+    private final List<String> likes = new ArrayList<>();
+    @Nullable private String nickname;
+    @Nullable private String expecting;
+    private int expectTicks;
+    private int chatWindow;
+    private int worryCooldown;
 
     public TannyEntity(EntityType<? extends TannyEntity> type, Level level) {
         super(type, level);
@@ -121,6 +141,7 @@ public class TannyEntity extends PathfinderMob {
         this.goalSelector.addGoal(0, new TannyWeakenedGoal(this));
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
+        this.goalSelector.addGoal(2, new TannyChatGoal(this));
         this.goalSelector.addGoal(3, new TannyFollowOwnerGoal(this, 1.1D, 4.5F, 2.2F));
         this.goalSelector.addGoal(3, new TannyStayGoal(this));
         this.goalSelector.addGoal(4, new TannyFarmGoal(this));
@@ -261,11 +282,89 @@ public class TannyEntity extends PathfinderMob {
 
         lucario.tick();
 
-        if (owner != null && !isWeakened() && getTarget() == null
-                && owner.level() == level() && distanceToSqr(owner) < 64
-                && getRandom().nextInt(4800) == 0) {
-            TannySpeech.say(this, owner, TannySpeech.AMBIENT);
+        // Conversación: frases en cola (con pausa para que parezca que escribe)
+        if (chatWindow > 0) chatWindow--;
+        if (expectTicks > 0 && --expectTicks == 0) expecting = null;
+        if (worryCooldown > 0) worryCooldown--;
+        int spoken = 0;
+        while (!pendingLines.isEmpty() && pendingLines.peekFirst().at() <= tickCount && spoken++ < 2) {
+            TannySpeech.say(this, owner, pendingLines.pollFirst().text());
         }
+
+        if (owner != null && !isWeakened() && owner.level() == level() && distanceToSqr(owner) < 24 * 24) {
+            if (worryCooldown == 0 && tickCount % 20 == 0 && owner.isAlive()
+                    && owner.getHealth() <= owner.getMaxHealth() * 0.3F) {
+                worryCooldown = 1200;
+                TannyChat.worryAboutOwner(this, owner);
+            } else if (getTarget() == null && chatWindow == 0 && distanceToSqr(owner) < 64
+                    && getRandom().nextInt(3600) == 0) {
+                queueSay(TannyChat.ambientLine(this, owner), 0);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ conversación
+
+    /** Pone una frase en cola; se dice tras {@code delay} ticks después de la anterior. */
+    public void queueSay(String text, int delay) {
+        int base = pendingLines.isEmpty() ? tickCount : Math.max(tickCount, pendingLines.peekLast().at());
+        pendingLines.addLast(new Pending(base + delay, text));
+    }
+
+    public boolean hasPendingLines() {
+        return !pendingLines.isEmpty();
+    }
+
+    public void openChatWindow() {
+        chatWindow = 900; // 45 s sin tener que repetir "Tanny"
+    }
+
+    public void closeChatWindow() {
+        chatWindow = 0;
+        expecting = null;
+    }
+
+    public boolean isChatting() {
+        return chatWindow > 0;
+    }
+
+    @Nullable
+    public String getExpecting() {
+        return expecting;
+    }
+
+    public void expect(@Nullable String topic) {
+        expecting = topic;
+        expectTicks = topic == null ? 0 : 700;
+    }
+
+    @Nullable
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(@Nullable String nickname) {
+        this.nickname = nickname;
+    }
+
+    public List<String> getLikes() {
+        return likes;
+    }
+
+    public void addLike(String like) {
+        likes.remove(like);
+        likes.add(like);
+        while (likes.size() > 8) likes.remove(0);
+    }
+
+    /** Elige una frase evitando repetir la última usada para esa misma clave. */
+    public String pickLine(String key, String[] lines) {
+        if (lines.length == 1) return lines[0];
+        int last = lastPicks.getOrDefault(key, -1);
+        int i = getRandom().nextInt(lines.length);
+        if (i == last) i = (i + 1 + getRandom().nextInt(lines.length - 1)) % lines.length;
+        lastPicks.put(key, i);
+        return lines[i];
     }
 
     // ------------------------------------------------------------------ combate y vida
@@ -697,6 +796,10 @@ public class TannyEntity extends PathfinderMob {
         if (homeDim != null) tag.putString("HomeDim", homeDim);
         if (anchorPos != null) tag.putLong("AnchorPos", anchorPos.asLong());
         tag.put("Inventory", inventory.createTag());
+        if (nickname != null) tag.putString("Nickname", nickname);
+        ListTag likeTags = new ListTag();
+        for (String like : likes) likeTags.add(StringTag.valueOf(like));
+        tag.put("Likes", likeTags);
     }
 
     @Override
@@ -711,6 +814,10 @@ public class TannyEntity extends PathfinderMob {
         homeDim = tag.contains("HomeDim") ? tag.getString("HomeDim") : null;
         anchorPos = tag.contains("AnchorPos") ? BlockPos.of(tag.getLong("AnchorPos")) : null;
         inventory.fromTag(tag.getList("Inventory", Tag.TAG_COMPOUND));
+        nickname = tag.contains("Nickname") ? tag.getString("Nickname") : null;
+        likes.clear();
+        ListTag likeTags = tag.getList("Likes", Tag.TAG_STRING);
+        for (int i = 0; i < likeTags.size(); i++) likes.add(likeTags.getString(i));
         this.setCustomName(Component.literal("Tanny"));
     }
 

@@ -23,7 +23,19 @@ jobs:
           DIR=$(dirname "$(find . -maxdepth 3 -name gradlew | head -1)")
           cd "$DIR"
           chmod +x gradlew
-          ./gradlew build --no-daemon --stacktrace
+          set -o pipefail
+          ./gradlew build --no-daemon --stacktrace 2>&1 | tee "$GITHUB_WORKSPACE/build-log.txt"
+
+      - name: Guardar el registro de errores
+        if: failure()
+        run: |
+          mkdir -p descargas
+          grep -E "error:|warning:|FAILED|BUILD|What went wrong" -A3 build-log.txt | head -300 > descargas/build-errors.txt || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add descargas/build-errors.txt
+          git commit -m "Registro de errores de compilación [skip ci]" || true
+          git push || true
 
       - name: Guardar el .jar
         uses: actions/upload-artifact@v4
@@ -37,10 +49,10 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           mkdir -p descargas
-          rm -f descargas/*.jar
+          rm -f descargas/*.jar descargas/build-errors.txt
           find . -path '*/build/libs/*.jar' ! -name '*-sources.jar' -exec cp {} descargas/ \;
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add descargas
+          git add -A descargas
           git diff --cached --quiet || git commit -m "Mod compilado (.jar) [skip ci]"
           git push

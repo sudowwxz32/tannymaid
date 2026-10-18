@@ -98,7 +98,10 @@ public final class TannySpeech {
 
     public static void say(TannyEntity tanny, ServerPlayer player, String message) {
         if (player == null) return;
-        player.sendSystemMessage(Component.literal("§d♡ Tanny§7: §f" + message));
+        if (tanny != null && tanny.getNickname() != null) {
+            message = message.replace("Master", tanny.getNickname());
+        }
+        player.sendSystemMessage(Component.literal("§d<Tanny>§r " + message));
         if (tanny != null) {
             tanny.markTalking();
             tanny.level().playSound(null, tanny.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,

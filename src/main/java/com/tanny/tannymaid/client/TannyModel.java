@@ -21,24 +21,27 @@ public class TannyModel extends PlayerModel<TannyEntity> {
         this.riding = this.riding || entity.isWeakened();
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
+        // IMPORTANTE: los valores se ASIGNAN (no se suman) porque el modelo no reinicia
+        // head.zRot / head.y / body.xRot en cada fotograma; sumarlos hacía girar la cabeza en círculos.
+
         // Respiración sutil
         float breath = Mth.sin(ageInTicks * 0.09F);
-        this.head.y += breath * 0.25F;
-        this.body.xRot += breath * 0.015F;
-        this.rightArm.zRot += 0.04F + breath * 0.02F;
-        this.leftArm.zRot -= 0.04F + breath * 0.02F;
+        this.head.y = (this.crouching ? 4.2F : 0.0F) + breath * 0.2F;
+        this.body.xRot = (this.crouching ? 0.5F : 0.0F) + breath * 0.012F;
 
+        float tilt = 0.0F;
         if (entity.isWeakened()) {
             this.head.xRot = 0.5F;
-            this.head.zRot = 0.15F;
+            tilt = 0.15F;
         } else if (entity.isTalking()) {
-            // Gestos de cabeza al hablar
-            this.head.xRot += Mth.sin(ageInTicks * 0.55F) * 0.10F;
-            this.head.zRot += Mth.sin(ageInTicks * 0.27F) * 0.08F;
+            // Asiente suavemente y ladea la cabeza al hablar
+            this.head.xRot += Mth.sin(ageInTicks * 0.45F) * 0.07F;
+            tilt = Mth.sin(ageInTicks * 0.2F) * 0.07F;
         } else if (!entity.isAggressive()) {
-            // Inclinación curiosa y tierna
-            this.head.zRot += Mth.sin(ageInTicks * 0.025F) * 0.05F;
+            // Inclinación curiosa y tierna, muy lenta
+            tilt = Mth.sin(ageInTicks * 0.025F) * 0.05F;
         }
+        this.head.zRot = tilt;
 
         this.hat.copyFrom(this.head);
         this.jacket.copyFrom(this.body);

@@ -14,6 +14,8 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.ServerChatEvent;
+import com.tanny.tannymaid.util.TannyChat;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -30,6 +32,15 @@ public final class CommonEvents {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         TannyCommand.register(event.getDispatcher());
+    }
+
+    /** Conversación: si le escribes "Tanny, ..." en el chat, ella te responde. */
+    @SubscribeEvent
+    public static void onServerChat(ServerChatEvent event) {
+        ServerPlayer player = event.getPlayer();
+        String raw = event.getRawText();
+        if (player == null || raw == null || player.getServer() == null) return;
+        player.getServer().execute(() -> TannyChat.onChat(player, raw));
     }
 
     /** Un Lucario de Tanny que quedó guardado de una sesión anterior se elimina al cargar. */
