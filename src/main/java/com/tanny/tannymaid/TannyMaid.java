@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.tanny.tannymaid.entity.TannyEntity;
 import com.tanny.tannymaid.registry.ModEntities;
 import com.tanny.tannymaid.registry.ModItems;
+import com.tanny.tannymaid.registry.ModMenus;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
@@ -21,6 +22,7 @@ public class TannyMaid {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModEntities.ENTITIES.register(modBus);
         ModItems.ITEMS.register(modBus);
+        ModMenus.MENUS.register(modBus);
         modBus.addListener(this::onAttributes);
         modBus.addListener(this::onCreativeTab);
         LOGGER.info("TannyMaid Adventures cargado. ¡Hola, Master!");

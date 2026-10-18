@@ -17,7 +17,7 @@ public class TannyChatGoal extends Goal {
     }
 
     private boolean valid(ServerPlayer o) {
-        return o != null && tanny.isChatting() && !tanny.isWeakened() && tanny.getTarget() == null
+        return o != null && tanny.isChatting() && !tanny.isWeakened() && tanny.getTarget() == null && !tanny.isGathering()
                 && o.level() == tanny.level() && tanny.distanceToSqr(o) < 7 * 7;
     }
 

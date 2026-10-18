@@ -28,7 +28,7 @@ public class TannyStayGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (tanny.getMode().follows() || tanny.isWeakened() || tanny.getTarget() != null) return false;
+        if (tanny.getMode().follows() || tanny.isWeakened() || tanny.getTarget() != null || tanny.isGathering()) return false;
         BlockPos a = tanny.getAnchor();
         if (a == null) return false;
         double r = radius();

@@ -26,7 +26,7 @@ public class TannyCollectItemsGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (!tanny.isCollecting() || tanny.isWeakened() || tanny.getTarget() != null) return false;
+        if (!tanny.isCollecting() || tanny.isWeakened() || tanny.getTarget() != null || tanny.isGathering()) return false;
         if (--cooldown > 0) return false;
         cooldown = 10;
         ServerPlayer owner = tanny.getOwnerPlayer();

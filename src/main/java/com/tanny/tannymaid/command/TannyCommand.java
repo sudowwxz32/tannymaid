@@ -1,6 +1,12 @@
 package com.tanny.tannymaid.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.tanny.tannymaid.entity.TannyResource;
+import com.tanny.tannymaid.util.TannyCrafting;
+import net.minecraft.commands.SharedSuggestionProvider;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.tanny.tannymaid.entity.TannyEntity;
@@ -34,7 +40,51 @@ public final class TannyCommand {
                 .then(Commands.literal("lucario").executes(ctx -> run(ctx, (t, p) -> t.getLucario().toggleManual(p))))
                 .then(Commands.literal("collect").executes(ctx -> run(ctx, TannyEntity::commandCollect)))
                 .then(Commands.literal("status").executes(ctx -> run(ctx, TannyEntity::commandStatus)))
-                .then(Commands.literal("dismiss").executes(ctx -> run(ctx, TannyEntity::commandDismiss))));
+                .then(Commands.literal("dismiss").executes(ctx -> run(ctx, TannyEntity::commandDismiss)))
+                .then(gather("recolectar"))
+                .then(gather("gather"))
+                .then(craft("craftear"))
+                .then(craft("craft"))
+                .then(Commands.literal("pan").executes(ctx -> run(ctx, TannyEntity::commandBread)))
+                .then(Commands.literal("bread").executes(ctx -> run(ctx, TannyEntity::commandBread)))
+                .then(Commands.literal("seguro").executes(ctx -> run(ctx, TannyEntity::commandSafe)))
+                .then(Commands.literal("safe").executes(ctx -> run(ctx, TannyEntity::commandSafe)))
+                .then(Commands.literal("parar").executes(ctx -> run(ctx, TannyEntity::commandStopWork)))
+                .then(Commands.literal("stop").executes(ctx -> run(ctx, TannyEntity::commandStopWork))));
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> gather(String name) {
+        return Commands.literal(name)
+                .then(Commands.argument("recurso", StringArgumentType.word())
+                        .suggests((c, b) -> SharedSuggestionProvider.suggest(TannyResource.KEYS, b))
+                        .executes(ctx -> doGather(ctx, 64))
+                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(1, 64))
+                                .executes(ctx -> doGather(ctx, IntegerArgumentType.getInteger(ctx, "cantidad")))));
+    }
+
+    private static int doGather(CommandContext<CommandSourceStack> ctx, int amount) throws CommandSyntaxException {
+        String name = StringArgumentType.getString(ctx, "recurso");
+        TannyResource res = TannyResource.byName(name);
+        if (res == null) {
+            TannySpeech.system(ctx.getSource().getPlayerOrException(),
+                    "Recurso desconocido. Usa: madera, piedra, carbon, hierro o tierra.");
+            return 0;
+        }
+        return run(ctx, (t, p) -> t.commandGather(p, res, amount));
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> craft(String name) {
+        return Commands.literal(name)
+                .then(Commands.argument("objeto", StringArgumentType.word())
+                        .suggests((c, b) -> SharedSuggestionProvider.suggest(TannyCrafting.ITEMS.keySet(), b))
+                        .executes(ctx -> doCraft(ctx, 1))
+                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(1, 64))
+                                .executes(ctx -> doCraft(ctx, IntegerArgumentType.getInteger(ctx, "cantidad")))));
+    }
+
+    private static int doCraft(CommandContext<CommandSourceStack> ctx, int amount) throws CommandSyntaxException {
+        String name = StringArgumentType.getString(ctx, "objeto");
+        return run(ctx, (t, p) -> TannyCrafting.craft(t, p, name, amount));
     }
 
     private static int run(CommandContext<CommandSourceStack> ctx, BiConsumer<TannyEntity, ServerPlayer> action)
@@ -72,6 +122,11 @@ public final class TannyCommand {
         TannySpeech.system(p, "§f/tanny collect§7 – activa/desactiva recoger objetos del suelo");
         TannySpeech.system(p, "§f/tanny status§7 – vida, modo y posición");
         TannySpeech.system(p, "§f/tanny dismiss§7 – la despide y te devuelve el contrato");
+        TannySpeech.system(p, "§f/tanny recolectar <madera|piedra|carbon|hierro|tierra> [1-64]§7 – recolecta bloques");
+        TannySpeech.system(p, "§f/tanny craftear <objeto> [cantidad]§7 – palos, herramientas, escudo, Poké Balls");
+        TannySpeech.system(p, "§f/tanny pan§7 – te da 24 panes (cada 5 min)");
+        TannySpeech.system(p, "§f/tanny seguro§7 – te lleva al lugar seguro más cercano");
+        TannySpeech.system(p, "§f/tanny parar§7 – deja de recolectar");
         TannySpeech.system(p, "Clic derecho: inventario · Shift+clic derecho: cambiar modo · Clic con comida/poción: curarla");
         return 1;
     }

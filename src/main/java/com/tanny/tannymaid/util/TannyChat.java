@@ -11,6 +11,7 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import javax.annotation.Nullable;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
@@ -153,6 +154,33 @@ public final class TannyChat {
         }
         if (has(m, "saca a lucario", "llama a lucario", "sal lucario", "invoca a lucario", "guarda a lucario", "regresa lucario")) {
             t.getLucario().toggleManual(p); return;
+        }
+        if (has(m, "recolecta", "consigue", "traeme", "trae ", "junta", "busca", "saca ", "pica ", "corta")) {
+            com.tanny.tannymaid.entity.TannyResource res = null;
+            for (String w : m.split(" ")) {
+                res = com.tanny.tannymaid.entity.TannyResource.byName(w);
+                if (res != null) break;
+            }
+            if (res != null) {
+                t.commandGather(p, res, firstNumber(m, 64));
+                return;
+            }
+        }
+        if (has(m, "craftea", "fabrica", "fabricame", "hazme", "construye", "crea ", "creame")) {
+            String obj = craftTarget(m);
+            if (obj != null) {
+                TannyCrafting.craft(t, p, obj, firstNumber(m, 1));
+                return;
+            }
+        }
+        if (has(m, "dame pan", "quiero pan", "pan por favor", "hornea", "panes")) {
+            t.commandBread(p); return;
+        }
+        if (has(m, "lugar seguro", "llevame a salvo", "sacame de aqui", "rescatame", "estoy perdido", "llevame a casa")) {
+            t.commandSafe(p); return;
+        }
+        if (has(m, "para ", "deten", "deja de", "ya basta", "suficiente") || m.equals("para")) {
+            if (t.isGathering()) { t.commandStopWork(p); return; }
         }
         if (has(m, "inventario", "que llevas", "que tienes", "abre tu mochila", "muestrame tus cosas")) {
             say(t, delay, "¡Claro! Mira, esto es lo que llevo ♡");
@@ -316,7 +344,8 @@ public final class TannyChat {
         }
         if (has(m, "ayuda", "que puedes hacer", "que sabes hacer", "como funciona", "comandos")) {
             say(t, delay, "¡Puedes pedirme cosas hablando! Dime \"sígueme\", \"quédate aquí\", \"ve a casa\", \"ven aquí\", "
-                    + "\"ordena los cofres\", \"cosecha\", \"protégeme\", \"saca a Lucario\" o \"qué llevas\". ¡Y también podemos platicar! ♡");
+                    + "\"ordena los cofres\", \"cosecha\", \"protégeme\", \"saca a Lucario\", \"recolecta 20 de madera\", "
+                    + "\"craftea un pico de piedra\", \"dame pan\" o \"llévame a un lugar seguro\". ¡Y también podemos platicar! ♡");
             return;
         }
         if (has(m, "estas herida", "te duele", "te curo", "estas cansada")) {
@@ -562,6 +591,34 @@ public final class TannyChat {
                     return "un bioma de " + id.getPath().replace('_', ' ');
                 })
                 .orElse("un lugar misterioso");
+    }
+
+    private static int firstNumber(String m, int def) {
+        for (String w : m.split(" ")) {
+            if (w.matches("\\d{1,3}")) return Math.max(1, Math.min(64, Integer.parseInt(w)));
+        }
+        return def;
+    }
+
+    @Nullable
+    private static String craftTarget(String m) {
+        String[] tools = {"pico", "hacha", "pala", "espada", "azada"};
+        String[] mats = {"madera", "piedra", "hierro", "oro", "diamante"};
+        for (String tool : tools) {
+            if (has(m, tool)) {
+                for (String mat : mats) {
+                    if (has(m, mat)) return tool + "_" + mat;
+                }
+                return tool + "_madera";
+            }
+        }
+        if (has(m, "palo")) return "palos";
+        if (has(m, "escudo")) return "escudo";
+        if (has(m, "tablon")) return "tablones";
+        if (has(m, "superball", "super ball")) return "superball";
+        if (has(m, "ultraball", "ultra ball")) return "ultraball";
+        if (has(m, "pokebola", "pokeball", "poke ball")) return "pokebola";
+        return null;
     }
 
     static boolean has(String text, String... keys) {

@@ -58,6 +58,12 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Set;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraftforge.network.NetworkHooks;
+import com.tanny.tannymaid.menu.TannyMenu;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
@@ -86,6 +92,16 @@ public class TannyEntity extends PathfinderMob {
     private static final int TALK_TICKS = 50;
 
     private final SimpleContainer inventory = new SimpleContainer(27);
+    /** Barra de herramientas: 0 pico, 1 pala, 2 hacha, 3 espada, 4 escudo. */
+    private final SimpleContainer tools = new SimpleContainer(TannyMenu.TOOL_COUNT);
+
+    // ---- recolección
+    @Nullable private TannyResource gatherResource;
+    private int gatherTarget;
+    private int gatherDone;
+    private final Set<BlockPos> gatherSkip = new HashSet<>();
+    private long breadReadyAt;
+    private long safeReadyAt;
     private final LucarioCompanion lucario = new LucarioCompanion(this);
 
     @Nullable private UUID ownerUUID;
@@ -116,6 +132,9 @@ public class TannyEntity extends PathfinderMob {
         if (this.getNavigation() instanceof GroundPathNavigation nav) {
             nav.setCanOpenDoors(true);
         }
+        this.tools.addListener(c -> updateEquipment());
+        this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
+        this.setDropChance(EquipmentSlot.OFFHAND, 0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -142,6 +161,7 @@ public class TannyEntity extends PathfinderMob {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
         this.goalSelector.addGoal(2, new TannyChatGoal(this));
+        this.goalSelector.addGoal(3, new TannyGatherGoal(this));
         this.goalSelector.addGoal(3, new TannyFollowOwnerGoal(this, 1.1D, 4.5F, 2.2F));
         this.goalSelector.addGoal(3, new TannyStayGoal(this));
         this.goalSelector.addGoal(4, new TannyFarmGoal(this));
@@ -387,6 +407,18 @@ public class TannyEntity extends PathfinderMob {
         if (isInvulnerableTo(source)) {
             return false;
         }
+        ItemStack shield = tools.getItem(4);
+        if (!shield.isEmpty() && attacker != null && !source.is(DamageTypeTags.BYPASSES_SHIELD)
+                && getRandom().nextFloat() < 0.5F) {
+            // ¡Bloqueo con escudo!
+            level().playSound(null, blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.NEUTRAL, 1.0F, 0.9F + getRandom().nextFloat() * 0.2F);
+            shield.hurtAndBreak(1 + (int) amount, this, e -> e.broadcastBreakEvent(EquipmentSlot.OFFHAND));
+            tools.setChanged();
+            if (attacker instanceof LivingEntity living) {
+                living.knockback(0.5D, getX() - living.getX(), getZ() - living.getZ());
+            }
+            return false;
+        }
         if (amount >= getHealth()) {
             becomeWeakened();
             return true;
@@ -605,9 +637,148 @@ public class TannyEntity extends PathfinderMob {
     }
 
     public void openInventory(ServerPlayer player) {
-        player.openMenu(new SimpleMenuProvider(
-                (id, playerInv, p) -> ChestMenu.threeRows(id, playerInv, inventory),
-                Component.literal("Inventario de Tanny ♡")));
+        NetworkHooks.openScreen(player, new SimpleMenuProvider(
+                (id, playerInv, p) -> new TannyMenu(id, playerInv, inventory, tools, this),
+                Component.literal("Tanny ♡")), buf -> buf.writeVarInt(getId()));
+    }
+
+    public SimpleContainer getTools() {
+        return tools;
+    }
+
+    /** Pone la espada en la mano y el escudo en la otra (salvo mientras trabaja). */
+    public void updateEquipment() {
+        if (level().isClientSide || isGathering()) return;
+        setItemSlot(EquipmentSlot.MAINHAND, tools.getItem(3));
+        setItemSlot(EquipmentSlot.OFFHAND, tools.getItem(4));
+    }
+
+    @Nullable
+    public BlockPos getHomeInThisLevel() {
+        if (homePos != null && homeDim != null && homeDim.equals(level().dimension().location().toString())) return homePos;
+        return null;
+    }
+
+    @Nullable
+    public BlockPos getHomePos() {
+        return homePos;
+    }
+
+    @Nullable
+    public String getHomeDim() {
+        return homeDim;
+    }
+
+    // ------------------------------------------------------------------ recolectar
+
+    public boolean isGathering() {
+        return gatherResource != null;
+    }
+
+    @Nullable
+    public TannyResource getGatherResource() {
+        return gatherResource;
+    }
+
+    public boolean isGatherBlockSkipped(BlockPos pos) {
+        return gatherSkip.contains(pos);
+    }
+
+    public void skipGatherBlock(BlockPos pos) {
+        gatherSkip.add(pos.immutable());
+    }
+
+    public void commandGather(ServerPlayer player, TannyResource res, int amount) {
+        if (isWeakened()) {
+            TannySpeech.say(this, player, "Perdón, Amo... primero necesito recuperarme.");
+            return;
+        }
+        if (res.needsTool && tools.getItem(res.toolSlot).isEmpty()) {
+            TannySpeech.say(this, player, "Amo, para sacar " + res.display + " necesito " + res.toolName()
+                    + ". Pónmelo en mi barra de herramientas, por favor ♡");
+            return;
+        }
+        gatherResource = res;
+        gatherTarget = Math.max(1, Math.min(64, amount));
+        gatherDone = 0;
+        gatherSkip.clear();
+        getNavigation().stop();
+        TannySpeech.say(this, player, "¡Entendido, Amo! Voy por " + gatherTarget + " de " + res.display + ". ¡Ya vuelvo! ♡");
+    }
+
+    public void onGatheredBlock() {
+        gatherDone++;
+        if (gatherDone >= gatherTarget) {
+            finishGather(true, "done");
+        } else if (!hasFreeSlot()) {
+            finishGather(false, "full");
+        }
+    }
+
+    private boolean hasFreeSlot() {
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            if (inventory.getItem(i).isEmpty()) return true;
+        }
+        return false;
+    }
+
+    public void finishGather(boolean success, String reason) {
+        TannyResource res = gatherResource;
+        int done = gatherDone;
+        gatherResource = null;
+        gatherSkip.clear();
+        updateEquipment();
+        if (res == null) return;
+        ServerPlayer owner = getOwnerPlayer();
+        String msg = switch (reason) {
+            case "done" -> "¡Listo, Amo! Recolecté " + done + " de " + res.display + ". Está en mi mochila ♡";
+            case "full" -> "Amo, mi mochila está llena. Alcancé a juntar " + done + " de " + res.display + ".";
+            case "no_tool" -> "Amo, necesito " + res.toolName() + " para seguir sacando " + res.display
+                    + ". Llevo " + done + ".";
+            case "weak_tool" -> "Amo, mi pico no sirve para " + res.display + "... necesito uno mejor (de piedra o más). Llevo " + done + ".";
+            case "stopped" -> "Está bien, Amo, dejo de recolectar. Junté " + done + " de " + res.display + ".";
+            default -> done == 0
+                    ? "Amo, no encuentro " + res.display + " cerca de aquí... ¿vamos a otro lugar?"
+                    : "Solo encontré " + done + " de " + res.display + " por aquí, Amo. ¡Lo guardé en mi mochila!";
+        };
+        TannySpeech.say(this, owner, msg);
+    }
+
+    public void commandStopWork(ServerPlayer player) {
+        if (isGathering()) {
+            finishGather(false, "stopped");
+        } else {
+            TannySpeech.say(this, player, "No estoy haciendo nada ahora, Amo. ¡Dime qué necesitas! ♡");
+        }
+    }
+
+    // ------------------------------------------------------------------ pan y lugar seguro
+
+    public void commandBread(ServerPlayer player) {
+        long now = level().getGameTime();
+        if (now < breadReadyAt) {
+            long secs = (breadReadyAt - now) / 20;
+            TannySpeech.say(this, player, "El pan todavía está en el horno, Amo. Estará listo en " + secs + " segundos ♡");
+            return;
+        }
+        breadReadyAt = now + 6000; // 5 minutos
+        ItemStack bread = new ItemStack(Items.BREAD, 24);
+        if (!player.getInventory().add(bread)) player.drop(bread, false);
+        if (level() instanceof ServerLevel sl) {
+            sl.sendParticles(ParticleTypes.HEART, getX(), getY() + 1.8, getZ(), 4, 0.3, 0.2, 0.3, 0.02);
+        }
+        TannySpeech.say(this, player, "¡Pan recién horneado, Amo! Aquí tienes 24. ¡Buen provecho! ♡");
+    }
+
+    public void commandSafe(ServerPlayer player) {
+        long now = level().getGameTime();
+        if (now < safeReadyAt) {
+            TannySpeech.say(this, player, "Dame un momentito para recuperar fuerzas, Amo... (" + (safeReadyAt - now) / 20 + " s)");
+            return;
+        }
+        if (com.tanny.tannymaid.util.SafePlace.bringToSafety(this, player)) {
+            safeReadyAt = now + 600; // 30 s
+        }
     }
 
     // ------------------------------------------------------------------ órdenes
@@ -702,6 +873,14 @@ public class TannyEntity extends PathfinderMob {
                 player.drop(stack, false);
             }
         }
+        for (int i = 0; i < tools.getContainerSize(); i++) {
+            ItemStack stack = tools.removeItemNoUpdate(i);
+            if (!stack.isEmpty() && !player.getInventory().add(stack)) {
+                player.drop(stack, false);
+            }
+        }
+        setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
         ItemStack contract = new ItemStack(ModItems.TANNY_CONTRACT.get());
         if (!player.getInventory().add(contract)) player.drop(contract, false);
         TannyLookup.setStoredId(player, null);
@@ -713,6 +892,7 @@ public class TannyEntity extends PathfinderMob {
     // ------------------------------------------------------------------ teletransporte
 
     public void teleportToOwner(ServerPlayer owner) {
+        if (isRemoved()) return;
         spawnPoof();
         if (owner.level() != level()) {
             this.teleportTo((ServerLevel) owner.level(), owner.getX(), owner.getY(), owner.getZ(),
@@ -796,6 +976,7 @@ public class TannyEntity extends PathfinderMob {
         if (homeDim != null) tag.putString("HomeDim", homeDim);
         if (anchorPos != null) tag.putLong("AnchorPos", anchorPos.asLong());
         tag.put("Inventory", inventory.createTag());
+        tag.put("Tools", saveTools());
         if (nickname != null) tag.putString("Nickname", nickname);
         ListTag likeTags = new ListTag();
         for (String like : likes) likeTags.add(StringTag.valueOf(like));
@@ -814,11 +995,48 @@ public class TannyEntity extends PathfinderMob {
         homeDim = tag.contains("HomeDim") ? tag.getString("HomeDim") : null;
         anchorPos = tag.contains("AnchorPos") ? BlockPos.of(tag.getLong("AnchorPos")) : null;
         inventory.fromTag(tag.getList("Inventory", Tag.TAG_COMPOUND));
+        loadTools(tag.getList("Tools", Tag.TAG_COMPOUND));
         nickname = tag.contains("Nickname") ? tag.getString("Nickname") : null;
         likes.clear();
         ListTag likeTags = tag.getList("Likes", Tag.TAG_STRING);
         for (int i = 0; i < likeTags.size(); i++) likes.add(likeTags.getString(i));
         this.setCustomName(Component.literal("Tanny"));
+    }
+
+    /** Carga la barra de herramientas respetando la posición de cada ranura. */
+    private void loadTools(ListTag list) {
+        for (int i = 0; i < tools.getContainerSize(); i++) tools.setItem(i, ItemStack.EMPTY);
+        // SimpleContainer.createTag() no guarda el índice: se guarda en orden y sin huecos,
+        // así que usamos un formato propio con índice.
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag item = list.getCompound(i);
+            int slot = item.contains("TannySlot") ? item.getInt("TannySlot") : -1;
+            ItemStack stack = ItemStack.of(item);
+            if (slot >= 0 && slot < tools.getContainerSize()) {
+                tools.setItem(slot, stack);
+            } else {
+                for (int j = 0; j < tools.getContainerSize(); j++) {
+                    if (tools.getItem(j).isEmpty() && TannyMenu.fitsToolSlot(j, stack)) {
+                        tools.setItem(j, stack);
+                        break;
+                    }
+                }
+            }
+        }
+        updateEquipment();
+    }
+
+    private ListTag saveTools() {
+        ListTag list = new ListTag();
+        for (int i = 0; i < tools.getContainerSize(); i++) {
+            ItemStack stack = tools.getItem(i);
+            if (stack.isEmpty()) continue;
+            CompoundTag item = new CompoundTag();
+            stack.save(item);
+            item.putInt("TannySlot", i);
+            list.add(item);
+        }
+        return list;
     }
 
     /** Usado por el contrato al invocarla por primera vez. */

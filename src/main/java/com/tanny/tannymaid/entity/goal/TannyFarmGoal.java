@@ -35,7 +35,7 @@ public class TannyFarmGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (tanny.getMode() != TannyMode.FARM || tanny.isWeakened() || tanny.getTarget() != null) return false;
+        if (tanny.getMode() != TannyMode.FARM || tanny.isWeakened() || tanny.getTarget() != null || tanny.isGathering()) return false;
         if (--cooldown > 0) return false;
         cooldown = 20;
         return findJob();

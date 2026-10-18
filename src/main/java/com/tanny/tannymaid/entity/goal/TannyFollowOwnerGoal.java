@@ -25,7 +25,7 @@ public class TannyFollowOwnerGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (!tanny.getMode().follows() || tanny.isWeakened()) return false;
+        if (!tanny.getMode().follows() || tanny.isWeakened() || tanny.isGathering()) return false;
         ServerPlayer o = tanny.getOwnerPlayer();
         if (o == null || o.isSpectator() || o.level() != tanny.level()) return false;
         if (tanny.distanceToSqr(o) < startDistance * startDistance) return false;
