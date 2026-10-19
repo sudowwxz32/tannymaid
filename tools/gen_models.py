@@ -186,11 +186,15 @@ class Part:
         self.name, self.parent, self.pivot, self.rot, self.boxes = name, parent, pivot, rot, list(boxes)
 
 
-def mirror(parts, src_suffix="_r", dst_suffix="_l"):
+def _flip(name):
+    return name.replace("_fr", "_fl").replace("_br", "_bl").replace("_r", "_l")
+
+
+def mirror(parts):
     out = []
     for p in parts:
-        name = p.name.replace(src_suffix, dst_suffix)
-        parent = p.parent.replace(src_suffix, dst_suffix)
+        name = _flip(p.name)
+        parent = _flip(p.parent)
         px, py, pz = p.pivot
         rx, ry, rz = p.rot
         boxes = [Box(-(b.x + b.w), b.y, b.z, b.w, b.h, b.d, b.paint) for b in p.boxes]
