@@ -64,7 +64,7 @@ import java.util.*;
  * Laury, mujer dragón. Vida de Warden (500), no muere (se debilita y se regenera),
  * se transforma en un dragón azul que se puede montar y volar, pelea, recolecta, craftea y conversa.
  */
-public class LauryEntity extends PathfinderMob {
+public class LauryEntity extends PathfinderMob implements PlayerRideableJumping {
 
     private static final EntityDataAccessor<Boolean> DATA_DRAGON = SynchedEntityData.defineId(LauryEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_WEAKENED = SynchedEntityData.defineId(LauryEntity.class, EntityDataSerializers.BOOLEAN);
@@ -80,7 +80,17 @@ public class LauryEntity extends PathfinderMob {
     private static final UUID DRAGON_DAMAGE = UUID.fromString("5b2a3c1e-7a51-4c55-9a4a-1d7b6f0a2e01");
     private static final UUID DRAGON_ARMOR = UUID.fromString("5b2a3c1e-7a51-4c55-9a4a-1d7b6f0a2e02");
     private static final UUID DRAGON_SPEED = UUID.fromString("5b2a3c1e-7a51-4c55-9a4a-1d7b6f0a2e03");
-    private static final float FLY_SPEED = 0.85F;
+    private static final float FLY_SPEED = 0.8F;
+    private static final float MAX_TURN = 7.5F;          // grados por tick: el dragón gira con inercia
+
+    // ---- estado de vuelo (cliente): inclinación, alabeo y aleteo, para animación y cámara
+    public float flightPitch, prevFlightPitch;            // + = nariz abajo (picada)
+    public float flightRoll, prevFlightRoll;              // + = ala derecha abajo (giro a la derecha)
+    public float flapPhase, prevFlapPhase;
+    public float flapStrength;                            // 0 = alas quietas/recogidas, 1 = aleteo completo
+    public float diveAmount;                              // 0..1, alas pegadas al cuerpo en picada
+    public float flightSpeed;                             // bloques por tick (suavizado)
+    private float pendingBoost;
     private static final int TALK_TICKS = 50;
 
     // Barra de herramientas: 0 espada, 1 hacha, 2 pico, 3 pala, 4 azada, 5 arco, 6 escudo
@@ -271,6 +281,54 @@ public class LauryEntity extends PathfinderMob {
     public void tick() {
         super.tick();
         if (!level().isClientSide) serverTick();
+        else clientFlightTick();
+    }
+
+    /** Calcula (en el cliente) la inclinación, el alabeo y el ritmo de aleteo a partir del movimiento real. */
+    private void clientFlightTick() {
+        prevFlightPitch = flightPitch;
+        prevFlightRoll = flightRoll;
+        prevFlapPhase = flapPhase;
+        if (!isDragon() || isWeakened()) {
+            flightPitch *= 0.8F;
+            flightRoll *= 0.8F;
+            flapStrength *= 0.8F;
+            diveAmount *= 0.8F;
+            flightSpeed = 0;
+            return;
+        }
+        double dx = getX() - xo, dy = getY() - yo, dz = getZ() - zo;
+        double hs = Math.sqrt(dx * dx + dz * dz);
+        double speed = Math.sqrt(hs * hs + dy * dy);
+        flightSpeed += ((float) speed - flightSpeed) * 0.2F;
+        boolean airborne = !onGround();
+
+        float targetPitch = 0, targetRoll = 0;
+        if (airborne && speed > 0.04) {
+            targetPitch = (float) Math.toDegrees(-Math.atan2(dy, Math.max(hs, 0.08)));
+            targetPitch = Mth.clamp(targetPitch, -45.0F, 60.0F);
+            float yawRate = Mth.wrapDegrees(getYRot() - yRotO);
+            float yaw = getYRot() * Mth.DEG_TO_RAD;
+            double lateral = dx * -Mth.cos(yaw) + dz * -Mth.sin(yaw);    // + = derrapando a la derecha
+            targetRoll = Mth.clamp(yawRate * 5.0F + (float) lateral * 25.0F, -55.0F, 55.0F);
+        }
+        flightPitch += (targetPitch - flightPitch) * 0.14F;
+        flightRoll += (targetRoll - flightRoll) * 0.12F;
+        diveAmount += (Mth.clamp((flightPitch - 18.0F) / 25.0F, 0.0F, 1.0F) - diveAmount) * 0.15F;
+
+        float rate, strength;
+        if (!airborne) { rate = 0.0F; strength = 0.0F; }
+        else if (diveAmount > 0.5F) { rate = 0.05F; strength = 0.15F; }                 // picada: alas recogidas
+        else if (dy > 0.08) { rate = 0.42F; strength = 1.0F; }                           // ascenso: aletazos fuertes
+        else if (hs > 0.45) { rate = 0.2F; strength = 0.55F; }                           // crucero: planeo y aleteo lento
+        else { rate = 0.32F; strength = 0.85F; }                                         // suspendida en el aire
+        flapStrength += (strength - flapStrength) * 0.1F;
+        flapPhase += rate;
+        // sonido de aletazo cuando el ala baja
+        if (airborne && rate > 0.15F && Mth.sin(prevFlapPhase) > 0 && Mth.sin(flapPhase) <= 0) {
+            level().playLocalSound(getX(), getY(), getZ(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.NEUTRAL,
+                    0.5F + flapStrength * 0.6F, 1.1F + getRandom().nextFloat() * 0.15F, false);
+        }
     }
 
     private void serverTick() {
@@ -556,28 +614,49 @@ public class LauryEntity extends PathfinderMob {
         }
     }
 
-    /** Vuelo controlado por el jinete: avanza hacia donde mira (arriba = subir, abajo = bajar). */
+    /**
+     * Vuelo controlado por el jinete: el dragón gira con inercia hacia donde miras (y se inclina en la curva),
+     * acelera en picada, sube más lento, rebota con cada aletazo y da un impulso con la barra espaciadora.
+     */
     @Override
     public void travel(Vec3 input) {
         if (isDragon() && !isWeakened() && getControllingPassenger() instanceof Player rider) {
-            setYRot(rider.getYRot());
+            float diff = Mth.wrapDegrees(rider.getYRot() - getYRot());
+            float turn = Mth.clamp(diff, -MAX_TURN, MAX_TURN);
             yRotO = getYRot();
+            setYRot(getYRot() + turn);
             setXRot(rider.getXRot() * 0.5F);
             yBodyRot = getYRot();
             yHeadRot = getYRot();
+
             float forward = rider.zza;
             float strafe = rider.xxa;
-            Vec3 look = rider.getLookAngle();
+            float yawRad = getYRot() * Mth.DEG_TO_RAD;
+            float pitchRad = rider.getXRot() * Mth.DEG_TO_RAD;
+            // dirección: rumbo del dragón (con inercia) + inclinación de la mirada del jinete
+            Vec3 dir = new Vec3(-Mth.sin(yawRad) * Mth.cos(pitchRad), -Mth.sin(pitchRad), Mth.cos(yawRad) * Mth.cos(pitchRad));
+            float speed = FLY_SPEED;
+            if (dir.y < 0) speed *= 1.0F + (float) -dir.y * 0.95F;      // picada: gana velocidad
+            else speed *= 1.0F - (float) dir.y * 0.35F;                 // ascenso: cuesta más
             Vec3 wanted = Vec3.ZERO;
-            if (forward > 0) wanted = look.scale(FLY_SPEED);
-            else if (forward < 0) wanted = look.scale(-FLY_SPEED * 0.35F);
+            if (forward > 0) wanted = dir.scale(speed);
+            else if (forward < 0) wanted = dir.scale(-FLY_SPEED * 0.3F);
             if (strafe != 0) {
-                float yaw = getYRot() * Mth.DEG_TO_RAD;
-                wanted = wanted.add(Mth.cos(yaw) * strafe * FLY_SPEED * 0.6F, 0, Mth.sin(yaw) * strafe * FLY_SPEED * 0.6F);
+                wanted = wanted.add(Mth.cos(yawRad) * strafe * FLY_SPEED * 0.55F, 0, Mth.sin(yawRad) * strafe * FLY_SPEED * 0.55F);
             }
-            Vec3 motion = getDeltaMovement().scale(0.86D).add(wanted.scale(0.14D));
-            if (forward == 0 && strafe == 0 && !onGround()) {
-                motion = motion.add(0, Mth.sin(tickCount * 0.12F) * 0.004D, 0);   // planeo suave
+            Vec3 motion = getDeltaMovement().scale(0.9D).add(wanted.scale(0.1D));
+            if (!onGround()) {
+                if (forward == 0 && strafe == 0) {
+                    motion = motion.add(0, Mth.sin(tickCount * 0.32F) * 0.012D, 0);         // aleteo en el sitio
+                } else if (dir.y > -0.3) {
+                    motion = motion.add(0, Mth.sin(tickCount * 0.3F) * 0.02D, 0);          // rebote de cada aletazo
+                }
+            }
+            if (pendingBoost > 0) {
+                Vec3 fwd = new Vec3(-Mth.sin(yawRad), 0, Mth.cos(yawRad));
+                motion = motion.add(fwd.scale(0.5D * pendingBoost)).add(0, 0.85D * pendingBoost, 0);
+                level().playLocalSound(getX(), getY(), getZ(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.NEUTRAL, 1.4F, 0.8F, false);
+                pendingBoost = 0;
             }
             setDeltaMovement(motion);
             move(MoverType.SELF, motion);
@@ -585,6 +664,30 @@ public class LauryEntity extends PathfinderMob {
             return;
         }
         super.travel(input);
+    }
+
+    // ---- impulso con la barra espaciadora (barra de salto como la de los caballos)
+
+    @Override
+    public void onPlayerJump(int power) {
+        if (power <= 0 || !isDragon() || isWeakened()) return;
+        pendingBoost = Math.min(power, 100) / 100.0F * (power >= 90 ? 1.25F : 1.0F);
+    }
+
+    @Override
+    public boolean canJump() {
+        return isDragon() && !isWeakened() && isVehicle();
+    }
+
+    @Override
+    public void handleStartJump(int power) {
+        if (!level().isClientSide && level() instanceof ServerLevel sl) {
+            sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 1.5, getZ(), 12, 1.5, 0.3, 1.5, 0.05);
+        }
+    }
+
+    @Override
+    public void handleStopJump() {
     }
 
     // ================================================================ interacción

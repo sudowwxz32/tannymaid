@@ -94,7 +94,8 @@ public final class LauryCommand {
                 "§f/laury craftear <objeto> [cantidad]§7 – con lo que tenga en su mochila",
                 "§f/laury carne§7 – te da 24 de carne cocinada",
                 "§f/laury parar§7 · §f/laury estado§7 · §f/laury despedir",
-                "§7Volar: avanza hacia donde miras (arriba sube, abajo baja). Shift para bajarte.",
+                "§7Volar: W avanza hacia donde miras (arriba sube, abajo = picada). Gira con el mouse.",
+                "§7Mantén y suelta ESPACIO para un aletazo de impulso hacia arriba. Shift para bajarte.",
                 "§7Hablar: escribe en el chat §f\"Laury, hola\"§7."
         };
         for (String s : lines) LaurySpeech.system(p, s);

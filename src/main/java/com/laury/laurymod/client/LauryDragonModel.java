@@ -22,7 +22,7 @@ public class LauryDragonModel extends EntityModel<LauryEntity> {
     @Override
     public void setupAnim(LauryEntity e, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
         root.getAllParts().forEach(ModelPart::resetPose);
-        boolean flying = !e.onGround() || e.isNoGravity();
+        boolean flying = !e.onGround();
         boolean weak = e.isWeakened();
 
         // cabeza y cuello siguen la mirada
@@ -51,16 +51,32 @@ public class LauryDragonModel extends EntityModel<LauryEntity> {
             p.get("dleg_br").xRot -= walk;
         }
 
+        // ---- estado de vuelo interpolado
+        float pt = age - e.tickCount;
+        float phase = Mth.lerp(pt, e.prevFlapPhase, e.flapPhase);
+        float pitchDeg = Mth.lerp(pt, e.prevFlightPitch, e.flightPitch);
+        float rollDeg = Mth.lerp(pt, e.prevFlightRoll, e.flightRoll);
+        float dive = e.diveAmount;
+        float str = e.flapStrength;
+
         // alas
         ModelPart wr = p.get("dwing_r"), wl = p.get("dwing_l"), wr2 = p.get("dwing_r2"), wl2 = p.get("dwing_l2");
         if (flying && !weak) {
-            float flap = Mth.sin(age * 0.28F);
-            wr.zRot += flap * 0.75F;
-            wl.zRot -= flap * 0.75F;
-            wr2.zRot += Mth.sin(age * 0.28F - 0.8F) * 0.5F;
-            wl2.zRot -= Mth.sin(age * 0.28F - 0.8F) * 0.5F;
+            float flap = Mth.sin(phase) * 0.8F * str;
+            float lag = Mth.sin(phase - 0.9F) * 0.55F * str;
+            float glide = (1.0F - str) * 0.12F;                       // planeo: alas un poco hacia arriba
+            // en el giro, el ala de dentro baja y la de fuera sube
+            float bank = rollDeg * Mth.DEG_TO_RAD * 0.25F;
+            wr.zRot += flap + glide - bank - dive * 0.35F;
+            wl.zRot -= flap + glide + bank - dive * 0.35F;
+            wr2.zRot += lag + dive * 0.2F;
+            wl2.zRot -= lag + dive * 0.2F;
+            // picada: alas hacia atrás, pegadas al cuerpo
+            wr.yRot += dive * 0.95F;
+            wl.yRot -= dive * 0.95F;
+            wr2.yRot -= dive * 1.3F;
+            wl2.yRot += dive * 1.3F;
         } else {
-            // plegadas sobre el lomo
             float breath = Mth.sin(age * 0.06F) * 0.04F;
             wr.zRot += 0.55F + breath;
             wl.zRot -= 0.55F + breath;
@@ -72,11 +88,22 @@ public class LauryDragonModel extends EntityModel<LauryEntity> {
             wl2.yRot += 2.1F;
         }
 
-        // cola
-        float sway = flying ? 0.5F : 1.0F + limbAmount;
+        // cola: ondula, se abre hacia fuera en las curvas y sigue la inclinación
+        float sway = flying ? 0.6F + str * 0.4F : 1.0F + limbAmount;
         for (int i = 1; i <= 5; i++) {
-            p.get("dtail" + i).yRot += Mth.sin(age * 0.08F - i * 0.7F) * 0.1F * sway;
-            if (flying) p.get("dtail" + i).xRot += 0.04F;
+            ModelPart t = p.get("dtail" + i);
+            t.yRot += Mth.sin(age * 0.08F - i * 0.7F) * 0.1F * sway + rollDeg * Mth.DEG_TO_RAD * 0.06F;
+            if (flying) {
+                t.xRot += 0.04F + Mth.sin(phase - i * 0.6F) * 0.05F * str - pitchDeg * Mth.DEG_TO_RAD * 0.05F;
+            }
+        }
+
+        // cuello y cabeza compensan la inclinación para mirar al frente
+        if (flying && !weak) {
+            p.get("neck1").xRot -= pitchDeg * Mth.DEG_TO_RAD * 0.35F;
+            p.get("dhead").xRot -= pitchDeg * Mth.DEG_TO_RAD * 0.15F;
+            p.get("neck1").zRot -= rollDeg * Mth.DEG_TO_RAD * 0.25F;
+            p.get("neck1").xRot += Mth.sin(phase + 0.5F) * 0.06F * str;
         }
 
         // debilitada: tumbada en el suelo
@@ -86,8 +113,6 @@ public class LauryDragonModel extends EntityModel<LauryEntity> {
             for (String leg : new String[] {"dleg_br", "dleg_bl"}) p.get(leg).xRot += 1.2F;
             p.get("neck1").xRot += 0.6F;
             p.get("dhead").xRot -= 0.3F;
-        } else if (flying) {
-            p.get("dbody").xRot += Mth.clamp(-e.getXRot() * Mth.DEG_TO_RAD * 0.6F, -0.5F, 0.5F);
         }
     }
 

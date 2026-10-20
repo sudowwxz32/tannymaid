@@ -20,7 +20,7 @@ public final class LaurySpeech {
     public static final String[] COMBAT = {"¡Ja! ¿Eso es todo lo que tienes?", "¡Detrás de mí, {p}! ¡Esto se pone bueno!", "¡Nadie toca a mi compañero!"};
     public static final String[] TO_DRAGON = {"¡Hora de ponerse seria! ¡ROOAAAR!", "¡Siente el poder de un dragón de verdad! ¡Jajaja!"};
     public static final String[] TO_HUMAN = {"Fiuu... de vuelta a dos patas. ¿Me extrañabas así, {p}?", "¡Listo! Forma humana. Las alas pesan menos así, jaja."};
-    public static final String[] RIDE = {"¡Agárrate fuerte, {p}! Mira hacia donde quieras volar y avanza. ¡Jajaja!", "¡Súbete! ¡El cielo es nuestro!"};
+    public static final String[] RIDE = {"¡Agárrate fuerte, {p}! W para volar hacia donde mires, ESPACIO para un aletazo. ¡Jajaja!", "¡Súbete! ¡El cielo es nuestro!"};
     public static final String[] WEAK = {"Ugh... me dieron fuerte... Dame un momento, {p}. Ya me levanto...", "Tsk... sigo aquí. Solo necesito recuperar el aliento..."};
     public static final String[] RECOVER = {"¡Jajaja! ¡Laury está de vuelta y con más ganas!", "¡Recuperada al cien! ¿Quién sigue?"};
     public static final String[] FED = {"¡Mmm, delicioso! Gracias, {p}. ¡Energía al máximo!", "¡Jaja, comida! Me conoces bien."};

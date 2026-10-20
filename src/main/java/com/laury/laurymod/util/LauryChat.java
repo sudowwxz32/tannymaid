@@ -285,7 +285,7 @@ public final class LauryChat {
     }
 
     private static String isDragonTip(LauryEntity l) {
-        return l.isDragon() ? "¡Súbete! Clic derecho sobre mí. Avanza hacia donde mires: arriba para subir, abajo para bajar. Shift para bajarte."
+        return l.isDragon() ? "¡Súbete! Clic derecho sobre mí. W para avanzar hacia donde mires: mira abajo para una picada, arriba para subir. Mantén y suelta ESPACIO para un aletazo de impulso. ¡Y agárrate en las curvas, jaja!"
                 : "¡Claro! Dime \"transfórmate en dragón\" o usa /laury dragon, y luego súbete con clic derecho. ¡El cielo nos espera!";
     }
 
