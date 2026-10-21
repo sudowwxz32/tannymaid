@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 /** Cliente → servidor: elegir fase/kaioken (menú K), transformarse (P) o el aura (U). */
 public class ActionPacket {
-    public static final int SELECT = 0, TRANSFORM = 1, AURA = 2;
+    public static final int SELECT = 0, TRANSFORM = 1, AURA = 2, BLAST = 3, FLY = 4;
 
     private final int action, form, kaioken;
 
@@ -37,6 +37,8 @@ public class ActionPacket {
                 case SELECT -> PowerLogic.select(sp, p.form, p.kaioken);
                 case TRANSFORM -> PowerLogic.toggleTransform(sp);
                 case AURA -> PowerLogic.toggleAura(sp);
+                case BLAST -> PowerLogic.kiBlast(sp);
+                case FLY -> PowerLogic.toggleFlight(sp);
                 default -> { }
             }
         });

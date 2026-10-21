@@ -2,5 +2,10 @@
   "key.categories.blockdragonsuperz": "Block Dragon Super Z",
   "key.blockdragonsuperz.menu": "Menú de fases",
   "key.blockdragonsuperz.transform": "Transformarse",
-  "key.blockdragonsuperz.aura": "Activar/desactivar aura"
+  "key.blockdragonsuperz.aura": "Activar/desactivar aura",
+  "key.blockdragonsuperz.fly": "Volar",
+  "key.blockdragonsuperz.blast": "Ráfaga de ki",
+  "item.blockdragonsuperz.senzu_bean": "Semilla del Ermitaño",
+  "block.blockdragonsuperz.senzu_crop": "Planta de Semilla del Ermitaño",
+  "entity.blockdragonsuperz.ki_blast": "Ráfaga de Ki"
 }

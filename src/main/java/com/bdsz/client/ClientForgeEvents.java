@@ -24,7 +24,19 @@ import org.joml.Vector3f;
 
 @Mod.EventBusSubscriber(modid = BlockDragonSuperZ.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public final class ClientForgeEvents {
+    private static int blastDelay;
+
     private ClientForgeEvents() {}
+
+    /** Con la raza saiyajin, los corazones normales se reemplazan por la barra de vida del panel. */
+    @SubscribeEvent
+    public static void hideHearts(net.minecraftforge.client.event.RenderGuiOverlayEvent.Pre e) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && ClientStates.get(mc.player.getId()).saiyan
+                && e.getOverlay().id().equals(net.minecraftforge.client.gui.overlay.VanillaGuiOverlay.PLAYER_HEALTH.id())) {
+            e.setCanceled(true);
+        }
+    }
 
     @SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent e) {
@@ -44,6 +56,19 @@ public final class ClientForgeEvents {
             if (!mine.saiyan) notSaiyan(mc);
             else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.AURA, 0, 0));
         }
+        while (ClientModEvents.FLY.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc);
+            else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.FLY, 0, 0));
+        }
+        // B: ráfaga de ki (mantener pulsado = disparo continuo)
+        if (blastDelay > 0) blastDelay--;
+        boolean b = false;
+        while (ClientModEvents.BLAST.consumeClick()) b = true;
+        if ((b || ClientModEvents.BLAST.isDown()) && mc.screen == null && blastDelay == 0) {
+            if (!mine.saiyan) notSaiyan(mc);
+            else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.BLAST, 0, 0));
+            blastDelay = 8;
+        }
         if (!mc.isPaused()) auras(mc, mc.level);
     }
 
@@ -61,7 +86,7 @@ public final class ClientForgeEvents {
             int k = s.activeKaioken();
             boolean self = p == mc.player && mc.options.getCameraType().isFirstPerson();
             float power = f == Form.BASE ? 0.6F : 1.0F + f.ordinal() * 0.15F + k / 100.0F;
-            int count = (int) ((self ? 2 : 5) * power);
+            int count = (int) ((self ? 1 : 2) * power);
             Vector3f color = f == Form.BASE ? (k > 0 ? new Vector3f(1.0F, 0.15F, 0.1F) : new Vector3f(0.85F, 0.95F, 1.0F))
                     : new Vector3f(f.r(), f.g(), f.b());
             DustParticleOptions dust = new DustParticleOptions(color, 1.1F + power * 0.25F);
@@ -88,6 +113,9 @@ public final class ClientForgeEvents {
             if (f == Form.GOD && rnd.nextInt(3) == 0) {
                 level.addParticle(ParticleTypes.FLAME, p.getX() + (rnd.nextDouble() - 0.5), p.getY() + 0.1,
                         p.getZ() + (rnd.nextDouble() - 0.5), 0, 0.12, 0);
+            }
+            if (p.getAbilities().flying && s.flight && rnd.nextInt(2) == 0) {
+                level.addParticle(dust, p.getX(), p.getY() - 0.1, p.getZ(), 0, -0.15, 0);
             }
             if (p.tickCount % 40 == 0) {
                 level.playLocalSound(p.getX(), p.getY(), p.getZ(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS,

@@ -2,5 +2,10 @@
   "key.categories.blockdragonsuperz": "Block Dragon Super Z",
   "key.blockdragonsuperz.menu": "Forms menu",
   "key.blockdragonsuperz.transform": "Transform",
-  "key.blockdragonsuperz.aura": "Toggle aura"
+  "key.blockdragonsuperz.aura": "Toggle aura",
+  "key.blockdragonsuperz.fly": "Fly",
+  "key.blockdragonsuperz.blast": "Ki blast",
+  "item.blockdragonsuperz.senzu_bean": "Senzu Bean",
+  "block.blockdragonsuperz.senzu_crop": "Senzu Plant",
+  "entity.blockdragonsuperz.ki_blast": "Ki Blast"
 }

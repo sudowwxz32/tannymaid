@@ -46,11 +46,12 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             case 3 -> "g_";
             default -> "s_";
         };
+        boolean extraBang = f.hairStyle == 4;
         root.getAllParts().forEach(ModelPart::resetPose);
         for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
             String n = en.getKey();
             if (n.equals("root") || n.equals("head")) continue;
-            en.getValue().visible = n.startsWith("c_") || n.startsWith(prefix);
+            en.getValue().visible = n.startsWith("c_") || n.startsWith(prefix) || (extraBang && n.startsWith("x_"));
         }
         // el cabello vibra con la energía (fase 2 y Blue chisporrotean más)
         float jitter = (f == Form.SSJ2 || f == Form.BLUE) ? 0.04F : 0.015F;

@@ -33,6 +33,12 @@ public final class SaiyanData {
         Net.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> p), new SyncPacket(p.getId(), s));
     }
 
+    /** Guarda sin reaplicar atributos y avisa solo al propio jugador (actualizaciones de ki y tiempo). */
+    public static void setQuiet(ServerPlayer p, SaiyanState s) {
+        root(p).put(KEY, s.save());
+        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new SyncPacket(p.getId(), s));
+    }
+
     public static void syncTo(ServerPlayer target, ServerPlayer viewer) {
         Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> viewer), new SyncPacket(target.getId(), get(target)));
     }

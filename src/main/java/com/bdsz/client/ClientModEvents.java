@@ -19,6 +19,10 @@ public final class ClientModEvents {
     public static final KeyMapping MENU = new KeyMapping("key.blockdragonsuperz.menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, CATEGORY);
     public static final KeyMapping TRANSFORM = new KeyMapping("key.blockdragonsuperz.transform", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_P, CATEGORY);
     public static final KeyMapping AURA = new KeyMapping("key.blockdragonsuperz.aura", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, CATEGORY);
+    public static final KeyMapping FLY = new KeyMapping("key.blockdragonsuperz.fly", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, CATEGORY);
+    public static final KeyMapping BLAST = new KeyMapping("key.blockdragonsuperz.blast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
+    public static final ModelLayerLocation AURA_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "aura"), "main");
+    public static final ModelLayerLocation KI_BLAST = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ki_blast"), "main");
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -28,11 +32,25 @@ public final class ClientModEvents {
         e.register(MENU);
         e.register(TRANSFORM);
         e.register(AURA);
+        e.register(FLY);
+        e.register(BLAST);
     }
 
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, HairModelData::createLayer);
+        e.registerLayerDefinition(AURA_LAYER, AuraLayer::createLayer);
+        e.registerLayerDefinition(KI_BLAST, KiBlastRenderer::createLayer);
+    }
+
+    @SubscribeEvent
+    public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
+        e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KI_BLAST.get(), KiBlastRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void overlays(net.minecraftforge.client.event.RegisterGuiOverlaysEvent e) {
+        e.registerAboveAll("saiyan_hud", new SaiyanHud());
     }
 
     /** Añade el cabello saiyajin a los jugadores (skins normal y delgada). */
@@ -41,6 +59,7 @@ public final class ClientModEvents {
         for (String skin : e.getSkins()) {
             if (e.getSkin(skin) instanceof PlayerRenderer renderer) {
                 renderer.addLayer(new SaiyanHairLayer(renderer, e.getEntityModels()));
+                renderer.addLayer(new AuraLayer(renderer, e.getEntityModels()));
             }
         }
     }

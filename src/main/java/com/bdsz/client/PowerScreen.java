@@ -79,14 +79,22 @@ public class PowerScreen extends Screen {
         g.drawString(font, "§eFases", cx - 160, top + 2, 0xFFFFFF);
         g.drawString(font, "§cKaioken", cx + 10, top + 2, 0xFFFFFF);
         Form f = Form.byId(form);
-        float dmg = f.damage * (1.0F + kaioken / 20.0F);
-        int res = Math.round(Math.min(0.9F, f.resist + kaioken / 400.0F) * 100);
-        String stats = String.format("Selección: §f%s%s §7→ Fuerza x%.1f · Resistencia %d%%", f.display,
-                kaioken > 0 ? " + Kaioken x" + kaioken : "", dmg, res);
-        g.drawCenteredString(font, "§7" + stats, cx, top + 14 + 8 * 22 + 32, 0xFFFFFF);
+        SaiyanState preview = new SaiyanState();
+        preview.saiyan = true;
+        preview.selected = form;
+        preview.kaioken = kaioken;
+        preview.transformed = form != 0 || kaioken > 0;
+        int secs = SaiyanState.timeLimit(form, kaioken) / 20;
+        String stats = String.format("§f%s%s §7→ Fuerza x%.1f (+%.0f por golpe) · Resistencia %d%%", f.display,
+                kaioken > 0 ? " + Kaioken x" + kaioken : "", preview.damageMultiplier(), preview.punchBonus(), Math.round(preview.resistance() * 100));
+        String stats2 = String.format("§7+%d ❤ · Velocidad +%d%% · Ki máx %d · Tiempo %d:%02d", preview.extraHealth() / 2,
+                Math.round(preview.speedBonus() * 100), preview.maxKi(), secs / 60, secs % 60);
+        g.drawCenteredString(font, stats, cx, top + 14 + 8 * 22 + 30, 0xFFFFFF);
+        g.drawCenteredString(font, stats2, cx, top + 14 + 8 * 22 + 41, 0xFFFFFF);
         SaiyanState s = state();
         String now = s.transformed ? "§aTransformado" : "§7Estado base";
-        g.drawCenteredString(font, now + "  §8|  §7Aura: " + (s.aura ? "§bencendida" : "§8apagada"), cx, top + 14 + 8 * 22 + 46, 0xFFFFFF);
+        g.drawCenteredString(font, now + "  §8|  §7Aura (U): " + (s.aura ? "§bsí" : "§8no") + "  §8|  §7Vuelo (I): "
+                + (s.flight ? "§bsí" : "§8no") + "  §8|  §7Ráfaga de ki: §eB", cx, top + 14 + 8 * 22 + 56, 0xFFFFFF);
         super.render(g, mx, my, pt);
     }
 

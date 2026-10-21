@@ -13,6 +13,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -32,9 +34,15 @@ public final class ServerEvents {
     /** Fuerza: tus golpes hacen más daño. Resistencia: recibes menos. */
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void hurt(LivingHurtEvent e) {
-        if (e.getSource().getEntity() instanceof ServerPlayer atk) {
+        // solo los golpes directos (puñetazos/armas); las ráfagas de ki ya traen su propio daño
+        if (e.getSource().getEntity() instanceof ServerPlayer atk && e.getSource().getDirectEntity() == atk) {
             SaiyanState s = SaiyanData.get(atk);
-            if (s.saiyan && s.powered()) e.setAmount(e.getAmount() * s.damageMultiplier());
+            if (s.saiyan && s.powered()) {
+                e.setAmount(e.getAmount() * s.damageMultiplier() + s.punchBonus());
+                if (s.activeForm() == Form.ULTRA || s.activeForm() == Form.BLUE || s.activeForm() == Form.GOD) {
+                    atk.serverLevel().sendParticles(ParticleTypes.SONIC_BOOM, e.getEntity().getX(), e.getEntity().getY(0.5), e.getEntity().getZ(), 1, 0, 0, 0, 0);
+                }
+            }
         }
         if (e.getEntity() instanceof ServerPlayer vic) {
             SaiyanState s = SaiyanData.get(vic);
@@ -66,8 +74,9 @@ public final class ServerEvents {
     public static void death(LivingDeathEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) {
             SaiyanState s = SaiyanData.get(p);
-            if (s.transformed) {
+            if (s.transformed || s.flight) {
                 s.transformed = false;
+                s.flight = false;
                 SaiyanData.set(p, s);
             }
         }
@@ -75,12 +84,29 @@ public final class ServerEvents {
 
     @SubscribeEvent
     public static void login(PlayerEvent.PlayerLoggedInEvent e) {
-        if (e.getEntity() instanceof ServerPlayer p) SaiyanData.set(p, SaiyanData.get(p));
+        if (e.getEntity() instanceof ServerPlayer p) {
+            SaiyanState s = SaiyanData.get(p);
+            SaiyanData.set(p, s);
+            PowerLogic.applyFlight(p, s);
+        }
     }
 
     @SubscribeEvent
     public static void respawn(PlayerEvent.PlayerRespawnEvent e) {
-        if (e.getEntity() instanceof ServerPlayer p) SaiyanData.set(p, SaiyanData.get(p));
+        if (e.getEntity() instanceof ServerPlayer p) {
+            SaiyanState s = SaiyanData.get(p);
+            SaiyanData.set(p, s);
+            PowerLogic.applyFlight(p, s);
+        }
+    }
+
+    /** Comer recupera ki. */
+    @SubscribeEvent
+    public static void ate(LivingEntityUseItemEvent.Finish e) {
+        if (e.getEntity() instanceof ServerPlayer p && e.getItem().isEdible()) {
+            FoodProperties food = e.getItem().getFoodProperties(p);
+            if (food != null) PowerLogic.onAte(p, food.getNutrition(), food.getSaturationModifier() * food.getNutrition());
+        }
     }
 
     @SubscribeEvent
