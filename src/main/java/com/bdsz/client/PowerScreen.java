@@ -92,11 +92,12 @@ public class PowerScreen extends Screen {
         preview.selected = form;
         preview.kaioken = kaioken;
         preview.transformed = form != 0 || kaioken > 0;
-        int secs = SaiyanState.timeLimit(form, kaioken) / 20;
+        int limit = SaiyanState.timeLimit(form, kaioken, state().mastery);
+        int secs = Math.max(0, limit) / 20;
         String stats = String.format("§f%s%s §7→ Fuerza x%.1f (+%.0f por golpe) · Resistencia %d%%", f.display,
                 kaioken > 0 ? " + Kaioken x" + kaioken : "", preview.damageMultiplier(), preview.punchBonus(), Math.round(preview.resistance() * 100));
         String stats2 = String.format("§7+%d ❤ · Velocidad +%d%% · Ki máx %d · Tiempo %d:%02d", preview.extraHealth() / 2,
-                Math.round(preview.speedBonus() * 100), preview.maxKi(), secs / 60, secs % 60);
+                Math.round(preview.speedBonus() * 100), preview.maxKi(), secs / 60, secs % 60).replace(limit < 0 ? String.format("%d:%02d", secs / 60, secs % 60) : "\u0000", "∞");
         g.drawCenteredString(font, stats, cx, top + 14 + Form.values().length * ROW + 30, 0xFFFFFF);
         g.drawCenteredString(font, stats2, cx, top + 14 + Form.values().length * ROW + 41, 0xFFFFFF);
         SaiyanState s = state();

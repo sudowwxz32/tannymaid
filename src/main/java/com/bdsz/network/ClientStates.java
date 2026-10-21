@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ClientStates {
     private static final Map<Integer, SaiyanState> STATES = new ConcurrentHashMap<>();
     private static final Map<Integer, Long> TRANSFORM_AT = new ConcurrentHashMap<>();
+    private static final Map<Integer, Long> DRAGON_AT = new ConcurrentHashMap<>();
     /** Reloj del cliente (ticks), lo avanza ClientForgeEvents. */
     public static long clientTicks;
     private static final SaiyanState NONE = new SaiyanState();
@@ -19,7 +20,14 @@ public final class ClientStates {
         SaiyanState old = STATES.get(id);
         boolean newForm = old != null && s.transformed && (!old.transformed || old.selected != s.selected || old.kaioken != s.kaioken);
         if (newForm) TRANSFORM_AT.put(id, clientTicks);
+        if (s.dragonFist > 0 && (old == null || old.dragonFist <= 0)) DRAGON_AT.put(id, clientTicks);
         STATES.put(id, s);
+    }
+
+    /** Ticks desde que apareció el dragón del Puño del Dragón. */
+    public static long ticksSinceDragon(int id) {
+        Long t = DRAGON_AT.get(id);
+        return t == null ? Long.MAX_VALUE : clientTicks - t;
     }
 
     /** Ticks desde la última transformación de ese jugador (para la pose y el temblor). */

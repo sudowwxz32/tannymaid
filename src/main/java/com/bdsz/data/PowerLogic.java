@@ -1,6 +1,7 @@
 package com.bdsz.data;
 
 import com.bdsz.entity.KiBlastEntity;
+import com.bdsz.entity.KameBeamEntity;
 import com.bdsz.registry.ModRegistry;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -52,14 +53,16 @@ public final class PowerLogic {
         }
         Form old = s.activeForm();
         int oldK = s.activeKaioken();
-        int oldMax = Math.max(1, s.timerMax);
+        int oldMax = s.timerMax;
         s.selected = Form.byId(form).ordinal();
         s.kaioken = Math.max(0, Math.min(100, (kaioken / 10) * 10));
         if (s.transformed && !s.powered()) s.transformed = false;
         if (s.transformed && (old != s.activeForm() || oldK != s.activeKaioken())) {
             // el tiempo que quedaba se conserva en proporción a la nueva fase
-            int newMax = SaiyanState.timeLimit(s.selected, s.kaioken);
-            s.timer = Math.max(20, (int) ((long) s.timer * newMax / oldMax));
+            int newMax = SaiyanState.timeLimit(s.selected, s.kaioken, s.mastery);
+            if (newMax < 0) s.timer = -1;
+            else if (oldMax <= 0) s.timer = newMax;
+            else s.timer = Math.max(20, (int) ((long) s.timer * newMax / oldMax));
             s.timerMax = newMax;
             SaiyanData.set(p, s);
             burst(p, s, s.activeForm() != old);
@@ -154,7 +157,7 @@ public final class PowerLogic {
         if (!p.isCreative()) s.ki = Math.max(0, s.ki - TRANSFORM_COST);
         s.transformed = true;
         s.totemReady = true;
-        s.timerMax = SaiyanState.timeLimit(s.selected, s.kaioken);
+        s.timerMax = SaiyanState.timeLimit(s.selected, s.kaioken, s.mastery);
         s.timer = s.timerMax;
         SaiyanData.set(p, s);
         p.setHealth(Math.min(p.getMaxHealth(), p.getHealth() + s.extraHealth()));   // los corazones nuevos llegan llenos
@@ -463,9 +466,9 @@ public final class PowerLogic {
             if (f.ordinal() >= Form.GOD.ordinal()) p.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, f == Form.ULTRA ? 2 : 1, true, false, false));
             if (f == Form.ULTRA || f == Form.BLUE) p.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, f == Form.ULTRA ? 1 : 0, true, false, false));
             if (!p.isCreative()) {
-                s.timer -= 20;
+                if (s.timerMax > 0) s.timer -= 20;
                 changed = true;
-                if (s.timer <= 0) {
+                if (s.timerMax > 0 && s.timer <= 0) {
                     s.cooldown = EXHAUST_TICKS;
                     revert(p, s, "§cSe acabó el tiempo de tu transformación. Estás agotado por 60 s.");
                     return;
@@ -497,6 +500,25 @@ public final class PowerLogic {
     public static boolean unlockTier(ServerPlayer p, int targetTier) {
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) { msg(p, "§cPrimero usa /raza sayajin"); return false; }
+        if (targetTier == 6) {
+            // Dominio Total
+            if (s.tier < 5) { msg(p, "§cPrimero debes desbloquear el Bloque Especial."); return false; }
+            if (s.mastery) { msg(p, "§7Ya tienes el Dominio Total."); return false; }
+            s.mastery = true;
+            if (s.transformed) {
+                s.timerMax = SaiyanState.timeLimit(s.selected, s.kaioken, true);
+                s.timer = s.timerMax;
+            }
+            SaiyanData.set(p, s);
+            ServerLevel lv = p.serverLevel();
+            lv.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, p.getX(), p.getY() + 1, p.getZ(), 120, 0.8, 1.2, 0.8, 0.5);
+            lv.sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 1, p.getZ(), 80, 0.5, 1.5, 0.5, 0.2);
+            lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 0.8F);
+            lv.playSound(null, p.blockPosition(), SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1.2F, 0.6F);
+            p.sendSystemMessage(Component.literal("§6§l¡DOMINIO TOTAL! §r§eTus transformaciones ya no tienen límite de tiempo."));
+            p.sendSystemMessage(Component.literal("§7(Con Kaioken desde la Fase 3 hasta el Ultra Ego el límite es de 40 minutos.)"));
+            return true;
+        }
         if (s.tier >= targetTier) { msg(p, "§7Ya desbloqueaste el Bloque " + targetTier + "."); return false; }
         if (s.tier < targetTier - 1) { msg(p, "§cPrimero debes desbloquear el Bloque " + (targetTier - 1) + "."); return false; }
         s.tier = targetTier;
@@ -513,6 +535,180 @@ public final class PowerLogic {
         p.sendSystemMessage(Component.literal("§6§l¡" + (targetTier == 5 ? "Bloque Especial" : "Bloque " + targetTier) + " desbloqueado! §r§e" + names));
         p.sendSystemMessage(Component.literal("§7Elígelas en el menú (K) y transfórmate con P."));
         return true;
+    }
+
+    // ------------------------------------------------------------ ataques especiales
+
+    public static final int KAME_COST = 80, BIG_BANG_COST = 60, DRAGON_COST = 200;
+    public static final int DRAGON_WINDOW = 30 * 20, DRAGON_COOLDOWN = 3 * 60 * 20;
+
+    private static boolean canAttack(ServerPlayer p, SaiyanState s, int cost, String name) {
+        if (!s.saiyan) { msg(p, "§cNo eres saiyajin. Usa /raza sayajin"); return false; }
+        if (s.powering > 0 || s.pose != 0) return false;
+        if (s.attackCooldown > 0) return false;
+        if (s.ki < cost && !p.isCreative()) { msg(p, "§cNecesitas " + cost + " de ki para " + name + "."); return false; }
+        return true;
+    }
+
+    /** R: Kamehameha. Carga con las manos a un lado y luego dispara un rayo continuo. */
+    public static void kamehameha(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!canAttack(p, s, KAME_COST, "el Kamehameha")) return;
+        if (!p.isCreative()) s.ki -= KAME_COST;
+        s.charging = false;
+        s.pose = SaiyanState.POSE_KAME_CHARGE;
+        s.poseTimer = 26;
+        SaiyanData.set(p, s);
+        p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 1.6F);
+        msg(p, "§bKa... me... ha... me...");
+    }
+
+    private static void fireKamehameha(ServerPlayer p, SaiyanState s) {
+        KameBeamEntity beam = new KameBeamEntity(ModRegistry.KAME_BEAM.get(), p.level());
+        Form f = s.activeForm();
+        float width = 0.5F + f.ordinal() * 0.06F + s.activeKaioken() / 400.0F;
+        int color = f == Form.ULTRA_EGO ? 0xA060FF : (s.activeKaioken() > 0 ? 0xFF5A5A : 0x5AC8FF);
+        beam.setup(p, 6.0F * s.damageMultiplier(), width, color);
+        p.level().addFreshEntity(beam);
+        s.pose = SaiyanState.POSE_KAME_FIRE;
+        s.poseTimer = KameBeamEntity.DURATION;
+        s.attackCooldown = 40;
+        SaiyanData.set(p, s);
+        ServerLevel lv = p.serverLevel();
+        lv.playSound(null, p.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.2F, 1.4F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.8F);
+        msg(p, "§b§l¡HAAAAAAA!");
+    }
+
+    /** G: Big Bang Attack. Una esfera enorme que explota en un área amplia. */
+    public static void bigBang(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!canAttack(p, s, BIG_BANG_COST, "el Big Bang Attack")) return;
+        if (!p.isCreative()) s.ki -= BIG_BANG_COST;
+        s.charging = false;
+        s.pose = SaiyanState.POSE_BIG_BANG;
+        s.poseTimer = 18;
+        s.attackCooldown = 40;
+        SaiyanData.set(p, s);
+        Form f = s.activeForm();
+        KiBlastEntity blast = new KiBlastEntity(ModRegistry.KI_BLAST.get(), p.level());
+        blast.setOwner(p);
+        Vec3 look = p.getLookAngle();
+        blast.setPos(p.getX() + look.x * 1.6, p.getEyeY() - 0.3 + look.y * 1.6, p.getZ() + look.z * 1.6);
+        blast.setup(f == Form.ULTRA_EGO ? 0xB070FF : 0xA8E8FF, 2.4F + f.ordinal() * 0.1F, 14.0F * s.damageMultiplier());
+        blast.setBigBang(5.5F + f.ordinal() * 0.3F);
+        blast.shoot(look.x, look.y, look.z, 1.0F, 0.0F);
+        p.level().addFreshEntity(blast);
+        ServerLevel lv = p.serverLevel();
+        lv.playSound(null, p.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.5F, 0.5F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.5F, 0.6F);
+        msg(p, "§b§l¡BIG BANG ATTACK!");
+    }
+
+    /** Z: Puño del Dragón. Oscurece todo, caen rayos y un dragón espiritual te envuelve; tu siguiente golpe es devastador. */
+    public static void dragonFist(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan) { msg(p, "§cNo eres saiyajin. Usa /raza sayajin"); return; }
+        if (s.dragonFist > 0) { msg(p, "§6El dragón ya te envuelve: ¡golpea!"); return; }
+        if (s.dragonCooldown > 0 && !p.isCreative()) {
+            int sec = s.dragonCooldown / 20;
+            msg(p, String.format("§cEl Puño del Dragón estará listo en %d:%02d (una semilla del ermitaño lo recupera).", sec / 60, sec % 60));
+            return;
+        }
+        if (s.ki < DRAGON_COST && !p.isCreative()) { msg(p, "§cNecesitas " + DRAGON_COST + " de ki para el Puño del Dragón."); return; }
+        if (!p.isCreative()) s.ki -= DRAGON_COST;
+        s.charging = false;
+        s.dragonFist = DRAGON_WINDOW;
+        s.dragonCooldown = DRAGON_COOLDOWN;
+        s.pose = SaiyanState.POSE_DRAGON;
+        s.poseTimer = 30;
+        SaiyanData.set(p, s);
+        ServerLevel lv = p.serverLevel();
+        for (ServerPlayer other : lv.players()) {
+            if (other.distanceTo(p) < 48) other.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 220, 0, false, false, false));
+        }
+        for (int i = 0; i < 6; i++) {
+            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(lv);
+            if (bolt != null) {
+                bolt.setVisualOnly(true);
+                bolt.moveTo(p.getX() + (lv.random.nextDouble() - 0.5) * 14, p.getY(), p.getZ() + (lv.random.nextDouble() - 0.5) * 14);
+                lv.addFreshEntity(bolt);
+            }
+        }
+        lv.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.75F, 0.15F), 2.5F), p.getX(), p.getY() + 1.5, p.getZ(), 200, 1.2, 2.0, 1.2, 0);
+        lv.playSound(null, p.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 1.5F, 0.8F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.5F, 0.7F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.WARDEN_EMERGE, SoundSource.PLAYERS, 1.0F, 1.2F);
+        msg(p, "§6§l¡PUÑO DEL DRAGÓN! §r§e¡Golpea a tu enemigo! (30 s)");
+    }
+
+    /** Golpe del Puño del Dragón: daño devastador (suficiente para el Dragón del End). */
+    public static float dragonFistHit(ServerPlayer p, LivingEntity target, float amount) {
+        SaiyanState s = SaiyanData.get(p);
+        if (s.dragonFist <= 0) return amount;
+        s.dragonFist = 0;
+        SaiyanData.set(p, s);
+        ServerLevel lv = p.serverLevel();
+        Vec3 from = p.position().add(0, 1.2, 0), to = target.position().add(0, target.getBbHeight() / 2, 0);
+        DustParticleOptions gold = new DustParticleOptions(new Vector3f(1.0F, 0.75F, 0.15F), 2.5F);
+        Vec3 d = to.subtract(from);
+        for (int i = 0; i <= 40; i++) {
+            double t = i / 40.0;
+            double spin = t * Math.PI * 6;
+            Vec3 pt = from.add(d.scale(t)).add(Math.cos(spin) * 0.8, Math.sin(spin) * 0.8, 0);
+            lv.sendParticles(gold, pt.x, pt.y, pt.z, 4, 0.1, 0.1, 0.1, 0);
+        }
+        lv.sendParticles(ParticleTypes.EXPLOSION_EMITTER, to.x, to.y, to.z, 2, 0.5, 0.5, 0.5, 0);
+        lv.sendParticles(ParticleTypes.FLASH, to.x, to.y, to.z, 3, 0.5, 0.5, 0.5, 0);
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(lv);
+        if (bolt != null) {
+            bolt.setVisualOnly(true);
+            bolt.moveTo(target.getX(), target.getY(), target.getZ());
+            lv.addFreshEntity(bolt);
+        }
+        lv.playSound(null, target.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 2.0F, 0.6F);
+        lv.playSound(null, target.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0F, 0.5F);
+        msg(p, "§6§l¡DRAGÓN!");
+        return Math.max(amount, 5000.0F);
+    }
+
+    /** Cada tick: avanza las poses de ataque y los tiempos de espera. */
+    public static void tickAttacks(ServerPlayer p, SaiyanState s) {
+        boolean dirty = false;
+        if (s.attackCooldown > 0) { s.attackCooldown--; }
+        if (s.dragonCooldown > 0) { s.dragonCooldown--; if (s.dragonCooldown % 20 == 0) dirty = true; }
+        if (s.dragonFist > 0) {
+            s.dragonFist--;
+            if (s.dragonFist % 20 == 0) dirty = true;
+            if (s.dragonFist == 0) {
+                msg(p, "§7El dragón se desvanece...");
+                SaiyanData.set(p, s);
+                return;
+            }
+        }
+        if (s.pose != 0) {
+            if (s.pose == SaiyanState.POSE_KAME_CHARGE) {
+                ServerLevel lv = p.serverLevel();
+                Vec3 side = p.getLookAngle().cross(new Vec3(0, 1, 0)).normalize();
+                Vec3 hands = p.position().add(0, 1.0, 0).add(side.scale(0.45));
+                float grow = 1.0F - s.poseTimer / 26.0F;
+                lv.sendParticles(new DustParticleOptions(new Vector3f(0.4F, 0.8F, 1.0F), 0.8F + grow * 1.5F), hands.x, hands.y, hands.z, 6, 0.1 + grow * 0.15, 0.1 + grow * 0.15, 0.1 + grow * 0.15, 0);
+                if (s.poseTimer % 6 == 0) lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 1.0F, 1.0F + grow);
+                p.setDeltaMovement(0, Math.min(0, p.getDeltaMovement().y), 0);
+                p.hurtMarked = true;
+            }
+            if (--s.poseTimer <= 0) {
+                if (s.pose == SaiyanState.POSE_KAME_CHARGE) {
+                    fireKamehameha(p, s);
+                    return;
+                }
+                s.pose = 0;
+                SaiyanData.set(p, s);
+                return;
+            }
+        }
+        root(p, s);
+        if (dirty) SaiyanData.setQuiet(p, s);
     }
 
     /** Efecto de tótem: si mueres transformado, sobrevives una vez por transformación. */
@@ -555,6 +751,8 @@ public final class PowerLogic {
             s.ki = s.maxKi();
             s.cooldown = 0;
             if (s.transformed) s.timer = s.timerMax;
+            s.dragonCooldown = 0;          // la semilla también recupera el Puño del Dragón
+            s.attackCooldown = 0;
             SaiyanData.set(p, s);
         }
         p.serverLevel().sendParticles(ParticleTypes.HAPPY_VILLAGER, p.getX(), p.getY() + 1, p.getZ(), 25, 0.5, 0.8, 0.5, 0.0);

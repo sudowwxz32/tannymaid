@@ -26,6 +26,11 @@ public class KiBlastEntity extends Projectile {
     private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(KiBlastEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> SIZE = SynchedEntityData.defineId(KiBlastEntity.class, EntityDataSerializers.FLOAT);
     private float damage = 8.0F;
+    private float radius = 0.0F;   // > 0: explosión amplia (Big Bang Attack)
+
+    public void setBigBang(float radius) {
+        this.radius = radius;
+    }
     private int life;
 
     public KiBlastEntity(EntityType<? extends KiBlastEntity> type, Level level) {
@@ -51,7 +56,7 @@ public class KiBlastEntity extends Projectile {
     @Override
     public void tick() {
         super.tick();
-        if (++life > 70) {
+        if (++life > (radius > 0 ? 100 : 70)) {
             if (!level().isClientSide) explode(position());
             return;
         }
@@ -99,10 +104,26 @@ public class KiBlastEntity extends Projectile {
             sl.sendParticles(ParticleTypes.FLASH, at.x, at.y, at.z, 1, 0, 0, 0, 0);
             sl.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6F, 1.6F);
             Entity owner = getOwner();
-            double r = 1.5 + getSize();
+            double r = radius > 0 ? radius : 1.5 + getSize();
+            if (radius > 0) {
+                sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, at.x, at.y, at.z, 2, 1.0, 1.0, 1.0, 0);
+                sl.sendParticles(dust, at.x, at.y, at.z, 200, radius * 0.5, radius * 0.5, radius * 0.5, 0.0);
+                sl.sendParticles(ParticleTypes.END_ROD, at.x, at.y, at.z, 80, 0.5, 0.5, 0.5, 0.6);
+                for (int i = 0; i < 40; i++) {
+                    double a = i * Math.PI * 2 / 40;
+                    sl.sendParticles(dust, at.x + Math.cos(a) * radius, at.y, at.z + Math.sin(a) * radius, 2, 0.1, 0.3, 0.1, 0);
+                }
+                sl.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0F, 0.6F);
+                sl.playSound(null, at.x, at.y, at.z, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.0F, 1.2F);
+            }
             for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(r),
                     e -> e != owner && e.isAlive() && e.distanceToSqr(at) < r * r)) {
-                e.hurt(damageSources().thrown(this, owner), damage * 0.4F);
+                e.hurt(damageSources().thrown(this, owner), radius > 0 ? damage * 0.75F : damage * 0.4F);
+                if (radius > 0) {
+                    Vec3 push = e.position().subtract(at).normalize().scale(1.5);
+                    e.setDeltaMovement(e.getDeltaMovement().add(push.x, 0.6, push.z));
+                    e.hurtMarked = true;
+                }
             }
         }
         discard();

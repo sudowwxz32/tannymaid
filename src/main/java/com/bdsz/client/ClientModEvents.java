@@ -24,6 +24,10 @@ public final class ClientModEvents {
     public static final KeyMapping BLAST = new KeyMapping("key.blockdragonsuperz.blast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
     public static final ModelLayerLocation AURA_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "aura"), "main");
     public static final ModelLayerLocation KI_BLAST = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ki_blast"), "main");
+    public static final KeyMapping KAMEHAMEHA = new KeyMapping("key.blockdragonsuperz.kamehameha", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY);
+    public static final KeyMapping BIG_BANG = new KeyMapping("key.blockdragonsuperz.bigbang", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, CATEGORY);
+    public static final KeyMapping DRAGON_FIST = new KeyMapping("key.blockdragonsuperz.dragonfist", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, CATEGORY);
+    public static final ModelLayerLocation SPIRIT_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "spirit_dragon"), "main");
     public static final ModelLayerLocation TAIL_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "tail"), "main");
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
@@ -37,6 +41,9 @@ public final class ClientModEvents {
         e.register(FLY);
         e.register(BLAST);
         e.register(CHARGE);
+        e.register(KAMEHAMEHA);
+        e.register(BIG_BANG);
+        e.register(DRAGON_FIST);
     }
 
     @SubscribeEvent
@@ -44,12 +51,14 @@ public final class ClientModEvents {
         e.registerLayerDefinition(HAIR, HairModelData::createLayer);
         e.registerLayerDefinition(AURA_LAYER, AuraLayer::createLayer);
         e.registerLayerDefinition(TAIL_LAYER, TailLayer::createLayer);
+        e.registerLayerDefinition(SPIRIT_LAYER, DragonSpiritLayer::createLayer);
         e.registerLayerDefinition(KI_BLAST, KiBlastRenderer::createLayer);
     }
 
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KI_BLAST.get(), KiBlastRenderer::new);
+        e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAME_BEAM.get(), KameBeamRenderer::new);
     }
 
     @SubscribeEvent
@@ -64,6 +73,7 @@ public final class ClientModEvents {
             if (e.getSkin(skin) instanceof PlayerRenderer renderer) {
                 renderer.addLayer(new SaiyanHairLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new TailLayer(renderer, e.getEntityModels()));
+                renderer.addLayer(new DragonSpiritLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new AuraLayer(renderer, e.getEntityModels()));
             }
         }

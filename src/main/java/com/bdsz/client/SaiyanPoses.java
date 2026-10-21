@@ -30,7 +30,50 @@ public final class SaiyanPoses {
         boolean powering = s.powering > 0 || since < 14;
         float shake = Mth.sin(age * 2.7F) * 0.035F;
 
-        if (powering) {
+        if (s.pose == SaiyanState.POSE_KAME_CHARGE) {
+            // manos juntas a un costado, cuerpo girado, cargando energía
+            m.body.yRot = -0.45F;
+            m.head.yRot = 0.3F;
+            m.rightArm.xRot = 0.35F + shake;
+            m.rightArm.yRot = 0.6F;
+            m.rightArm.zRot = 0.35F;
+            m.leftArm.xRot = 0.25F - shake;
+            m.leftArm.yRot = 0.9F;
+            m.leftArm.zRot = 0.15F;
+            m.rightLeg.zRot = 0.2F;
+            m.leftLeg.zRot = -0.2F;
+            m.leftLeg.xRot = -0.25F;
+        } else if (s.pose == SaiyanState.POSE_KAME_FIRE) {
+            // ambos brazos al frente, palmas juntas
+            m.body.yRot = 0.0F;
+            m.rightArm.xRot = -1.55F + m.head.xRot + shake;
+            m.rightArm.yRot = -0.12F;
+            m.rightArm.zRot = 0.0F;
+            m.leftArm.xRot = -1.55F + m.head.xRot - shake;
+            m.leftArm.yRot = 0.12F;
+            m.leftArm.zRot = 0.0F;
+            m.rightLeg.xRot = 0.25F;
+            m.leftLeg.xRot = -0.3F;
+        } else if (s.pose == SaiyanState.POSE_BIG_BANG) {
+            // brazo derecho extendido con la palma abierta
+            m.rightArm.xRot = -1.6F + m.head.xRot;
+            m.rightArm.yRot = -0.05F;
+            m.rightArm.zRot = 0.0F;
+            m.leftArm.xRot = 0.2F;
+            m.leftArm.zRot = -0.35F;
+            m.leftLeg.xRot = -0.25F;
+            m.rightLeg.xRot = 0.15F;
+        } else if (s.pose == SaiyanState.POSE_DRAGON) {
+            // puño atrás, listo para el golpe del dragón
+            m.body.yRot = -0.35F;
+            m.rightArm.xRot = 0.9F + shake;
+            m.rightArm.zRot = 0.25F;
+            m.leftArm.xRot = -1.3F + m.head.xRot;
+            m.leftArm.zRot = -0.1F;
+            m.rightLeg.zRot = 0.25F;
+            m.leftLeg.zRot = -0.25F;
+            m.head.xRot -= 0.2F;
+        } else if (powering) {
             // grito de transformación: puños a la cintura, codos atrás, pecho al frente, cabeza al cielo
             float progress = s.poweringTotal > 0 && s.powering > 0 ? 1.0F - (float) s.powering / s.poweringTotal : 1.0F;
             float tremble = shake * (1.0F + progress * 2.5F);

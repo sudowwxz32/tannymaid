@@ -49,6 +49,9 @@ public class SaiyanHud implements IGuiOverlay {
         if (s.powering > 0) {
             pct = 1.0F - (float) s.powering / Math.max(1, s.poweringTotal);
             timeText = "¡Transformándose! " + Math.round(pct * 100) + "%";
+        } else if (s.transformed && s.timerMax < 0) {
+            timeText = "∞ Dominio Total";
+            pct = 1.0F;
         } else if (s.transformed && s.timerMax > 0) {
             int sec = s.timer / 20;
             timeText = String.format("Transformación %d:%02d", sec / 60, sec % 60);
@@ -62,9 +65,18 @@ public class SaiyanHud implements IGuiOverlay {
         }
         bar(g, font, x + 7, y + 46, w - 9, 0xFFA0761A, 0xFFFFD34A, pct, timeText);
 
+        int extraY = 0;
+        if (s.dragonFist > 0) {
+            g.drawString(font, "§6🐉 ¡Puño del Dragón listo! Golpea (" + s.dragonFist / 20 + " s)", x + 7, y + h + 6, 0xFFFFFF, true);
+            extraY += 11;
+        } else if (s.dragonCooldown > 0) {
+            int sec = s.dragonCooldown / 20;
+            g.drawString(font, String.format("§7🐉 Puño del Dragón: %d:%02d", sec / 60, sec % 60), x + 7, y + h + 6, 0xFFFFFF, true);
+            extraY += 11;
+        }
         if (s.charging) {
             String ch = "§b⚡ Recargando ki §7(H para detener)";
-            g.drawString(font, ch, x + 7, y + h + 6, 0xFFFFFF, true);
+            g.drawString(font, ch, x + 7, y + h + 6 + extraY, 0xFFFFFF, true);
         }
         if (s.flight) {
             String fl = p.getAbilities().flying ? "§b✈ Volando" : "§7✈ Vuelo listo";

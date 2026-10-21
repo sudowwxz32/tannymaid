@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DDD",
+    "DLD",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "L": {
+      "item": "blockdragonsuperz:training_list_4"
+    }
+  },
+  "result": {
+    "item": "blockdragonsuperz:training_list_5",
+    "count": 1
+  }
+}

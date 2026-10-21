@@ -37,6 +37,10 @@ public final class ServerEvents {
         // solo los golpes directos (puñetazos/armas); las ráfagas de ki ya traen su propio daño
         if (e.getSource().getEntity() instanceof ServerPlayer atk && e.getSource().getDirectEntity() == atk) {
             SaiyanState s = SaiyanData.get(atk);
+            if (s.saiyan && s.dragonFist > 0) {
+                e.setAmount(PowerLogic.dragonFistHit(atk, e.getEntity(), e.getAmount()));
+                return;
+            }
             if (s.saiyan && s.powered()) {
                 e.setAmount(e.getAmount() * s.damageMultiplier() + s.punchBonus());
                 if (s.activeForm() == Form.ULTRA || s.activeForm() == Form.BLUE || s.activeForm() == Form.GOD) {
@@ -79,6 +83,9 @@ public final class ServerEvents {
         if (!s.saiyan) return;
         if (s.powering > 0) PowerLogic.tickPowerUp(p, s);
         else if (s.charging) PowerLogic.tickCharging(p, s);
+        if (s.pose != 0 || s.dragonFist > 0 || s.dragonCooldown > 0 || s.attackCooldown > 0) {
+            PowerLogic.tickAttacks(p, SaiyanData.get(p));
+        }
         if (p.tickCount % 20 == 0) PowerLogic.secondTick(p);
     }
 
@@ -106,6 +113,8 @@ public final class ServerEvents {
             SaiyanState s = SaiyanData.get(p);
             s.charging = false;
             s.powering = 0;
+            s.pose = 0;
+            s.dragonFist = 0;
             SaiyanData.set(p, s);
             PowerLogic.applyFlight(p, s);
         }

@@ -20,6 +20,14 @@ public class SaiyanState {
     public int poweringTotal;
     public boolean totemReady;  // salvación tipo tótem disponible en esta transformación
     public int tier = 1;        // bloque de entrenamiento desbloqueado (1..5; 5 = Bloque Especial)
+    public boolean mastery;     // Dominio Total: tiempo infinito
+    public int pose;            // pose de ataque: 0 ninguna, 1 carga Kamehameha, 2 dispara Kamehameha, 3 Big Bang, 4 Puño del Dragón
+    public int poseTimer;
+    public int dragonFist;      // ticks restantes para dar el golpe del Puño del Dragón
+    public int dragonCooldown;  // ticks de espera para volver a usarlo
+    public int attackCooldown;  // espera corta entre Kamehameha / Big Bang
+
+    public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
     public boolean unlocked(Form f) { return f.tier() <= tier; }
 
@@ -39,6 +47,17 @@ public class SaiyanState {
     public float flySpeed() { return activeForm().fly + activeKaioken() / 2000.0F; }
 
     /** Tiempo límite (ticks) de la fase elegida; el Kaioken lo reduce 10 s por cada x10. */
+    /** Tiempo límite en ticks; -1 = infinito (Dominio Total). */
+    public static int timeLimit(int form, int kaioken, boolean mastery) {
+        Form f = Form.byId(form);
+        if (mastery) {
+            // con Kaioken, de la Fase 3 al Ultra Ego deja de ser infinito pero sube a 40 minutos
+            if (kaioken > 0 && f.ordinal() >= Form.SSJ3.ordinal()) return 40 * 60 * 20;
+            return -1;
+        }
+        return timeLimit(form, kaioken);
+    }
+
     public static int timeLimit(int form, int kaioken) {
         Form f = Form.byId(form);
         float minutes = f == Form.BASE ? 10.0F : f.minutes;
@@ -61,6 +80,12 @@ public class SaiyanState {
         t.putBoolean("KiInit", true);
         t.putBoolean("TotemReady", totemReady);
         t.putInt("Tier", tier);
+        t.putBoolean("Mastery", mastery);
+        t.putInt("Pose", pose);
+        t.putInt("PoseTimer", poseTimer);
+        t.putInt("DragonFist", dragonFist);
+        t.putInt("DragonCooldown", dragonCooldown);
+        t.putInt("AttackCooldown", attackCooldown);
         t.putBoolean("Charging", charging);
         t.putInt("Powering", powering);
         t.putInt("PoweringTotal", poweringTotal);
@@ -81,6 +106,12 @@ public class SaiyanState {
         s.cooldown = t.getInt("Cooldown");
         s.totemReady = t.getBoolean("TotemReady");
         s.tier = Math.max(1, Math.min(5, t.getInt("Tier")));
+        s.mastery = t.getBoolean("Mastery");
+        s.pose = t.getInt("Pose");
+        s.poseTimer = t.getInt("PoseTimer");
+        s.dragonFist = t.getInt("DragonFist");
+        s.dragonCooldown = t.getInt("DragonCooldown");
+        s.attackCooldown = t.getInt("AttackCooldown");
         s.charging = t.getBoolean("Charging");
         s.powering = t.getInt("Powering");
         s.poweringTotal = t.getInt("PoweringTotal");
@@ -103,6 +134,11 @@ public class SaiyanState {
         b.writeVarInt(poweringTotal);
         b.writeBoolean(totemReady);
         b.writeVarInt(tier);
+        b.writeBoolean(mastery);
+        b.writeVarInt(pose);
+        b.writeVarInt(poseTimer);
+        b.writeVarInt(dragonFist);
+        b.writeVarInt(dragonCooldown);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -122,6 +158,11 @@ public class SaiyanState {
         s.poweringTotal = b.readVarInt();
         s.totemReady = b.readBoolean();
         s.tier = b.readVarInt();
+        s.mastery = b.readBoolean();
+        s.pose = b.readVarInt();
+        s.poseTimer = b.readVarInt();
+        s.dragonFist = b.readVarInt();
+        s.dragonCooldown = b.readVarInt();
         return s;
     }
 }

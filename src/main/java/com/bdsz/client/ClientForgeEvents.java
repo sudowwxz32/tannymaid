@@ -69,6 +69,16 @@ public final class ClientForgeEvents {
             else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.BLAST, 0, 0));
             blastDelay = 8;
         }
+        // ataques especiales: R Kamehameha, G Big Bang, Z Puño del Dragón
+        while (ClientModEvents.KAMEHAMEHA.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc); else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.KAMEHAMEHA, 0, 0));
+        }
+        while (ClientModEvents.BIG_BANG.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc); else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.BIG_BANG, 0, 0));
+        }
+        while (ClientModEvents.DRAGON_FIST.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc); else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.DRAGON_FIST, 0, 0));
+        }
         // H: pulsar para empezar a recargar ki, pulsar otra vez para detener
         while (ClientModEvents.CHARGE.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc);

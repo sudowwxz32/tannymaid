@@ -3,6 +3,7 @@ package com.bdsz.registry;
 import com.bdsz.BlockDragonSuperZ;
 import com.bdsz.block.SenzuCropBlock;
 import com.bdsz.entity.KiBlastEntity;
+import com.bdsz.entity.KameBeamEntity;
 import com.bdsz.item.SenzuBeanItem;
 import com.bdsz.item.TrainingListItem;
 import com.bdsz.loot.SenzuLootModifier;
@@ -32,6 +33,10 @@ public final class ModRegistry {
             () -> EntityType.Builder.<KiBlastEntity>of(KiBlastEntity::new, MobCategory.MISC)
                     .sized(0.6F, 0.6F).clientTrackingRange(8).updateInterval(1).fireImmune().build("ki_blast"));
 
+    public static final RegistryObject<EntityType<KameBeamEntity>> KAME_BEAM = ENTITIES.register("kamehameha",
+            () -> EntityType.Builder.<KameBeamEntity>of(KameBeamEntity::new, MobCategory.MISC)
+                    .sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(1).fireImmune().noSave().build("kamehameha"));
+
     public static final RegistryObject<Block> SENZU_CROP = BLOCKS.register("senzu_crop",
             () -> new SenzuCropBlock(BlockBehaviour.Properties.copy(Blocks.WHEAT)));
 
@@ -48,6 +53,9 @@ public final class ModRegistry {
 
     public static final RegistryObject<Item> TRAINING_LIST_4 = ITEMS.register("training_list_4",
             () -> new TrainingListItem(5, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+
+    public static final RegistryObject<Item> TOTAL_MASTERY = ITEMS.register("training_list_5",
+            () -> new TrainingListItem(6, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
 
     public static final RegistryObject<Codec<SenzuLootModifier>> SENZU_LOOT = LOOT.register("senzu_in_villages", () -> SenzuLootModifier.CODEC);
 

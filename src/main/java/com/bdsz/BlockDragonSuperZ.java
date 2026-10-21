@@ -31,6 +31,7 @@ public class BlockDragonSuperZ {
             e.accept(ModRegistry.TRAINING_LIST_2.get());
             e.accept(ModRegistry.TRAINING_LIST_3.get());
             e.accept(ModRegistry.TRAINING_LIST_4.get());
+            e.accept(ModRegistry.TOTAL_MASTERY.get());
         }
     }
 
