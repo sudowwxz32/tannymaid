@@ -63,7 +63,7 @@ public class SaiyanHud implements IGuiOverlay {
         bar(g, font, x + 7, y + 46, w - 9, 0xFFA0761A, 0xFFFFD34A, pct, timeText);
 
         if (s.charging) {
-            String ch = "§b⚡ Recargando ki";
+            String ch = "§b⚡ Recargando ki §7(H para detener)";
             g.drawString(font, ch, x + 7, y + h + 6, 0xFFFFFF, true);
         }
         if (s.flight) {

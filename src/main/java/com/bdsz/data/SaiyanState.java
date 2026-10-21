@@ -57,6 +57,9 @@ public class SaiyanState {
         t.putInt("Cooldown", cooldown);
         t.putBoolean("KiInit", true);
         t.putBoolean("TotemReady", totemReady);
+        t.putBoolean("Charging", charging);
+        t.putInt("Powering", powering);
+        t.putInt("PoweringTotal", poweringTotal);
         return t;
     }
 
@@ -73,6 +76,9 @@ public class SaiyanState {
         s.timerMax = t.getInt("TimerMax");
         s.cooldown = t.getInt("Cooldown");
         s.totemReady = t.getBoolean("TotemReady");
+        s.charging = t.getBoolean("Charging");
+        s.powering = t.getInt("Powering");
+        s.poweringTotal = t.getInt("PoweringTotal");
         return s;
     }
 

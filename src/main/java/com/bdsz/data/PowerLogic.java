@@ -132,7 +132,8 @@ public final class PowerLogic {
         if (--s.powering <= 0) {
             completeTransform(p, s);
         } else if (s.powering % 10 == 0) {
-            SaiyanData.setQuiet(p, s);
+            SaiyanData.sync(p, s);
+            root(p, s);
         } else {
             root(p, s);
         }
@@ -158,12 +159,26 @@ public final class PowerLogic {
 
     // ------------------------------------------------------------ recarga de ki (H)
 
+    /** H: la primera pulsación empieza a recargar, la segunda la detiene (también se detiene sola con el ki lleno). */
+    public static void toggleCharging(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan) { msg(p, "§cNo eres saiyajin. Usa /raza sayajin"); return; }
+        if (s.powering > 0) return;
+        if (!s.charging && s.ki >= s.maxKi()) { msg(p, "§bTu ki ya está al máximo."); return; }
+        setCharging(p, !s.charging);
+    }
+
     public static void setCharging(ServerPlayer p, boolean on) {
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan || s.powering > 0 || s.charging == on) return;
         s.charging = on;
         SaiyanData.set(p, s);
-        if (on) p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.9F, 0.6F);
+        if (on) {
+            p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.9F, 0.6F);
+            msg(p, "§b⚡ Recargando ki... §7(H para detener)");
+        } else {
+            p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.7F, 1.0F);
+        }
     }
 
     public static void tickCharging(ServerPlayer p, SaiyanState s) {
@@ -181,9 +196,17 @@ public final class PowerLogic {
                     p.getX() + Math.cos(a) * 1.4, p.getY() + 0.1, p.getZ() + Math.sin(a) * 1.4, 2, 0.1, 0.1, 0.1, 0.2);
         }
         if (p.tickCount % 16 == 0) lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 1.0F, 0.7F + (float) s.ki / max * 0.6F);
+        if (s.ki >= max) {
+            // ki lleno: la recarga termina sola
+            s.ki = max;
+            s.charging = false;
+            SaiyanData.set(p, s);
+            lv.playSound(null, p.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
+            msg(p, "§b¡Ki al máximo!");
+            return;
+        }
         if (p.tickCount % 10 == 0) SaiyanData.setQuiet(p, s);
         else root(p, s);
-        if (s.ki >= max && p.tickCount % 40 == 0) msg(p, "§b¡Ki al máximo!");
     }
 
     public static void toggleAura(ServerPlayer p) {

@@ -25,7 +25,6 @@ import org.joml.Vector3f;
 @Mod.EventBusSubscriber(modid = BlockDragonSuperZ.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public final class ClientForgeEvents {
     private static int blastDelay;
-    private static boolean charging;
 
     private ClientForgeEvents() {}
 
@@ -70,13 +69,10 @@ public final class ClientForgeEvents {
             else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.BLAST, 0, 0));
             blastDelay = 8;
         }
-        // H: recargar ki mientras se mantiene pulsada
-        boolean chargeDown = ClientModEvents.CHARGE.isDown() && mc.screen == null;
-        while (ClientModEvents.CHARGE.consumeClick()) { }
-        if (chargeDown != charging) {
-            charging = chargeDown;
-            if (mine.saiyan) Net.CHANNEL.sendToServer(new ActionPacket(charging ? ActionPacket.CHARGE_ON : ActionPacket.CHARGE_OFF, 0, 0));
-            else if (charging) notSaiyan(mc);
+        // H: pulsar para empezar a recargar ki, pulsar otra vez para detener
+        while (ClientModEvents.CHARGE.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc);
+            else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.CHARGE_TOGGLE, 0, 0));
         }
         if (!mc.isPaused()) {
             ClientStates.clientTicks++;
