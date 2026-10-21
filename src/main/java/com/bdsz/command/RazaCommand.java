@@ -22,21 +22,34 @@ public final class RazaCommand {
                 .then(Commands.literal("saiyajin").executes(RazaCommand::saiyan))
                 .then(Commands.literal("saiyan").executes(RazaCommand::saiyan))
                 .then(Commands.literal("humano").executes(RazaCommand::human))
-                .then(Commands.literal("info").executes(RazaCommand::info)));
+                .then(Commands.literal("info").executes(RazaCommand::info))
+                .then(Commands.literal("libro").executes(c -> { GuideBook.give(c.getSource().getPlayerOrException()); return 1; }))
+                .then(Commands.literal("bloque").requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("nivel", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 4))
+                                .executes(c -> {
+                                    ServerPlayer p = c.getSource().getPlayerOrException();
+                                    SaiyanState s = SaiyanData.get(p);
+                                    s.tier = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "nivel");
+                                    SaiyanData.set(p, s);
+                                    p.sendSystemMessage(Component.literal("§6Bloque fijado en " + s.tier));
+                                    return 1;
+                                }))));
     }
 
     private static int saiyan(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer p = c.getSource().getPlayerOrException();
         SaiyanState s = SaiyanData.get(p);
         if (s.saiyan) {
-            p.sendSystemMessage(Component.literal("§6Ya eres saiyajin. §7K = menú, P = transformarte, U = aura."));
+            p.sendSystemMessage(Component.literal("§6Ya eres saiyajin. §7Usa §e/raza libro§7 si perdiste la guía."));
             return 1;
         }
         s.saiyan = true;
         SaiyanData.set(p, s);
         PowerLogic.burst(p, s, false);
         p.sendSystemMessage(Component.literal("§6§l¡Ahora eres un guerrero saiyajin!"));
-        p.sendSystemMessage(Component.literal("§eK§7 abre el menú de fases y Kaioken · §eP§7 te transforma · §eU§7 activa el aura"));
+        p.sendSystemMessage(Component.literal("§eK§7 menú · §eP§7 transformarte · §eU§7 aura · §eI§7 volar · §eB§7 ráfaga · §eH§7 recargar ki"));
+        p.sendSystemMessage(Component.literal("§7Recibiste la §6Guía del Saiyajin§7: ahí están los crafteos para desbloquear las fases."));
+        GuideBook.give(p);
         return 1;
     }
 

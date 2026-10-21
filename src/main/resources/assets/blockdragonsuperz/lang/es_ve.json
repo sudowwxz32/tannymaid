@@ -8,5 +8,8 @@
   "item.blockdragonsuperz.senzu_bean": "Semilla del Ermitaño",
   "block.blockdragonsuperz.senzu_crop": "Planta de Semilla del Ermitaño",
   "entity.blockdragonsuperz.ki_blast": "Ráfaga de Ki",
-  "key.blockdragonsuperz.charge": "Recargar ki"
+  "key.blockdragonsuperz.charge": "Recargar ki",
+  "item.blockdragonsuperz.training_list_1": "Lista de Entrenamiento I",
+  "item.blockdragonsuperz.training_list_2": "Lista de Entrenamiento II",
+  "item.blockdragonsuperz.training_list_3": "Lista de Entrenamiento III"
 }

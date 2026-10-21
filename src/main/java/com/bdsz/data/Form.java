@@ -10,7 +10,7 @@ package com.bdsz.data;
  */
 public enum Form {
     BASE("Base", 0xFFFFFF, 1.0F, 0, 0.00F, 0, 0.00F, 0.0F, 0, 100, 0.0F, 0.06F, 0, 0xBFE6FF, 1.0F),
-    FALSE_SSJ("Super Saiyajin Falso", 0xE8C24A, 1.5F, 2, 0.10F, 6, 0.08F, 0.5F, 1, 150, 35.0F, 0.07F, 1, 0xD9B44A, 1.15F),
+    FALSE_SSJ("Super Saiyajin Falso", 0x26262C, 1.5F, 2, 0.10F, 6, 0.08F, 0.5F, 1, 150, 35.0F, 0.07F, 1, 0xD9B44A, 1.15F),
     SSJ1("Super Saiyajin Fase 1", 0xFFD83A, 2.0F, 5, 0.20F, 12, 0.15F, 1.0F, 1, 200, 30.0F, 0.08F, 1, 0xC8962E, 1.6F),
     SSJ2("Super Saiyajin Fase 2", 0xFFE45C, 3.0F, 10, 0.30F, 20, 0.22F, 1.5F, 2, 300, 20.0F, 0.09F, 4, 0xFFD94A, 1.35F),
     SSJ3("Super Saiyajin Fase 3", 0xFFCF2E, 4.0F, 18, 0.40F, 30, 0.30F, 2.0F, 2, 400, 12.0F, 0.10F, 2, 0xFFC21E, 1.5F),
@@ -60,6 +60,16 @@ public enum Form {
     public float ab() { return (auraColor & 255) / 255.0F; }
     /** Duración (ticks) de la carga antes de transformarse: más larga y dramática en fases altas. */
     public int powerUpTicks() { return 24 + ordinal() * 8; }
+    /** Bloque de entrenamiento que desbloquea esta fase (1 = solo Kaioken). */
+    public int tier() {
+        return switch (this) {
+            case BASE -> 1;
+            case FALSE_SSJ, SSJ1 -> 2;
+            case SSJ2, SSJ3, GOD -> 3;
+            case BLUE, ULTRA -> 4;
+        };
+    }
+
     /** Fases con rayos eléctricos en el aura. */
     public boolean lightningAura() { return this == SSJ2 || this == SSJ3; }
 }

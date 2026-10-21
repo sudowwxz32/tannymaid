@@ -46,6 +46,10 @@ public final class PowerLogic {
     public static void select(ServerPlayer p, int form, int kaioken) {
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) return;
+        if (!s.unlocked(Form.byId(form))) {
+            msg(p, "§cEsa fase está bloqueada. Necesitas el Bloque " + Form.byId(form).tier() + " (Lista de Entrenamiento).");
+            return;
+        }
         Form old = s.activeForm();
         int oldK = s.activeKaioken();
         int oldMax = Math.max(1, s.timerMax);
@@ -76,6 +80,7 @@ public final class PowerLogic {
             return;
         }
         if (s.selected == 0 && s.kaioken == 0) { msg(p, "§eElige una fase o el Kaioken en el menú (tecla K)."); return; }
+        if (!s.unlocked(Form.byId(s.selected))) { msg(p, "§cEsa fase está bloqueada. Desbloquéala con una Lista de Entrenamiento."); return; }
         if (s.cooldown > 0 && !p.isCreative()) {
             msg(p, "§cEstás agotado. Podrás transformarte en " + (s.cooldown / 20) + " s (una semilla del ermitaño te recupera).");
             return;
@@ -468,6 +473,28 @@ public final class PowerLogic {
         }
         if (s.ki > s.maxKi()) { s.ki = s.maxKi(); changed = true; }
         if (changed) SaiyanData.setQuiet(p, s);
+    }
+
+    /** Usar una Lista de Entrenamiento: desbloquea el siguiente bloque de fases. */
+    public static boolean unlockTier(ServerPlayer p, int targetTier) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan) { msg(p, "§cPrimero usa /raza sayajin"); return false; }
+        if (s.tier >= targetTier) { msg(p, "§7Ya desbloqueaste el Bloque " + targetTier + "."); return false; }
+        if (s.tier < targetTier - 1) { msg(p, "§cPrimero debes desbloquear el Bloque " + (targetTier - 1) + "."); return false; }
+        s.tier = targetTier;
+        SaiyanData.set(p, s);
+        ServerLevel lv = p.serverLevel();
+        lv.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, p.getX(), p.getY() + 1, p.getZ(), 80, 0.6, 1.0, 0.6, 0.4);
+        lv.sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 1, p.getZ(), 40, 0.4, 1.2, 0.4, 0.15);
+        lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 1.2F);
+        StringBuilder names = new StringBuilder();
+        for (Form f : Form.values()) {
+            if (f.tier() == targetTier) names.append(names.length() > 0 ? ", " : "").append(f.display);
+        }
+        p.sendSystemMessage(Component.literal("§6§l¡Bloque " + targetTier + " desbloqueado! §r§e" + names));
+        p.sendSystemMessage(Component.literal("§7Elígelas en el menú (K) y transfórmate con P."));
+        return true;
     }
 
     /** Efecto de tótem: si mueres transformado, sobrevives una vez por transformación. */

@@ -26,6 +26,11 @@ public class BlockDragonSuperZ {
         if (e.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS || e.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
             e.accept(ModRegistry.SENZU_BEAN.get());
         }
+        if (e.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            e.accept(ModRegistry.TRAINING_LIST_1.get());
+            e.accept(ModRegistry.TRAINING_LIST_2.get());
+            e.accept(ModRegistry.TRAINING_LIST_3.get());
+        }
     }
 
     private void setup(FMLCommonSetupEvent e) {

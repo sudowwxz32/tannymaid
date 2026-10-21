@@ -139,6 +139,14 @@ public final class ClientForgeEvents {
         }
     }
 
+    /** Clic izquierdo al aire con una Lista de Entrenamiento. */
+    @SubscribeEvent
+    public static void leftClickAir(net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickEmpty e) {
+        if (e.getItemStack().getItem() instanceof com.bdsz.item.TrainingListItem) {
+            Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.USE_LIST, 0, 0));
+        }
+    }
+
     @SubscribeEvent
     public static void logout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientStates.clear();

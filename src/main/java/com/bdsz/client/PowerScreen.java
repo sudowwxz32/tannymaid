@@ -40,9 +40,16 @@ public class PowerScreen extends Screen {
         Form[] forms = Form.values();
         for (int i = 0; i < forms.length; i++) {
             final int id = i;
-            String label = (i == form ? "» " : "") + forms[i].display + (i == form ? " «" : "");
-            addRenderableWidget(Button.builder(Component.literal(label), b -> { form = id; send(); })
-                    .bounds(cx - 160, top + 14 + i * 22, 150, 20).build());
+            boolean open = state().unlocked(forms[i]);
+            String label = open ? (i == form ? "» " : "") + forms[i].display + (i == form ? " «" : "")
+                    : "§8🔒 " + forms[i].display;
+            Button btn = Button.builder(Component.literal(label), bb -> { form = id; send(); })
+                    .bounds(cx - 160, top + 14 + i * 22, 150, 20)
+                    .tooltip(open ? null : net.minecraft.client.gui.components.Tooltip.create(Component.literal(
+                            "Bloqueada: necesitas el Bloque " + forms[i].tier() + " (Lista de Entrenamiento)")))
+                    .build();
+            btn.active = open;
+            addRenderableWidget(btn);
         }
         for (int i = 0; i <= 10; i++) {
             final int lvl = i * 10;
@@ -76,7 +83,7 @@ public class PowerScreen extends Screen {
         int cx = width / 2;
         int top = Math.max(30, height / 2 - 110);
         g.drawCenteredString(font, "§6§lBlock Dragon Super Z", cx, top - 18, 0xFFFFFF);
-        g.drawString(font, "§eFases", cx - 160, top + 2, 0xFFFFFF);
+        g.drawString(font, "§eFases §7(Bloque " + state().tier + "/4)", cx - 160, top + 2, 0xFFFFFF);
         g.drawString(font, "§cKaioken", cx + 10, top + 2, 0xFFFFFF);
         Form f = Form.byId(form);
         SaiyanState preview = new SaiyanState();

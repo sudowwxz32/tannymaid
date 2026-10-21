@@ -4,6 +4,7 @@ import com.bdsz.BlockDragonSuperZ;
 import com.bdsz.block.SenzuCropBlock;
 import com.bdsz.entity.KiBlastEntity;
 import com.bdsz.item.SenzuBeanItem;
+import com.bdsz.item.TrainingListItem;
 import com.bdsz.loot.SenzuLootModifier;
 import com.mojang.serialization.Codec;
 import net.minecraft.world.entity.EntityType;
@@ -37,6 +38,13 @@ public final class ModRegistry {
     public static final RegistryObject<Item> SENZU_BEAN = ITEMS.register("senzu_bean",
             () -> new SenzuBeanItem(SENZU_CROP.get(), new Item.Properties().rarity(Rarity.RARE)
                     .food(new FoodProperties.Builder().nutrition(20).saturationMod(1.0F).alwaysEat().fast().build())));
+
+    public static final RegistryObject<Item> TRAINING_LIST_1 = ITEMS.register("training_list_1",
+            () -> new TrainingListItem(2, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
+    public static final RegistryObject<Item> TRAINING_LIST_2 = ITEMS.register("training_list_2",
+            () -> new TrainingListItem(3, new Item.Properties().stacksTo(16).rarity(Rarity.RARE)));
+    public static final RegistryObject<Item> TRAINING_LIST_3 = ITEMS.register("training_list_3",
+            () -> new TrainingListItem(4, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
 
     public static final RegistryObject<Codec<SenzuLootModifier>> SENZU_LOOT = LOOT.register("senzu_in_villages", () -> SenzuLootModifier.CODEC);
 

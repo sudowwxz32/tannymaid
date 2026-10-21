@@ -19,6 +19,9 @@ public class SaiyanState {
     public int powering;        // ticks restantes de la carga antes de transformarse
     public int poweringTotal;
     public boolean totemReady;  // salvación tipo tótem disponible en esta transformación
+    public int tier = 1;        // bloque de entrenamiento desbloqueado (1..4)
+
+    public boolean unlocked(Form f) { return f.tier() <= tier; }
 
     public Form activeForm() { return transformed ? Form.byId(selected) : Form.BASE; }
     /** Fase que se ve en el aura (durante la carga ya se ve la fase destino). */
@@ -57,6 +60,7 @@ public class SaiyanState {
         t.putInt("Cooldown", cooldown);
         t.putBoolean("KiInit", true);
         t.putBoolean("TotemReady", totemReady);
+        t.putInt("Tier", tier);
         t.putBoolean("Charging", charging);
         t.putInt("Powering", powering);
         t.putInt("PoweringTotal", poweringTotal);
@@ -76,6 +80,7 @@ public class SaiyanState {
         s.timerMax = t.getInt("TimerMax");
         s.cooldown = t.getInt("Cooldown");
         s.totemReady = t.getBoolean("TotemReady");
+        s.tier = Math.max(1, Math.min(4, t.getInt("Tier")));
         s.charging = t.getBoolean("Charging");
         s.powering = t.getInt("Powering");
         s.poweringTotal = t.getInt("PoweringTotal");
@@ -97,6 +102,7 @@ public class SaiyanState {
         b.writeVarInt(powering);
         b.writeVarInt(poweringTotal);
         b.writeBoolean(totemReady);
+        b.writeVarInt(tier);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -115,6 +121,7 @@ public class SaiyanState {
         s.powering = b.readVarInt();
         s.poweringTotal = b.readVarInt();
         s.totemReady = b.readBoolean();
+        s.tier = b.readVarInt();
         return s;
     }
 }

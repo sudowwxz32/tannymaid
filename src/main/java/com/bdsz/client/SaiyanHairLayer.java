@@ -38,7 +38,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                        float limbAmount, float partial, float age, float headYaw, float headPitch) {
         if (player.isInvisible()) return;
         SaiyanState s = ClientStates.get(player.getId());
-        Form f = s.activeForm();
+        Form f = s.visibleForm();   // durante la carga ya aparece el cabello de la fase destino
         if (!s.saiyan || f.hairStyle == 0) return;
 
         String prefix = switch (f.hairStyle) {
@@ -53,22 +53,34 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             if (n.equals("root") || n.equals("head")) continue;
             en.getValue().visible = n.startsWith("c_") || n.startsWith(prefix) || (extraBang && n.startsWith("x_"));
         }
-        // el cabello vibra con la energía (fase 2 y Blue chisporrotean más)
-        float jitter = (f == Form.SSJ2 || f == Form.BLUE) ? 0.04F : 0.015F;
+        // ---- movimiento del cabello: vibra con la energía y ondea fuerte al recargar o transformarse
+        long since = ClientStates.ticksSinceTransform(player.getId());
+        boolean intense = s.charging || s.powering > 0 || since < 20;
+        float growth = s.powering > 0 ? 0.3F + 0.7F * (1.0F - (float) s.powering / Math.max(1, s.poweringTotal)) : 1.0F;
+        float amp = intense ? 0.11F : (f == Form.SSJ2 || f == Form.BLUE) ? 0.04F : 0.015F;
+        float freq = intense ? 1.6F : 0.9F;
         for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
-            if (en.getKey().startsWith("s_") || en.getKey().startsWith("g_")) {
-                en.getValue().zRot += Mth.sin(age * 0.9F + en.getKey().hashCode()) * jitter;
+            String n = en.getKey();
+            ModelPart part = en.getValue();
+            boolean spike = n.startsWith("s_") || n.startsWith("g_") || n.startsWith("x_") || n.startsWith("l_");
+            if (!spike) continue;
+            float seed = n.hashCode() * 0.37F;
+            part.zRot += Mth.sin(age * freq + seed) * amp;
+            part.xRot += Mth.cos(age * freq * 0.8F + seed) * amp * 0.6F;
+            if (intense && !n.endsWith("_m") && !n.endsWith("_t") && !n.endsWith("_e")) {
+                part.xRot -= 0.06F;                               // la energía levanta el cabello
+                if (s.powering > 0) part.yScale = growth;          // el cabello crece mientras se transforma
             }
         }
-        // el cabello largo de la fase 3 se mece al caminar
+        // el cabello largo de la fase 3 se mece al caminar y ondea con la energía
         if (f.hairStyle == 2) {
-            parts.get("l_back").xRot += limbAmount * 0.35F + Mth.sin(age * 0.08F) * 0.03F;
-            parts.get("l_back2").xRot += limbAmount * 0.2F;
+            parts.get("l_back").xRot += limbAmount * 0.35F + Mth.sin(age * (intense ? 0.9F : 0.08F)) * (intense ? 0.12F : 0.03F);
+            parts.get("l_back2").xRot += limbAmount * 0.2F + (intense ? Mth.sin(age * 1.1F + 1) * 0.1F : 0);
         }
 
         ModelPart head = parts.get("head");
         head.copyFrom(getParentModel().head);
-        float pulse = 0.9F + Mth.sin(age * 0.25F) * 0.1F;
+        float pulse = intense ? 0.95F + Mth.sin(age * 0.9F) * 0.15F : 0.9F + Mth.sin(age * 0.25F) * 0.1F;
         float r = Math.min(1.0F, f.r() * pulse + 0.05F), g = Math.min(1.0F, f.g() * pulse + 0.05F), b = Math.min(1.0F, f.b() * pulse + 0.05F);
         VertexConsumer vc = buf.getBuffer(RenderType.entityCutoutNoCull(TEX));
         head.render(pose, vc, LightTexture.FULL_BRIGHT, LivingEntityRenderer.getOverlayCoords(player, 0.0F), r, g, b, 1.0F);

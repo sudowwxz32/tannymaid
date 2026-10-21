@@ -63,6 +63,15 @@ public final class ServerEvents {
         }
     }
 
+    /** Clic izquierdo sobre un bloque con una Lista de Entrenamiento. */
+    @SubscribeEvent
+    public static void leftClickBlock(net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock e) {
+        if (e.getItemStack().getItem() instanceof com.bdsz.item.TrainingListItem && e.getEntity() instanceof ServerPlayer p) {
+            com.bdsz.item.TrainingListItem.use(p, e.getItemStack());
+            e.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent e) {
         if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
