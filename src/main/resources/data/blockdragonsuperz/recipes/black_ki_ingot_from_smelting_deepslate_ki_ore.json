@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "blockdragonsuperz:deepslate_ki_ore"
+  },
+  "result": "blockdragonsuperz:black_ki_ingot",
+  "experience": 1.0,
+  "cookingtime": 200
+}

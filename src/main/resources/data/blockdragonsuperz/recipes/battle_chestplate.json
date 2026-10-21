@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IAI",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "blockdragonsuperz:blue_ki_ingot"
+    },
+    "A": {
+      "item": "minecraft:diamond_chestplate"
+    }
+  },
+  "result": {
+    "item": "blockdragonsuperz:battle_chestplate",
+    "count": 1
+  }
+}

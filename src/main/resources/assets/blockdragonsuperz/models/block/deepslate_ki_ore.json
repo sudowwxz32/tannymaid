@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "blockdragonsuperz:block/deepslate_ki_ore"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "blockdragonsuperz:black_ki_ingot"
+    },
+    {
+      "item": "minecraft:blue_dye"
+    }
+  ],
+  "result": {
+    "item": "blockdragonsuperz:blue_ki_ingot",
+    "count": 1
+  }
+}

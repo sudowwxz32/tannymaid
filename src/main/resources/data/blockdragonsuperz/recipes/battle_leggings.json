@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IAI",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "blockdragonsuperz:blue_ki_ingot"
+    },
+    "A": {
+      "item": "minecraft:diamond_leggings"
+    }
+  },
+  "result": {
+    "item": "blockdragonsuperz:battle_leggings",
+    "count": 1
+  }
+}

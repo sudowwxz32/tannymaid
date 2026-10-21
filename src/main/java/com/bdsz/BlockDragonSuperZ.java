@@ -33,6 +33,25 @@ public class BlockDragonSuperZ {
             e.accept(ModRegistry.TRAINING_LIST_4.get());
             e.accept(ModRegistry.TOTAL_MASTERY.get());
         }
+        if (e.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
+            e.accept(ModRegistry.KI_ORE_ITEM.get());
+            e.accept(ModRegistry.DEEPSLATE_KI_ORE_ITEM.get());
+        }
+        if (e.getTabKey() == CreativeModeTabs.INGREDIENTS) {
+            e.accept(ModRegistry.BLACK_KI_INGOT.get());
+            e.accept(ModRegistry.ORANGE_KI_INGOT.get());
+            e.accept(ModRegistry.BLUE_KI_INGOT.get());
+        }
+        if (e.getTabKey() == CreativeModeTabs.COMBAT) {
+            e.accept(ModRegistry.WARRIOR_HELMET.get());
+            e.accept(ModRegistry.WARRIOR_CHESTPLATE.get());
+            e.accept(ModRegistry.WARRIOR_LEGGINGS.get());
+            e.accept(ModRegistry.WARRIOR_BOOTS.get());
+            e.accept(ModRegistry.BATTLE_HELMET.get());
+            e.accept(ModRegistry.BATTLE_CHESTPLATE.get());
+            e.accept(ModRegistry.BATTLE_LEGGINGS.get());
+            e.accept(ModRegistry.BATTLE_BOOTS.get());
+        }
     }
 
     private void setup(FMLCommonSetupEvent e) {

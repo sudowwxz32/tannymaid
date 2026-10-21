@@ -17,5 +17,18 @@
   "key.blockdragonsuperz.kamehameha": "Kamehameha",
   "key.blockdragonsuperz.bigbang": "Big Bang Attack",
   "key.blockdragonsuperz.dragonfist": "Puño del Dragón",
-  "entity.blockdragonsuperz.kamehameha": "Kamehameha"
+  "entity.blockdragonsuperz.kamehameha": "Kamehameha",
+  "block.blockdragonsuperz.ki_ore": "Mineral de Ki",
+  "block.blockdragonsuperz.deepslate_ki_ore": "Mineral de Ki de pizarra profunda",
+  "item.blockdragonsuperz.black_ki_ingot": "Lingote de Ki Negro",
+  "item.blockdragonsuperz.orange_ki_ingot": "Lingote de Ki Naranja",
+  "item.blockdragonsuperz.blue_ki_ingot": "Lingote de Ki Azul",
+  "item.blockdragonsuperz.warrior_helmet": "Cinta del Guerrero",
+  "item.blockdragonsuperz.warrior_chestplate": "Traje del Guerrero",
+  "item.blockdragonsuperz.warrior_leggings": "Pantalones del Guerrero",
+  "item.blockdragonsuperz.warrior_boots": "Botas del Guerrero",
+  "item.blockdragonsuperz.battle_helmet": "Casco de Combate",
+  "item.blockdragonsuperz.battle_chestplate": "Armadura de Combate",
+  "item.blockdragonsuperz.battle_leggings": "Grebas de Combate",
+  "item.blockdragonsuperz.battle_boots": "Botas de Combate"
 }

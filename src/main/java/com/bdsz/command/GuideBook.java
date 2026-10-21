@@ -22,6 +22,7 @@ public final class GuideBook {
             "§l§5Lista de Entrenamiento IV§r\n§8(desbloquea el Bloque Especial)\n\n§0Crafteo sin forma:\n- Lista de Entrenamiento III\n- 2 bloques de hierro\n- 2 diamantes\n\n§0Clic izquierdo con ella en la mano.",
             "§l§dDominio Total§r\n§8(tiempo infinito)\n\n§0Crafteo en mesa:\nLista de Entrenamiento IV en el centro, rodeada de 8 diamantes.\n\n§0Con Kaioken, de la Fase 3 al Ultra Ego el límite es de 40 minutos.",
             "§l§1Ataques§r\n\n§0R §8- Kamehameha (80 ki)\n§0G §8- Big Bang Attack (60 ki)\n§0Z §8- Puño del Dragón (200 ki): todo se oscurece, un dragón te envuelve y tu siguiente golpe es devastador. Espera de 3 minutos; una semilla del ermitaño la recupera.\n§0B §8- ráfaga de ki (12 ki)",
+            "§l§1Armaduras de Ki§r\n\n§0Busca §5Mineral de Ki§0 a la altura del diamante. Fúndelo en el horno: sale un §8Lingote de Ki Negro§0.\nLingote negro + tinte naranja o azul = lingote de color.\nPieza de armadura de diamante en el centro + 8 lingotes alrededor.",
             "§l§1Consejos§r\n\n§0- Cada transformación tiene un §ltiempo límite§r§0 (barra dorada). El Kaioken lo reduce.\n- Las §2Semillas del Ermitaño§0 lo recuperan todo. Están en cofres de aldeas y se pueden plantar.\n- Desbloquea los bloques en orden."
     };
 

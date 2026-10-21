@@ -6,6 +6,11 @@ import com.bdsz.entity.KiBlastEntity;
 import com.bdsz.entity.KameBeamEntity;
 import com.bdsz.item.SenzuBeanItem;
 import com.bdsz.item.TrainingListItem;
+import com.bdsz.item.ModArmorMaterials;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.util.valueproviders.UniformInt;
 import com.bdsz.loot.SenzuLootModifier;
 import com.mojang.serialization.Codec;
 import net.minecraft.world.entity.EntityType;
@@ -56,6 +61,31 @@ public final class ModRegistry {
 
     public static final RegistryObject<Item> TOTAL_MASTERY = ITEMS.register("training_list_5",
             () -> new TrainingListItem(6, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
+
+    // ---- mineral de Ki (a la altura del diamante) y sus lingotes
+    public static final RegistryObject<Block> KI_ORE = BLOCKS.register("ki_ore",
+            () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(Blocks.DIAMOND_ORE).lightLevel(s -> 3), UniformInt.of(2, 5)));
+    public static final RegistryObject<Block> DEEPSLATE_KI_ORE = BLOCKS.register("deepslate_ki_ore",
+            () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(Blocks.DEEPSLATE_DIAMOND_ORE).lightLevel(s -> 3), UniformInt.of(2, 5)));
+    public static final RegistryObject<Item> KI_ORE_ITEM = ITEMS.register("ki_ore", () -> new BlockItem(KI_ORE.get(), new Item.Properties()));
+    public static final RegistryObject<Item> DEEPSLATE_KI_ORE_ITEM = ITEMS.register("deepslate_ki_ore", () -> new BlockItem(DEEPSLATE_KI_ORE.get(), new Item.Properties()));
+    public static final RegistryObject<Item> BLACK_KI_INGOT = ITEMS.register("black_ki_ingot", () -> new Item(new Item.Properties().fireResistant()));
+    public static final RegistryObject<Item> ORANGE_KI_INGOT = ITEMS.register("orange_ki_ingot", () -> new Item(new Item.Properties().fireResistant()));
+    public static final RegistryObject<Item> BLUE_KI_INGOT = ITEMS.register("blue_ki_ingot", () -> new Item(new Item.Properties().fireResistant()));
+
+    // ---- armaduras (resistencia de Netherite)
+    public static final RegistryObject<Item> WARRIOR_HELMET = armor("warrior_helmet", ModArmorMaterials.WARRIOR, ArmorItem.Type.HELMET);
+    public static final RegistryObject<Item> WARRIOR_CHESTPLATE = armor("warrior_chestplate", ModArmorMaterials.WARRIOR, ArmorItem.Type.CHESTPLATE);
+    public static final RegistryObject<Item> WARRIOR_LEGGINGS = armor("warrior_leggings", ModArmorMaterials.WARRIOR, ArmorItem.Type.LEGGINGS);
+    public static final RegistryObject<Item> WARRIOR_BOOTS = armor("warrior_boots", ModArmorMaterials.WARRIOR, ArmorItem.Type.BOOTS);
+    public static final RegistryObject<Item> BATTLE_HELMET = armor("battle_helmet", ModArmorMaterials.BATTLE, ArmorItem.Type.HELMET);
+    public static final RegistryObject<Item> BATTLE_CHESTPLATE = armor("battle_chestplate", ModArmorMaterials.BATTLE, ArmorItem.Type.CHESTPLATE);
+    public static final RegistryObject<Item> BATTLE_LEGGINGS = armor("battle_leggings", ModArmorMaterials.BATTLE, ArmorItem.Type.LEGGINGS);
+    public static final RegistryObject<Item> BATTLE_BOOTS = armor("battle_boots", ModArmorMaterials.BATTLE, ArmorItem.Type.BOOTS);
+
+    private static RegistryObject<Item> armor(String name, ModArmorMaterials mat, ArmorItem.Type type) {
+        return ITEMS.register(name, () -> new ArmorItem(mat, type, new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
+    }
 
     public static final RegistryObject<Codec<SenzuLootModifier>> SENZU_LOOT = LOOT.register("senzu_in_villages", () -> SenzuLootModifier.CODEC);
 

@@ -17,5 +17,18 @@
   "key.blockdragonsuperz.kamehameha": "Kamehameha",
   "key.blockdragonsuperz.bigbang": "Big Bang Attack",
   "key.blockdragonsuperz.dragonfist": "Dragon Fist",
-  "entity.blockdragonsuperz.kamehameha": "Kamehameha"
+  "entity.blockdragonsuperz.kamehameha": "Kamehameha",
+  "block.blockdragonsuperz.ki_ore": "Ki Ore",
+  "block.blockdragonsuperz.deepslate_ki_ore": "Deepslate Ki Ore",
+  "item.blockdragonsuperz.black_ki_ingot": "Black Ki Ingot",
+  "item.blockdragonsuperz.orange_ki_ingot": "Orange Ki Ingot",
+  "item.blockdragonsuperz.blue_ki_ingot": "Blue Ki Ingot",
+  "item.blockdragonsuperz.warrior_helmet": "Warrior Headband",
+  "item.blockdragonsuperz.warrior_chestplate": "Warrior Suit",
+  "item.blockdragonsuperz.warrior_leggings": "Warrior Pants",
+  "item.blockdragonsuperz.warrior_boots": "Warrior Boots",
+  "item.blockdragonsuperz.battle_helmet": "Battle Helmet",
+  "item.blockdragonsuperz.battle_chestplate": "Battle Armor",
+  "item.blockdragonsuperz.battle_leggings": "Battle Greaves",
+  "item.blockdragonsuperz.battle_boots": "Battle Boots"
 }

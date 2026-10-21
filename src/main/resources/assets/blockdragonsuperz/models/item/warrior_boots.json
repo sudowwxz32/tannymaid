@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "blockdragonsuperz:item/warrior_boots"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IAI",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "blockdragonsuperz:orange_ki_ingot"
+    },
+    "A": {
+      "item": "minecraft:diamond_leggings"
+    }
+  },
+  "result": {
+    "item": "blockdragonsuperz:warrior_leggings",
+    "count": 1
+  }
+}
