@@ -46,7 +46,10 @@ public class SaiyanHud implements IGuiOverlay {
         // tiempo de transformación
         String timeText;
         float pct;
-        if (s.transformed && s.timerMax > 0) {
+        if (s.powering > 0) {
+            pct = 1.0F - (float) s.powering / Math.max(1, s.poweringTotal);
+            timeText = "¡Transformándose! " + Math.round(pct * 100) + "%";
+        } else if (s.transformed && s.timerMax > 0) {
             int sec = s.timer / 20;
             timeText = String.format("Transformación %d:%02d", sec / 60, sec % 60);
             pct = (float) s.timer / s.timerMax;
@@ -59,6 +62,10 @@ public class SaiyanHud implements IGuiOverlay {
         }
         bar(g, font, x + 7, y + 46, w - 9, 0xFFA0761A, 0xFFFFD34A, pct, timeText);
 
+        if (s.charging) {
+            String ch = "§b⚡ Recargando ki";
+            g.drawString(font, ch, x + 7, y + h + 6, 0xFFFFFF, true);
+        }
         if (s.flight) {
             String fl = p.getAbilities().flying ? "§b✈ Volando" : "§7✈ Vuelo listo";
             g.drawString(font, fl, x + w - font.width(fl.substring(2)) - 2, y + 1, 0xFFFFFF, true);

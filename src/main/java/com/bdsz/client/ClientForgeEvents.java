@@ -25,6 +25,7 @@ import org.joml.Vector3f;
 @Mod.EventBusSubscriber(modid = BlockDragonSuperZ.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public final class ClientForgeEvents {
     private static int blastDelay;
+    private static boolean charging;
 
     private ClientForgeEvents() {}
 
@@ -69,7 +70,19 @@ public final class ClientForgeEvents {
             else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.BLAST, 0, 0));
             blastDelay = 8;
         }
-        if (!mc.isPaused()) auras(mc, mc.level);
+        // H: recargar ki mientras se mantiene pulsada
+        boolean chargeDown = ClientModEvents.CHARGE.isDown() && mc.screen == null;
+        while (ClientModEvents.CHARGE.consumeClick()) { }
+        if (chargeDown != charging) {
+            charging = chargeDown;
+            if (mine.saiyan) Net.CHANNEL.sendToServer(new ActionPacket(charging ? ActionPacket.CHARGE_ON : ActionPacket.CHARGE_OFF, 0, 0));
+            else if (charging) notSaiyan(mc);
+        }
+        if (!mc.isPaused()) {
+            ClientStates.clientTicks++;
+            ClientFlight.tick(mc);
+            auras(mc, mc.level);
+        }
     }
 
     private static void notSaiyan(Minecraft mc) {
@@ -81,14 +94,16 @@ public final class ClientForgeEvents {
         RandomSource rnd = level.random;
         for (Player p : level.players()) {
             SaiyanState s = ClientStates.get(p.getId());
-            if (!s.saiyan || !s.aura || p.isInvisible() || p.distanceToSqr(mc.player) > 64 * 64) continue;
-            Form f = s.activeForm();
+            boolean forced = s.charging || s.powering > 0;
+            if (!s.saiyan || !(s.aura || forced) || p.isInvisible() || p.distanceToSqr(mc.player) > 64 * 64) continue;
+            Form f = s.visibleForm();
             int k = s.activeKaioken();
             boolean self = p == mc.player && mc.options.getCameraType().isFirstPerson();
             float power = f == Form.BASE ? 0.6F : 1.0F + f.ordinal() * 0.15F + k / 100.0F;
             int count = (int) ((self ? 1 : 2) * power);
             Vector3f color = f == Form.BASE ? (k > 0 ? new Vector3f(1.0F, 0.15F, 0.1F) : new Vector3f(0.85F, 0.95F, 1.0F))
-                    : new Vector3f(f.r(), f.g(), f.b());
+                    : new Vector3f(f.ar(), f.ag(), f.ab());
+            if (forced) power += 0.6F;
             DustParticleOptions dust = new DustParticleOptions(color, 1.1F + power * 0.25F);
             DustParticleOptions red = new DustParticleOptions(new Vector3f(1.0F, 0.12F, 0.08F), 1.3F);
             double maxH = self ? 1.0 : p.getBbHeight() + 0.4;
@@ -102,7 +117,11 @@ public final class ClientForgeEvents {
                 level.addParticle(dust, x, y, z, 0, up, 0);
                 if (k > 0 && f != Form.BASE && rnd.nextInt(2) == 0) level.addParticle(red, x, y, z, 0, up * 1.3, 0);
             }
-            if ((f == Form.SSJ2 || f == Form.BLUE || f == Form.SSJ3) && rnd.nextInt(self ? 8 : 3) == 0) {
+            if (f.lightningAura() && rnd.nextInt(14) == 0) {
+                level.playLocalSound(p.getX(), p.getY() + 1, p.getZ(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS,
+                        0.12F + rnd.nextFloat() * 0.1F, 1.7F + rnd.nextFloat() * 0.3F, false);
+            }
+            if ((f == Form.SSJ2 || f == Form.BLUE || f == Form.SSJ3) && rnd.nextInt(self ? 4 : 2) == 0) {
                 level.addParticle(ParticleTypes.ELECTRIC_SPARK, p.getX() + (rnd.nextDouble() - 0.5) * 1.2,
                         p.getY() + rnd.nextDouble() * maxH, p.getZ() + (rnd.nextDouble() - 0.5) * 1.2, 0, 0.1, 0);
             }

@@ -94,7 +94,7 @@ public class PowerScreen extends Screen {
         SaiyanState s = state();
         String now = s.transformed ? "§aTransformado" : "§7Estado base";
         g.drawCenteredString(font, now + "  §8|  §7Aura (U): " + (s.aura ? "§bsí" : "§8no") + "  §8|  §7Vuelo (I): "
-                + (s.flight ? "§bsí" : "§8no") + "  §8|  §7Ráfaga de ki: §eB", cx, top + 14 + 8 * 22 + 56, 0xFFFFFF);
+                + (s.flight ? "§bsí" : "§8no") + "  §8|  §7Ki: §eB§7 ráfaga, §eH§7 recargar", cx, top + 14 + 8 * 22 + 56, 0xFFFFFF);
         super.render(g, mx, my, pt);
     }
 

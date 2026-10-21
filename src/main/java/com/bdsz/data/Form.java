@@ -9,14 +9,14 @@ package com.bdsz.data;
  * maxKi = ki máximo · minutes = tiempo límite · fly = velocidad de vuelo
  */
 public enum Form {
-    BASE("Base", 0xFFFFFF, 1.0F, 0, 0.00F, 0, 0.00F, 0.0F, 0, 100, 0.0F, 0.06F, 0),
-    FALSE_SSJ("Super Saiyajin Falso", 0xE8C24A, 1.5F, 2, 0.10F, 6, 0.08F, 0.5F, 1, 150, 35.0F, 0.07F, 1),
-    SSJ1("Super Saiyajin Fase 1", 0xFFD83A, 2.0F, 5, 0.20F, 12, 0.15F, 1.0F, 1, 200, 30.0F, 0.08F, 1),
-    SSJ2("Super Saiyajin Fase 2", 0xFFE45C, 3.0F, 10, 0.30F, 20, 0.22F, 1.5F, 2, 300, 20.0F, 0.09F, 4),
-    SSJ3("Super Saiyajin Fase 3", 0xFFCF2E, 4.0F, 18, 0.40F, 30, 0.30F, 2.0F, 2, 400, 12.0F, 0.10F, 2),
-    GOD("Super Saiyajin Dios", 0xE0304C, 6.0F, 35, 0.55F, 50, 0.40F, 3.0F, 3, 600, 8.0F, 0.12F, 3),
-    BLUE("Super Saiyajin Blue", 0x3FC8FF, 8.0F, 70, 0.65F, 70, 0.50F, 4.0F, 3, 800, 5.0F, 0.14F, 1),
-    ULTRA("Ultra Instinto", 0xDDE3F2, 12.0F, 600, 0.80F, 100, 0.70F, 6.0F, 4, 1200, 3.0F, 0.18F, 3);
+    BASE("Base", 0xFFFFFF, 1.0F, 0, 0.00F, 0, 0.00F, 0.0F, 0, 100, 0.0F, 0.06F, 0, 0xBFE6FF, 1.0F),
+    FALSE_SSJ("Super Saiyajin Falso", 0xE8C24A, 1.5F, 2, 0.10F, 6, 0.08F, 0.5F, 1, 150, 35.0F, 0.07F, 1, 0xD9B44A, 1.15F),
+    SSJ1("Super Saiyajin Fase 1", 0xFFD83A, 2.0F, 5, 0.20F, 12, 0.15F, 1.0F, 1, 200, 30.0F, 0.08F, 1, 0xC8962E, 1.6F),
+    SSJ2("Super Saiyajin Fase 2", 0xFFE45C, 3.0F, 10, 0.30F, 20, 0.22F, 1.5F, 2, 300, 20.0F, 0.09F, 4, 0xFFD94A, 1.35F),
+    SSJ3("Super Saiyajin Fase 3", 0xFFCF2E, 4.0F, 18, 0.40F, 30, 0.30F, 2.0F, 2, 400, 12.0F, 0.10F, 2, 0xFFC21E, 1.5F),
+    GOD("Super Saiyajin Dios", 0xE0304C, 6.0F, 35, 0.55F, 50, 0.40F, 3.0F, 3, 600, 8.0F, 0.12F, 3, 0xFF4A3A, 1.2F),
+    BLUE("Super Saiyajin Blue", 0x3FC8FF, 8.0F, 70, 0.65F, 70, 0.50F, 4.0F, 3, 800, 5.0F, 0.14F, 1, 0x3FC8FF, 1.35F),
+    ULTRA("Ultra Instinto", 0xDDE3F2, 12.0F, 600, 0.80F, 100, 0.70F, 6.0F, 4, 1200, 3.0F, 0.18F, 3, 0xC9D6FF, 1.1F);
 
     public final String display;
     public final int color;
@@ -24,9 +24,14 @@ public enum Form {
     public final int punch, hearts, jump, maxKi;
     /** 0 sin cabello, 1 puntas, 2 largo (fase 3), 3 Dios/Ultra, 4 puntas + mechón (fase 2). */
     public final int hairStyle;
+    /** Color y tamaño del aura (la fase 1 tiene un aura grande café amarillenta). */
+    public final int auraColor;
+    public final float auraSize;
 
     Form(String display, int color, float damage, int punch, float resist, int hearts, float speed, float agility,
-         int jump, int maxKi, float minutes, float fly, int hairStyle) {
+         int jump, int maxKi, float minutes, float fly, int hairStyle, int auraColor, float auraSize) {
+        this.auraColor = auraColor;
+        this.auraSize = auraSize;
         this.display = display;
         this.color = color;
         this.damage = damage;
@@ -50,4 +55,11 @@ public enum Form {
     public float r() { return ((color >> 16) & 255) / 255.0F; }
     public float g() { return ((color >> 8) & 255) / 255.0F; }
     public float b() { return (color & 255) / 255.0F; }
+    public float ar() { return ((auraColor >> 16) & 255) / 255.0F; }
+    public float ag() { return ((auraColor >> 8) & 255) / 255.0F; }
+    public float ab() { return (auraColor & 255) / 255.0F; }
+    /** Duración (ticks) de la carga antes de transformarse: más larga y dramática en fases altas. */
+    public int powerUpTicks() { return 24 + ordinal() * 8; }
+    /** Fases con rayos eléctricos en el aura. */
+    public boolean lightningAura() { return this == SSJ2 || this == SSJ3; }
 }

@@ -8,12 +8,24 @@ import java.util.concurrent.ConcurrentHashMap;
 /** Estados conocidos por el cliente (por id de entidad). Clase sin dependencias de cliente. */
 public final class ClientStates {
     private static final Map<Integer, SaiyanState> STATES = new ConcurrentHashMap<>();
+    private static final Map<Integer, Long> TRANSFORM_AT = new ConcurrentHashMap<>();
+    /** Reloj del cliente (ticks), lo avanza ClientForgeEvents. */
+    public static long clientTicks;
     private static final SaiyanState NONE = new SaiyanState();
 
     private ClientStates() {}
 
     public static void put(int id, SaiyanState s) {
+        SaiyanState old = STATES.get(id);
+        boolean newForm = old != null && s.transformed && (!old.transformed || old.selected != s.selected || old.kaioken != s.kaioken);
+        if (newForm) TRANSFORM_AT.put(id, clientTicks);
         STATES.put(id, s);
+    }
+
+    /** Ticks desde la última transformación de ese jugador (para la pose y el temblor). */
+    public static long ticksSinceTransform(int id) {
+        Long t = TRANSFORM_AT.get(id);
+        return t == null ? Long.MAX_VALUE : clientTicks - t;
     }
 
     public static SaiyanState get(int id) {
@@ -22,5 +34,6 @@ public final class ClientStates {
 
     public static void clear() {
         STATES.clear();
+        TRANSFORM_AT.clear();
     }
 }

@@ -65,18 +65,27 @@ public final class ServerEvents {
 
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent e) {
-        if (e.phase == TickEvent.Phase.END && e.player instanceof ServerPlayer p && p.tickCount % 20 == 0) {
-            PowerLogic.secondTick(p);
-        }
+        if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan) return;
+        if (s.powering > 0) PowerLogic.tickPowerUp(p, s);
+        else if (s.charging) PowerLogic.tickCharging(p, s);
+        if (p.tickCount % 20 == 0) PowerLogic.secondTick(p);
     }
 
     @SubscribeEvent
     public static void death(LivingDeathEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) {
+            if (PowerLogic.totemSave(p)) {
+                e.setCanceled(true);
+                return;
+            }
             SaiyanState s = SaiyanData.get(p);
-            if (s.transformed || s.flight) {
+            if (s.transformed || s.flight || s.charging || s.powering > 0) {
                 s.transformed = false;
                 s.flight = false;
+                s.charging = false;
+                s.powering = 0;
                 SaiyanData.set(p, s);
             }
         }
@@ -86,6 +95,8 @@ public final class ServerEvents {
     public static void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) {
             SaiyanState s = SaiyanData.get(p);
+            s.charging = false;
+            s.powering = 0;
             SaiyanData.set(p, s);
             PowerLogic.applyFlight(p, s);
         }

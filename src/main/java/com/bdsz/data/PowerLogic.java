@@ -69,20 +69,121 @@ public final class PowerLogic {
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) { msg(p, "§cNo eres saiyajin. Usa /raza sayajin"); return; }
         if (s.transformed) { revert(p, s, "§7Vuelves a tu estado base."); return; }
+        if (s.powering > 0) {
+            s.powering = 0;
+            SaiyanData.set(p, s);
+            msg(p, "§7Detienes la transformación.");
+            return;
+        }
         if (s.selected == 0 && s.kaioken == 0) { msg(p, "§eElige una fase o el Kaioken en el menú (tecla K)."); return; }
         if (s.cooldown > 0 && !p.isCreative()) {
             msg(p, "§cEstás agotado. Podrás transformarte en " + (s.cooldown / 20) + " s (una semilla del ermitaño te recupera).");
             return;
         }
-        if (s.ki < TRANSFORM_COST && !p.isCreative()) { msg(p, "§cNo tienes suficiente ki. Come algo para recuperarlo."); return; }
-        if (!p.isCreative()) s.ki -= TRANSFORM_COST;
+        if (s.ki < TRANSFORM_COST && !p.isCreative()) { msg(p, "§cNo tienes suficiente ki. Recárgalo con H o comiendo."); return; }
+        // empieza la carga dramática; la transformación ocurre al terminarla
+        s.charging = false;
+        s.poweringTotal = Form.byId(s.selected).powerUpTicks();
+        s.powering = s.poweringTotal;
+        SaiyanData.set(p, s);
+        p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 0.5F);
+        msg(p, "§e¡Aaaaah...! §7(cargando poder)");
+    }
+
+    /** Cada tick durante la carga: tierra que tiembla, polvo, energía que sube y sonidos cada vez más agudos. */
+    public static void tickPowerUp(ServerPlayer p, SaiyanState s) {
+        ServerLevel lv = p.serverLevel();
+        Form f = Form.byId(s.selected);
+        float progress = 1.0F - (float) s.powering / Math.max(1, s.poweringTotal);
+        double x = p.getX(), y = p.getY(), z = p.getZ();
+        p.setDeltaMovement(0, Math.min(0, p.getDeltaMovement().y), 0);   // queda clavado en el sitio
+        p.hurtMarked = true;
+        Vector3f col = new Vector3f(f.ar(), f.ag(), f.ab());
+        if (f == Form.BASE) col = new Vector3f(1.0F, 0.15F, 0.1F);
+        DustParticleOptions dust = new DustParticleOptions(col, 1.5F + progress * 1.5F);
+        lv.sendParticles(dust, x, y + 1.0, z, 4 + (int) (progress * 14), 0.35 + progress * 0.6, 0.9 + progress, 0.35 + progress * 0.6, 0.0);
+        // el suelo se resquebraja
+        net.minecraft.world.level.block.state.BlockState ground = lv.getBlockState(p.blockPosition().below());
+        if (!ground.isAir()) {
+            double rad = 0.8 + progress * (2.5 + f.ordinal() * 0.4);
+            for (int i = 0; i < 3 + (int) (progress * 8); i++) {
+                double a = lv.random.nextDouble() * Math.PI * 2;
+                lv.sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, ground),
+                        x + Math.cos(a) * rad, y + 0.1, z + Math.sin(a) * rad, 1, 0.1, 0.2, 0.1, 0.15 + progress * 0.3);
+            }
+        }
+        if (s.powering % 6 == 0) {
+            lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.8F + progress, 0.5F + progress * 1.3F);
+            lv.playSound(null, p.blockPosition(), SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.5F + progress * 0.8F, 0.8F + progress * 0.8F);
+        }
+        if (progress > 0.4F && s.powering % 9 == 0) {
+            lv.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y + 1.2, z, 15 + (int) (progress * 30), 0.6, 1.0, 0.6, 0.5);
+            lv.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.2F + progress * 0.3F, 0.5F);
+        }
+        if (progress > 0.55F && f.ordinal() >= Form.FALSE_SSJ.ordinal() && f.ordinal() <= Form.SSJ3.ordinal()
+                && lv.random.nextInt(Math.max(3, 14 - f.ordinal() * 2)) == 0) {
+            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(lv);
+            if (bolt != null) {
+                bolt.setVisualOnly(true);
+                bolt.moveTo(x + (lv.random.nextDouble() - 0.5) * 10, y, z + (lv.random.nextDouble() - 0.5) * 10);
+                lv.addFreshEntity(bolt);
+            }
+        }
+        if (--s.powering <= 0) {
+            completeTransform(p, s);
+        } else if (s.powering % 10 == 0) {
+            SaiyanData.setQuiet(p, s);
+        } else {
+            root(p, s);
+        }
+    }
+
+    private static void root(ServerPlayer p, SaiyanState s) {
+        p.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)
+                .put("BlockDragonSuperZ", s.save());
+    }
+
+    private static void completeTransform(ServerPlayer p, SaiyanState s) {
+        s.powering = 0;
+        if (!p.isCreative()) s.ki = Math.max(0, s.ki - TRANSFORM_COST);
         s.transformed = true;
+        s.totemReady = true;
         s.timerMax = SaiyanState.timeLimit(s.selected, s.kaioken);
         s.timer = s.timerMax;
         SaiyanData.set(p, s);
         p.setHealth(Math.min(p.getMaxHealth(), p.getHealth() + s.extraHealth()));   // los corazones nuevos llegan llenos
         burst(p, s, true);
         announce(p, s);
+    }
+
+    // ------------------------------------------------------------ recarga de ki (H)
+
+    public static void setCharging(ServerPlayer p, boolean on) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan || s.powering > 0 || s.charging == on) return;
+        s.charging = on;
+        SaiyanData.set(p, s);
+        if (on) p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.9F, 0.6F);
+    }
+
+    public static void tickCharging(ServerPlayer p, SaiyanState s) {
+        ServerLevel lv = p.serverLevel();
+        Form f = s.visibleForm();
+        p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5, 3, true, false, false));
+        int max = s.maxKi();
+        if (p.tickCount % 2 == 0 && s.ki < max) s.ki = Math.min(max, s.ki + Math.max(1, max / 160));
+        Vector3f col = f == Form.BASE ? new Vector3f(0.75F, 0.9F, 1.0F) : new Vector3f(f.ar(), f.ag(), f.ab());
+        lv.sendParticles(new DustParticleOptions(col, 1.6F), p.getX(), p.getY() + 0.9, p.getZ(), 6, 0.6, 0.9, 0.6, 0.0);
+        net.minecraft.world.level.block.state.BlockState ground = lv.getBlockState(p.blockPosition().below());
+        if (!ground.isAir() && p.tickCount % 2 == 0) {
+            double a = lv.random.nextDouble() * Math.PI * 2;
+            lv.sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, ground),
+                    p.getX() + Math.cos(a) * 1.4, p.getY() + 0.1, p.getZ() + Math.sin(a) * 1.4, 2, 0.1, 0.1, 0.1, 0.2);
+        }
+        if (p.tickCount % 16 == 0) lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 1.0F, 0.7F + (float) s.ki / max * 0.6F);
+        if (p.tickCount % 10 == 0) SaiyanData.setQuiet(p, s);
+        else root(p, s);
+        if (s.ki >= max && p.tickCount % 40 == 0) msg(p, "§b¡Ki al máximo!");
     }
 
     public static void toggleAura(ServerPlayer p) {
@@ -129,6 +230,7 @@ public final class PowerLogic {
 
     public static void revert(ServerPlayer p, SaiyanState s, String reason) {
         s.transformed = false;
+        s.powering = 0;
         s.timer = 0;
         s.ki = Math.min(s.ki, s.maxKi());
         SaiyanData.set(p, s);
@@ -181,10 +283,10 @@ public final class PowerLogic {
         ServerLevel lv = p.serverLevel();
         Form f = s.activeForm();
         boolean kaio = s.activeKaioken() > 0;
-        Vector3f col = f == Form.BASE && kaio ? new Vector3f(1.0F, 0.15F, 0.1F) : new Vector3f(f.r(), f.g(), f.b());
+        Vector3f col = f == Form.BASE && kaio ? new Vector3f(1.0F, 0.15F, 0.1F) : new Vector3f(f.ar(), f.ag(), f.ab());
         DustParticleOptions dust = new DustParticleOptions(col, 2.0F);
         double x = p.getX(), y = p.getY(), z = p.getZ();
-        int rings = big ? 3 : 1;
+        int rings = big ? 2 + f.ordinal() / 2 : 1;
         for (int r = 0; r < rings; r++) {
             double rad = 1.2 + r * 1.1;
             for (int i = 0; i < 48; i++) {
@@ -192,7 +294,14 @@ public final class PowerLogic {
                 lv.sendParticles(dust, x + Math.cos(a) * rad, y + 0.15 + r * 0.05, z + Math.sin(a) * rad, 1, 0.05, 0.1, 0.05, 0.0);
             }
         }
-        lv.sendParticles(dust, x, y + 1.5, z, 160, 0.4, 2.2, 0.4, 0.0);           // columna de luz
+        lv.sendParticles(dust, x, y + 1.5, z, 160 + f.ordinal() * 40, 0.4, 2.2 + f.ordinal() * 0.5, 0.4, 0.0);   // columna de luz
+        if (big) {
+            // pilar de energía que sube al cielo
+            for (int i = 0; i < 12 + f.ordinal() * 4; i++) {
+                lv.sendParticles(dust, x, y + 2 + i * 0.8, z, 6, 0.25, 0.3, 0.25, 0.0);
+            }
+            lv.sendParticles(ParticleTypes.END_ROD, x, y + 1, z, 30 + f.ordinal() * 10, 0.2, 0.2, 0.2, 0.35 + f.ordinal() * 0.05);
+        }
         lv.sendParticles(ParticleTypes.FLASH, x, y + 1, z, 1, 0, 0, 0, 0);
         if (big) {
             lv.sendParticles(ParticleTypes.EXPLOSION, x, y + 0.5, z, 5, 1.2, 0.3, 1.2, 0.0);
@@ -219,11 +328,42 @@ public final class PowerLogic {
                 }
             }
         }
-        lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 0.7F + f.ordinal() * 0.08F);
-        if (big) lv.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6F, 1.3F);
-        if (f == Form.ULTRA) lv.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.5F, 0.5F);
-        if (f == Form.GOD || f == Form.BLUE) lv.playSound(null, p.blockPosition(), SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 1.0F, 0.8F);
-        if (kaio) lv.playSound(null, p.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.0F, 0.6F);
+        // sonidos por capas, cada fase con su propio "rugido"
+        net.minecraft.core.BlockPos bp = p.blockPosition();
+        lv.playSound(null, bp, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.7F + f.ordinal() * 0.08F);
+        if (big) {
+            lv.playSound(null, bp, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.8F, 0.9F);
+            lv.playSound(null, bp, SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 1.0F, 0.6F);
+        }
+        switch (f) {
+            case FALSE_SSJ, SSJ1 -> lv.playSound(null, bp, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.6F, 1.4F);
+            case SSJ2 -> {
+                lv.playSound(null, bp, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.8F, 1.2F);
+                lv.playSound(null, bp, SoundEvents.TRIDENT_THUNDER, SoundSource.PLAYERS, 1.0F, 1.0F);
+            }
+            case SSJ3 -> {
+                lv.playSound(null, bp, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.0F, 0.8F);
+                lv.playSound(null, bp, SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.7F, 0.7F);
+            }
+            case GOD -> {
+                lv.playSound(null, bp, SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.PLAYERS, 1.2F, 0.8F);
+                lv.playSound(null, bp, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.2F, 0.6F);
+            }
+            case BLUE -> {
+                lv.playSound(null, bp, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.8F, 1.3F);
+                lv.playSound(null, bp, SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 1.2F, 0.8F);
+            }
+            case ULTRA -> {
+                lv.playSound(null, bp, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 2.0F, 0.5F);
+                lv.playSound(null, bp, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.6F, 1.8F);
+                lv.playSound(null, bp, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1.5F, 0.6F);
+            }
+            default -> { }
+        }
+        if (kaio) {
+            lv.playSound(null, bp, SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.2F, 0.6F);
+            lv.playSound(null, bp, SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.0F, 0.5F);
+        }
         if (big) {
             double push = 1.0 + f.ordinal() * 0.2;
             for (LivingEntity e : lv.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(5.0D + f.ordinal()),
@@ -266,6 +406,14 @@ public final class PowerLogic {
             int jump = Math.min(5, f.jump + (s.activeKaioken() >= 50 ? 1 : 0));
             if (jump > 0) p.addEffect(new MobEffectInstance(MobEffects.JUMP, 40, jump - 1, true, false, false));
             p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 260, 0, true, false, false));          // visión
+            p.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 60, 0, true, false, false));      // respiración acuática
+            p.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 60, 0, true, false, false));      // resistencia al fuego
+            // habilidades de la manzana de Notch, más fuertes en cada fase
+            int res = f == Form.ULTRA ? 2 : f.ordinal() >= Form.GOD.ordinal() ? 1 : f.ordinal() >= Form.SSJ2.ordinal() ? 0 : -1;
+            if (res >= 0) p.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, res, true, false, false));
+            int abs = f == Form.ULTRA || f == Form.BLUE ? 3 : f == Form.GOD ? 2 : f == Form.SSJ3 ? 1 : f.ordinal() >= Form.SSJ1.ordinal() ? 0 : -1;
+            if (abs >= 0 && p.tickCount % 400 == 0) p.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 2400, abs, true, false, true));
+            if (f.ordinal() >= Form.SSJ3.ordinal() && f != Form.ULTRA && f != Form.BLUE) p.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, true, false, false));
             if (f.ordinal() >= Form.GOD.ordinal()) p.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, f == Form.ULTRA ? 2 : 1, true, false, false));
             if (f == Form.ULTRA || f == Form.BLUE) p.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, f == Form.ULTRA ? 1 : 0, true, false, false));
             if (!p.isCreative()) {
@@ -297,6 +445,22 @@ public final class PowerLogic {
         }
         if (s.ki > s.maxKi()) { s.ki = s.maxKi(); changed = true; }
         if (changed) SaiyanData.setQuiet(p, s);
+    }
+
+    /** Efecto de tótem: si mueres transformado, sobrevives una vez por transformación. */
+    public static boolean totemSave(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan || !s.powered() || !s.totemReady) return false;
+        s.totemReady = false;
+        SaiyanData.set(p, s);
+        p.setHealth(Math.max(4.0F, p.getMaxHealth() * 0.25F));
+        p.removeAllEffects();
+        p.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1));
+        p.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1));
+        p.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0));
+        p.level().broadcastEntityEvent(p, (byte) 35);     // animación del tótem
+        msg(p, "§6¡Tu poder saiyajin te salvó de la muerte!");
+        return true;
     }
 
     /** Comer recupera ki (más con comida más nutritiva). */

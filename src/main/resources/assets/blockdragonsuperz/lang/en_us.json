@@ -7,5 +7,6 @@
   "key.blockdragonsuperz.blast": "Ki blast",
   "item.blockdragonsuperz.senzu_bean": "Senzu Bean",
   "block.blockdragonsuperz.senzu_crop": "Senzu Plant",
-  "entity.blockdragonsuperz.ki_blast": "Ki Blast"
+  "entity.blockdragonsuperz.ki_blast": "Ki Blast",
+  "key.blockdragonsuperz.charge": "Charge ki"
 }

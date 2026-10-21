@@ -20,6 +20,7 @@ public final class ClientModEvents {
     public static final KeyMapping TRANSFORM = new KeyMapping("key.blockdragonsuperz.transform", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_P, CATEGORY);
     public static final KeyMapping AURA = new KeyMapping("key.blockdragonsuperz.aura", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, CATEGORY);
     public static final KeyMapping FLY = new KeyMapping("key.blockdragonsuperz.fly", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, CATEGORY);
+    public static final KeyMapping CHARGE = new KeyMapping("key.blockdragonsuperz.charge", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H, CATEGORY);
     public static final KeyMapping BLAST = new KeyMapping("key.blockdragonsuperz.blast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
     public static final ModelLayerLocation AURA_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "aura"), "main");
     public static final ModelLayerLocation KI_BLAST = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ki_blast"), "main");
@@ -34,6 +35,7 @@ public final class ClientModEvents {
         e.register(AURA);
         e.register(FLY);
         e.register(BLAST);
+        e.register(CHARGE);
     }
 
     @SubscribeEvent

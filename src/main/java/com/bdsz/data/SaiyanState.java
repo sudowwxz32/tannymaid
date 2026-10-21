@@ -15,8 +15,14 @@ public class SaiyanState {
     public int timer;           // ticks restantes de transformación
     public int timerMax;
     public int cooldown;        // ticks de agotamiento tras acabarse el tiempo
+    public boolean charging;    // recargando ki (tecla H)
+    public int powering;        // ticks restantes de la carga antes de transformarse
+    public int poweringTotal;
+    public boolean totemReady;  // salvación tipo tótem disponible en esta transformación
 
     public Form activeForm() { return transformed ? Form.byId(selected) : Form.BASE; }
+    /** Fase que se ve en el aura (durante la carga ya se ve la fase destino). */
+    public Form visibleForm() { return transformed || powering > 0 ? Form.byId(selected) : Form.BASE; }
     public int activeKaioken() { return transformed ? kaioken : 0; }
     public boolean powered() { return transformed && (selected != 0 || kaioken > 0); }
 
@@ -50,6 +56,7 @@ public class SaiyanState {
         t.putInt("TimerMax", timerMax);
         t.putInt("Cooldown", cooldown);
         t.putBoolean("KiInit", true);
+        t.putBoolean("TotemReady", totemReady);
         return t;
     }
 
@@ -65,6 +72,7 @@ public class SaiyanState {
         s.timer = t.getInt("Timer");
         s.timerMax = t.getInt("TimerMax");
         s.cooldown = t.getInt("Cooldown");
+        s.totemReady = t.getBoolean("TotemReady");
         return s;
     }
 
@@ -79,6 +87,10 @@ public class SaiyanState {
         b.writeVarInt(timer);
         b.writeVarInt(timerMax);
         b.writeVarInt(cooldown);
+        b.writeBoolean(charging);
+        b.writeVarInt(powering);
+        b.writeVarInt(poweringTotal);
+        b.writeBoolean(totemReady);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -93,6 +105,10 @@ public class SaiyanState {
         s.timer = b.readVarInt();
         s.timerMax = b.readVarInt();
         s.cooldown = b.readVarInt();
+        s.charging = b.readBoolean();
+        s.powering = b.readVarInt();
+        s.poweringTotal = b.readVarInt();
+        s.totemReady = b.readBoolean();
         return s;
     }
 }
