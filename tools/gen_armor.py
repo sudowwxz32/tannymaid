@@ -50,8 +50,8 @@ ingot((40, 90, 210), (20, 48, 130), (120, 180, 255), "blue_ki_ingot")
 
 # ---------------------------------------------------------------- armaduras (diseños originales)
 SETS = {
-    "warrior": {"base": (40, 40, 46), "base2": (56, 56, 64), "accent": (236, 122, 28), "accent2": (255, 170, 70), "trim": (120, 120, 130)},
-    "battle": {"base": (26, 34, 70), "base2": (36, 46, 92), "accent": (150, 158, 172), "accent2": (200, 208, 220), "trim": (60, 220, 240)},
+    "warrior": {"base": (238, 124, 30), "base2": (214, 102, 20), "accent": (28, 28, 32), "accent2": (60, 60, 66), "trim": (252, 160, 70)},
+    "battle": {"base": (34, 70, 190), "base2": (26, 54, 150), "accent": (196, 200, 212), "accent2": (240, 242, 248), "trim": (150, 156, 170)},
 }
 
 def region(img, u, v, w, h, d, fn):
@@ -59,119 +59,198 @@ def region(img, u, v, w, h, d, fn):
     b.u, b.v = u, v
     paint_box(img, b)
 
-def layer1(c, kind):
+def fold(c, x, y):
+    """Pliegues de tela."""
+    if (x * 3 + y * 5) % 11 == 0:
+        return tuple(max(0, v - 18) for v in c)
+    return jit(c, 5)
+
+def gi_layer1(c):
     img = Image.new("RGBA", (64, 32), T)
-    base, base2, acc, acc2, trim = c["base"], c["base2"], c["accent"], c["accent2"], c["trim"]
-    # casco: cinta en la frente con placa
-    def head(f, x, y, w, h):
+    base, base2, belt, belt2, light = c["base"], c["base2"], c["accent"], c["accent2"], c["trim"]
+    def head(f, x, y, w, h):              # cinta de karate (hachimaki) con nudo atrás
         if f in ("top", "bottom"):
             return None
-        if y in (1, 2):
-            if f == "front" and 2 <= x <= 5:
-                return acc2 if y == 1 else acc        # placa metálica
-            if f == "back" and y == 2 and x in (3, 4):
-                return base2                          # nudo de la cinta
-            return base if kind == "warrior" else trim
-        if kind == "battle" and f in ("left", "right") and y in (3, 4, 5) and x in (1, 2):
-            return acc                                # protectores laterales
+        if y == 2:
+            return belt
+        if f == "back" and y in (3, 4, 5) and x in (3, 4):
+            return belt2                  # puntas del nudo
         return None
     region(img, 0, 0, 8, 8, 8, head)
-    # pecho: traje oscuro con placas segmentadas, cinturón y hebilla
-    def body(f, x, y, w, h):
+    def body(f, x, y, w, h):              # chaqueta del gi con cuello cruzado y cinturón negro
         if f == "top":
-            return acc
-        if f == "bottom":
             return base
-        if y == 9 or y == 10:
-            if f == "front" and x in (3, 4):
-                return acc2                           # hebilla
-            return base2 if kind == "warrior" else trim
-        if f in ("front", "back") and 1 <= y <= 7:
-            if x in (0, w - 1):
-                return base
-            if (y - 1) % 3 == 2:
-                return base2                          # separación entre placas
-            if kind == "battle" and x == w // 2 and f == "front":
-                return trim                           # línea de energía central
-            return acc if (x + y) % 5 else acc2
-        return jit(base, 4)
-    region(img, 16, 16, 8, 12, 4, body)
-    # brazos: hombreras y antebrazos con muñequeras
-    def arm(f, x, y, w, h):
-        if f == "top":
-            return acc
-        if y <= 3:
-            return acc if y < 3 else base2            # hombrera
-        if y >= 8:
-            if y == 8:
-                return trim if kind == "battle" else acc2
-            return base2                              # muñequera
-        return jit(base, 4)
-    region(img, 40, 16, 4, 12, 4, arm)
-    # botas
-    def boot(f, x, y, w, h):
         if f == "bottom":
-            return (20, 20, 24)
-        if y < 7:
             return None
-        if y == 7:
-            return acc
-        if y in (9,) and f == "front":
-            return acc2                               # correa
-        return base2 if y < 11 else (20, 20, 24)
-    region(img, 0, 16, 4, 12, 4, boot)
+        if y in (8, 9):
+            if f == "front" and x in (3, 4):
+                return belt2              # nudo del cinturón
+            return belt
+        if f == "front" and y in (10, 11) and x in (2, 5):
+            return belt                   # puntas del cinturón colgando
+        if f == "front":
+            # cuello cruzado en V: el pecho queda descubierto (se ve la piel)
+            lapel_l = 3 - y // 2
+            lapel_r = 4 + y // 2
+            if y < 6 and lapel_l < x < lapel_r:
+                return None
+            if y < 7 and (x == lapel_l or x == lapel_r):
+                return base2              # borde del cuello
+        if f == "back" and x in (3, 4) and y < 8:
+            return base2                  # costura central
+        return fold(base, x, y)
+    region(img, 16, 16, 8, 12, 4, body)
+    def arm(f, x, y, w, h):               # mangas hasta el codo, antebrazos libres
+        if f == "top":
+            return base
+        if y <= 5:
+            return fold(base, x, y)
+        if y == 6:
+            return base2                  # puño doblado
+        return None
+    region(img, 40, 16, 4, 12, 4, arm)
+    def shoe(f, x, y, w, h):              # zapatillas negras de artes marciales
+        if f == "bottom":
+            return (14, 14, 16)
+        if y < 10:
+            return None
+        return belt if y == 11 or f != "front" else belt2
+    region(img, 0, 16, 4, 12, 4, shoe)
     return img
 
-def layer2(c, kind):
+def gi_layer2(c):
     img = Image.new("RGBA", (64, 32), T)
-    base, base2, acc, acc2, trim = c["base"], c["base2"], c["accent"], c["accent2"], c["trim"]
-    def legs(f, x, y, w, h):
-        if f in ("top",):
+    base, base2 = c["base"], c["base2"]
+    def legs(f, x, y, w, h):              # pantalón ancho del gi
+        if f == "top":
             return base
-        if f == "bottom":
+        if f == "bottom" or y >= 10:
             return None
-        if y in (4, 5) and f == "front":
-            return acc if y == 4 else acc2            # rodilleras
-        if kind == "battle" and f in ("left", "right") and x == 1:
-            return trim                               # línea lateral
-        if y >= 10:
-            return None
-        return jit(base, 4)
+        if y == 9:
+            return base2                  # dobladillo
+        return fold(base, x, y)
     region(img, 0, 16, 4, 12, 4, legs)
     def waist(f, x, y, w, h):
-        if y < 9:
+        if y < 10:
             return None
-        if f == "front" and y == 9 and x in (3, 4):
-            return acc2
-        return base2 if y == 9 else base
+        return fold(base, x, y)
     region(img, 16, 16, 8, 12, 4, waist)
     return img
 
-for kind, c in SETS.items():
-    layer1(c, kind).save(f"{A}/textures/models/armor/{kind}_layer_1.png")
-    layer2(c, kind).save(f"{A}/textures/models/armor/{kind}_layer_2.png")
+def suit_layer1(c):
+    img = Image.new("RGBA", (64, 32), T)
+    base, base2, silver, white, gray = c["base"], c["base2"], c["accent"], c["accent2"], c["trim"]
+    def head(f, x, y, w, h):              # diadema plateada con gema azul
+        if f in ("top", "bottom"):
+            return None
+        if y == 1:
+            if f == "front" and x in (3, 4):
+                return base
+            return silver
+        return None
+    region(img, 0, 0, 8, 8, 8, head)
+    def body(f, x, y, w, h):              # uniforme azul completo con cuello alto y costuras plateadas
+        if f == "top":
+            return base
+        if f == "bottom":
+            return base2
+        if y == 0:
+            return silver                 # cuello alto
+        if y == 9:
+            return gray if not (f == "front" and x in (3, 4)) else white   # cinturón con hebilla
+        if f in ("left", "right") and x == 1:
+            return silver                 # costura lateral
+        if f == "front" and y in (1, 2) and x in (2, 5):
+            return base2
+        return jit(base, 5)
+    region(img, 16, 16, 8, 12, 4, body)
+    def arm(f, x, y, w, h):               # mangas largas hasta la muñeca
+        if f == "top":
+            return base
+        if f in ("left", "right") and x == 1 and y < 10:
+            return silver
+        if y == 10:
+            return silver
+        if y == 11:
+            return None
+        return jit(base, 5)
+    region(img, 40, 16, 4, 12, 4, arm)
+    def boot(f, x, y, w, h):              # botas blancas
+        if f == "bottom":
+            return (200, 202, 210)
+        if y < 6:
+            return None
+        if y == 6:
+            return gray                   # borde superior de la bota
+        if y == 11:
+            return (205, 208, 216)        # suela
+        return white if (x + y) % 6 else (226, 228, 236)
+    region(img, 0, 16, 4, 12, 4, boot)
+    return img
+
+def suit_layer2(c):
+    img = Image.new("RGBA", (64, 32), T)
+    base, base2, silver = c["base"], c["base2"], c["accent"]
+    def legs(f, x, y, w, h):
+        if f == "top":
+            return base
+        if f == "bottom" or y >= 7:
+            return None                   # debajo van las botas blancas
+        if f in ("left", "right") and x == 1:
+            return silver
+        return jit(base, 5)
+    region(img, 0, 16, 4, 12, 4, legs)
+    def waist(f, x, y, w, h):
+        if y < 10:
+            return None
+        return jit(base, 5)
+    region(img, 16, 16, 8, 12, 4, waist)
+    return img
+
+gi_layer1(SETS["warrior"]).save(f"{A}/textures/models/armor/warrior_layer_1.png")
+gi_layer2(SETS["warrior"]).save(f"{A}/textures/models/armor/warrior_layer_2.png")
+suit_layer1(SETS["battle"]).save(f"{A}/textures/models/armor/battle_layer_1.png")
+suit_layer2(SETS["battle"]).save(f"{A}/textures/models/armor/battle_layer_2.png")
 
 # íconos 16x16
 ICONS = {
-    "helmet": ["................", "................", "................", "................", "...bbbbbbbbbb...",
-               "..bAAAbaabAAAb..", "..bAAAbaabAAAb..", "...bbbbbbbbbb...", "................", "................",
-               "................", "................", "................", "................", "................", "................"],
-    "chestplate": ["................", "..AAA......AAA..", ".AAAAb....bAAAA.", ".AAbbbbbbbbbbAA.", "..AbAAAbbAAAbA..",
-                   "..AbbbbbbbbbbA..", "...bAAAbbAAAb...", "...bbbbbbbbbb...", "...bAAAbbAAAb...", "...bbbbbbbbbb...",
-                   "...ccccaaccccc..", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "................", "................", "................"],
-    "leggings": ["................", "...cccccaccccc..", "...bbbbbbbbbbb..", "...bbbbbbbbbbb..", "...bbbb..bbbbb..",
-                 "...bbbb..bbbb...", "...AAAb..bAAA...", "...bbbb..bbbb...", "...bbbb..bbbb...", "...bbbb..bbbb...",
-                 "...bbbb..bbbb...", "...bbbb..bbbb...", "................", "................", "................", "................"],
-    "boots": ["................", "................", "................", "................", "................",
-              "................", "...AAA....AAA...", "...bbb....bbb...", "...bAb....bAb...", "...bbb....bbb...",
-              "..bbbbb..bbbbb..", "..kkkkk..kkkkk..", "................", "................", "................", "................"],
+    "warrior": {
+        "helmet": ["................", "................", "................", "................", "................",
+                   "..kkkkkkkkkkkk..", "..kkkkkkkkkkkk..", "............kk..", ".............kk.", "..............k.",
+                   "................", "................", "................", "................", "................", "................"],
+        "chestplate": ["................", "..oooo....oooo..", ".oooooO..Ooooooo", ".ooooooO.Oooooo.", "..oooooOOoooooo.",
+                       "...oooooOooooo..", "...oooooooooooo.", "...oooooooooooo.", "...oooooooooooo.", "...kkkkkkkkkkkk.",
+                       "...ooooookoooooo", "...oooooo.kooooo", "...ooooo...kooo.", "................", "................", "................"],
+        "leggings": ["................", "...ooooooooooo..", "...ooooooooooo..", "...ooooooooooo..", "...oooo..ooooo..",
+                     "...oooo..oooo...", "...oooo..oooo...", "...oooo..oooo...", "...oooo..oooo...", "...oooo..oooo...",
+                     "...OOOO..OOOO...", "................", "................", "................", "................", "................"],
+        "boots": ["................", "................", "................", "................", "................",
+                  "................", "................", "................", "...kkk....kkk...", "...kkk....kkk...",
+                  "..kkkkk..kkkkk..", "..KKKKK..KKKKK..", "................", "................", "................", "................"],
+    },
+    "battle": {
+        "helmet": ["................", "................", "................", "................", "................",
+                   "..ssssssssssss..", "..sssssbbsssss..", "................", "................", "................",
+                   "................", "................", "................", "................", "................", "................"],
+        "chestplate": ["................", "..bbbbssssbbbb..", ".bbbbbbbbbbbbbb.", ".bbbbbbbbbbbbbb.", "..bbbbbbbbbbbb..",
+                       "..sbbbbbbbbbbs..", "..sbbbbbbbbbbs..", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "...ggggwwgggg...",
+                       "...bbbbbbbbbb...", "...bbbbbbbbbb...", "................", "................", "................", "................"],
+        "leggings": ["................", "...bbbbbbbbbbb..", "...bbbbbbbbbbb..", "...bbbbbbbbbbb..", "...sbbb..bbbs...",
+                     "...sbbb..bbbs...", "...sbbb..bbbs...", "...sbbb..bbbs...", "...sbbb..bbbs...", "...bbbb..bbbb...",
+                     "................", "................", "................", "................", "................", "................"],
+        "boots": ["................", "................", "................", "................", "................",
+                  "...ggg....ggg...", "...www....www...", "...www....www...", "...www....www...", "...www....www...",
+                  "..wwwww..wwwww..", "..GGGGG..GGGGG..", "................", "................", "................", "................"],
+    },
 }
-for kind, c in SETS.items():
-    for piece, rows in ICONS.items():
+PAL = {"o": (238, 124, 30), "O": (200, 96, 18), "k": (28, 28, 32), "K": (12, 12, 14),
+       "b": (34, 70, 190), "s": (196, 200, 212), "g": (150, 156, 170), "w": (240, 242, 248), "G": (200, 202, 210)}
+for kind, pieces in ICONS.items():
+    for piece, rows in pieces.items():
         img = Image.new("RGBA", (16, 16))
         for y, row in enumerate(rows):
             for x, ch in enumerate(row):
-                col = {"b": c["base2"], "A": c["accent"], "a": c["accent2"], "c": c["trim"] if kind == "battle" else c["base"], "k": (20, 20, 24)}.get(ch)
+                col = PAL.get(ch)
                 if col: img.putpixel((x, y), col + (255,))
         img.save(f"{A}/textures/item/{kind}_{piece}.png")
 
@@ -218,17 +297,17 @@ jdump({"type": "forge:add_features", "biomes": "#minecraft:is_overworld", "featu
 names_es = {"block.blockdragonsuperz.ki_ore": "Mineral de Ki", "block.blockdragonsuperz.deepslate_ki_ore": "Mineral de Ki de pizarra profunda",
             "item.blockdragonsuperz.black_ki_ingot": "Lingote de Ki Negro", "item.blockdragonsuperz.orange_ki_ingot": "Lingote de Ki Naranja",
             "item.blockdragonsuperz.blue_ki_ingot": "Lingote de Ki Azul",
-            "item.blockdragonsuperz.warrior_helmet": "Cinta del Guerrero", "item.blockdragonsuperz.warrior_chestplate": "Traje del Guerrero",
-            "item.blockdragonsuperz.warrior_leggings": "Pantalones del Guerrero", "item.blockdragonsuperz.warrior_boots": "Botas del Guerrero",
-            "item.blockdragonsuperz.battle_helmet": "Casco de Combate", "item.blockdragonsuperz.battle_chestplate": "Armadura de Combate",
-            "item.blockdragonsuperz.battle_leggings": "Grebas de Combate", "item.blockdragonsuperz.battle_boots": "Botas de Combate"}
+            "item.blockdragonsuperz.warrior_helmet": "Cinta de Karate", "item.blockdragonsuperz.warrior_chestplate": "Gi de Karate",
+            "item.blockdragonsuperz.warrior_leggings": "Pantalón de Karate", "item.blockdragonsuperz.warrior_boots": "Zapatillas de Karate",
+            "item.blockdragonsuperz.battle_helmet": "Diadema del Uniforme", "item.blockdragonsuperz.battle_chestplate": "Uniforme Azul",
+            "item.blockdragonsuperz.battle_leggings": "Pantalón del Uniforme Azul", "item.blockdragonsuperz.battle_boots": "Botas Blancas"}
 names_en = {"block.blockdragonsuperz.ki_ore": "Ki Ore", "block.blockdragonsuperz.deepslate_ki_ore": "Deepslate Ki Ore",
             "item.blockdragonsuperz.black_ki_ingot": "Black Ki Ingot", "item.blockdragonsuperz.orange_ki_ingot": "Orange Ki Ingot",
             "item.blockdragonsuperz.blue_ki_ingot": "Blue Ki Ingot",
-            "item.blockdragonsuperz.warrior_helmet": "Warrior Headband", "item.blockdragonsuperz.warrior_chestplate": "Warrior Suit",
-            "item.blockdragonsuperz.warrior_leggings": "Warrior Pants", "item.blockdragonsuperz.warrior_boots": "Warrior Boots",
-            "item.blockdragonsuperz.battle_helmet": "Battle Helmet", "item.blockdragonsuperz.battle_chestplate": "Battle Armor",
-            "item.blockdragonsuperz.battle_leggings": "Battle Greaves", "item.blockdragonsuperz.battle_boots": "Battle Boots"}
+            "item.blockdragonsuperz.warrior_helmet": "Karate Headband", "item.blockdragonsuperz.warrior_chestplate": "Karate Gi",
+            "item.blockdragonsuperz.warrior_leggings": "Karate Pants", "item.blockdragonsuperz.warrior_boots": "Karate Shoes",
+            "item.blockdragonsuperz.battle_helmet": "Uniform Headband", "item.blockdragonsuperz.battle_chestplate": "Blue Uniform",
+            "item.blockdragonsuperz.battle_leggings": "Blue Uniform Pants", "item.blockdragonsuperz.battle_boots": "White Boots"}
 import glob
 L = A + "/lang/"
 d = json.load(open(L + "en_us.json")); d.update(names_en); jdump(d, L + "en_us.json")
@@ -267,8 +346,8 @@ def preview(out):
             proj.append((dep / 4, pts, col))
         proj.sort(key=lambda t: t[0])
         for _, pts, col in proj: dr.polygon(pts, fill=col)
-    dr.text((10, 340), "Traje del Guerrero (frente / espalda)", fill=(255, 255, 255))
-    dr.text((W * 2 + 10, 340), "Armadura de Combate (frente / espalda)", fill=(255, 255, 255))
+    dr.text((10, 340), "Gi de Karate (frente / espalda)", fill=(255, 255, 255))
+    dr.text((W * 2 + 10, 340), "Uniforme Azul (frente / espalda)", fill=(255, 255, 255))
     img.save(out)
 
 if len(sys.argv) > 1:
