@@ -1,0 +1,28 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="blockdragonsuperz"
+version="1.0.0"
+displayName="Block Dragon Super Z"
+authors="BDSZ"
+description='''
+Conviértete en saiyajin (/raza sayajin) y transfórmate: Falso Super Saiyajin, fases 1, 2 y 3,
+Dios, Blue y Ultra Instinto, combinables con Kaioken x10 a x100.
+K = menú, P = transformarse, U = aura.
+'''
+
+[[dependencies.blockdragonsuperz]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.blockdragonsuperz]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="BOTH"
