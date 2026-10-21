@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 
 /** Menú (tecla K): elige la fase y el nivel de Kaioken. P transforma, U activa el aura. */
 public class PowerScreen extends Screen {
+    private static final int ROW = 20;
     private int form;
     private int kaioken;
 
@@ -36,7 +37,7 @@ public class PowerScreen extends Screen {
     private void rebuild() {
         clearWidgets();
         int cx = width / 2;
-        int top = Math.max(30, height / 2 - 110);
+        int top = Math.max(24, height / 2 - 128);
         Form[] forms = Form.values();
         for (int i = 0; i < forms.length; i++) {
             final int id = i;
@@ -44,7 +45,7 @@ public class PowerScreen extends Screen {
             String label = open ? (i == form ? "» " : "") + forms[i].display + (i == form ? " «" : "")
                     : "§8🔒 " + forms[i].display;
             Button btn = Button.builder(Component.literal(label), bb -> { form = id; send(); })
-                    .bounds(cx - 160, top + 14 + i * 22, 150, 20)
+                    .bounds(cx - 160, top + 14 + i * ROW, 150, 18)
                     .tooltip(open ? null : net.minecraft.client.gui.components.Tooltip.create(Component.literal(
                             "Bloqueada: necesitas el Bloque " + forms[i].tier() + " (Lista de Entrenamiento)")))
                     .build();
@@ -60,10 +61,10 @@ public class PowerScreen extends Screen {
             int x = i == 0 ? cx + 10 : cx + 10 + col * 76;
             int w = i == 0 ? 150 : 74;
             addRenderableWidget(Button.builder(Component.literal(label), b -> { kaioken = lvl; send(); })
-                    .bounds(x, top + 14 + row * 22, w, 20).build());
+                    .bounds(x, top + 14 + row * ROW, w, 18).build());
         }
         SaiyanState s = state();
-        int by = top + 14 + 8 * 22 + 6;
+        int by = top + 14 + Form.values().length * ROW + 6;
         addRenderableWidget(Button.builder(Component.literal(s.transformed ? "Destransformar (P)" : "Transformar (P)"),
                 b -> { Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.TRANSFORM, 0, 0)); onClose(); })
                 .bounds(cx - 160, by, 150, 20).build());
@@ -81,9 +82,9 @@ public class PowerScreen extends Screen {
     public void render(GuiGraphics g, int mx, int my, float pt) {
         renderBackground(g);
         int cx = width / 2;
-        int top = Math.max(30, height / 2 - 110);
+        int top = Math.max(24, height / 2 - 128);
         g.drawCenteredString(font, "§6§lBlock Dragon Super Z", cx, top - 18, 0xFFFFFF);
-        g.drawString(font, "§eFases §7(Bloque " + state().tier + "/4)", cx - 160, top + 2, 0xFFFFFF);
+        g.drawString(font, "§eFases §7(" + (state().tier >= 5 ? "Bloque Especial" : "Bloque " + state().tier + "/4") + ")", cx - 160, top + 2, 0xFFFFFF);
         g.drawString(font, "§cKaioken", cx + 10, top + 2, 0xFFFFFF);
         Form f = Form.byId(form);
         SaiyanState preview = new SaiyanState();
@@ -96,12 +97,12 @@ public class PowerScreen extends Screen {
                 kaioken > 0 ? " + Kaioken x" + kaioken : "", preview.damageMultiplier(), preview.punchBonus(), Math.round(preview.resistance() * 100));
         String stats2 = String.format("§7+%d ❤ · Velocidad +%d%% · Ki máx %d · Tiempo %d:%02d", preview.extraHealth() / 2,
                 Math.round(preview.speedBonus() * 100), preview.maxKi(), secs / 60, secs % 60);
-        g.drawCenteredString(font, stats, cx, top + 14 + 8 * 22 + 30, 0xFFFFFF);
-        g.drawCenteredString(font, stats2, cx, top + 14 + 8 * 22 + 41, 0xFFFFFF);
+        g.drawCenteredString(font, stats, cx, top + 14 + Form.values().length * ROW + 30, 0xFFFFFF);
+        g.drawCenteredString(font, stats2, cx, top + 14 + Form.values().length * ROW + 41, 0xFFFFFF);
         SaiyanState s = state();
         String now = s.transformed ? "§aTransformado" : "§7Estado base";
         g.drawCenteredString(font, now + "  §8|  §7Aura (U): " + (s.aura ? "§bsí" : "§8no") + "  §8|  §7Vuelo (I): "
-                + (s.flight ? "§bsí" : "§8no") + "  §8|  §7Ki: §eB§7 ráfaga, §eH§7 recargar", cx, top + 14 + 8 * 22 + 56, 0xFFFFFF);
+                + (s.flight ? "§bsí" : "§8no") + "  §8|  §7Ki: §eB§7 ráfaga, §eH§7 recargar", cx, top + 14 + Form.values().length * ROW + 56, 0xFFFFFF);
         super.render(g, mx, my, pt);
     }
 

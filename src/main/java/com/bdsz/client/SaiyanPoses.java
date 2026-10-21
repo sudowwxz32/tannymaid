@@ -13,6 +13,16 @@ public final class SaiyanPoses {
     private SaiyanPoses() {}
 
     public static void apply(PlayerModel<?> m, LivingEntity e, float limbSwing, float limbAmount, float age) {
+        // el modelo se comparte entre jugadores: siempre se reinicia la musculatura
+        float muscle = 1.0F;
+        if (e instanceof Player pl) {
+            SaiyanState st = ClientStates.get(pl.getId());
+            if (st.saiyan && (st.transformed || st.powering > 0)) {
+                float grow = st.powering > 0 ? 1.0F - (float) st.powering / Math.max(1, st.poweringTotal) : 1.0F;
+                muscle = 1.0F + (st.visibleForm().muscle() - 1.0F) * grow;
+            }
+        }
+        setMuscle(m, muscle);
         if (!(e instanceof Player p)) return;
         SaiyanState s = ClientStates.get(p.getId());
         if (!s.saiyan) return;
@@ -76,6 +86,28 @@ public final class SaiyanPoses {
             return;
         }
         copy(m);
+    }
+
+    /** Músculos: pecho y espalda más anchos, brazos y piernas más gruesos. */
+    private static void setMuscle(PlayerModel<?> m, float k) {
+        float arm = 1.0F + (k - 1.0F) * 1.6F;
+        float leg = 1.0F + (k - 1.0F) * 0.9F;
+        scale(m.body, k, 1.0F, 1.0F + (k - 1.0F) * 1.3F);
+        scale(m.jacket, k, 1.0F, 1.0F + (k - 1.0F) * 1.3F);
+        scale(m.rightArm, arm, 1.0F, arm);
+        scale(m.leftArm, arm, 1.0F, arm);
+        scale(m.rightSleeve, arm, 1.0F, arm);
+        scale(m.leftSleeve, arm, 1.0F, arm);
+        scale(m.rightLeg, leg, 1.0F, leg);
+        scale(m.leftLeg, leg, 1.0F, leg);
+        scale(m.rightPants, leg, 1.0F, leg);
+        scale(m.leftPants, leg, 1.0F, leg);
+    }
+
+    private static void scale(net.minecraft.client.model.geom.ModelPart p, float x, float y, float z) {
+        p.xScale = x;
+        p.yScale = y;
+        p.zScale = z;
     }
 
     private static void copy(PlayerModel<?> m) {

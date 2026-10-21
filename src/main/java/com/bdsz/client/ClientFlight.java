@@ -122,6 +122,17 @@ public final class ClientFlight {
             pose.mulPose(Axis.YP.rotationDegrees(-(180.0F - yaw)));
             pose.translate(0, -0.9, 0);
         }
+        // Fase 4 / Ultra Ego: más alto y robusto
+        SaiyanState s = ClientStates.get(p.getId());
+        if (s.saiyan && (s.transformed || s.powering > 0)) {
+            Form f = s.visibleForm();
+            float h = f.height();
+            if (h != 1.0F) {
+                float grow = s.powering > 0 ? 1.0F - (float) s.powering / Math.max(1, s.poweringTotal) : 1.0F;
+                float k = 1.0F + (h - 1.0F) * grow;
+                pose.scale(k, k, k);
+            }
+        }
     }
 
     @SubscribeEvent

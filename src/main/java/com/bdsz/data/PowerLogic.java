@@ -125,7 +125,7 @@ public final class PowerLogic {
             lv.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y + 1.2, z, 15 + (int) (progress * 30), 0.6, 1.0, 0.6, 0.5);
             lv.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.2F + progress * 0.3F, 0.5F);
         }
-        if (progress > 0.55F && f.ordinal() >= Form.FALSE_SSJ.ordinal() && f.ordinal() <= Form.SSJ3.ordinal()
+        if (progress > 0.55F && ((f.ordinal() >= Form.FALSE_SSJ.ordinal() && f.ordinal() <= Form.SSJ3.ordinal()) || f == Form.SSJ4 || f == Form.ULTRA_EGO)
                 && lv.random.nextInt(Math.max(3, 14 - f.ordinal() * 2)) == 0) {
             LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(lv);
             if (bolt != null) {
@@ -343,6 +343,14 @@ public final class PowerLogic {
                 lv.sendParticles(ParticleTypes.SONIC_BOOM, x, y + 1, z, 1, 0, 0, 0, 0);
             }
             case GOD -> lv.sendParticles(ParticleTypes.FLAME, x, y + 0.5, z, 80, 0.5, 1.6, 0.5, 0.04);
+            case SSJ4 -> {
+                lv.sendParticles(ParticleTypes.FLAME, x, y + 0.5, z, 100, 0.8, 1.8, 0.8, 0.05);
+                lv.sendParticles(ParticleTypes.LAVA, x, y + 0.5, z, 20, 1.0, 0.5, 1.0, 0.0);
+            }
+            case ULTRA_EGO -> {
+                lv.sendParticles(ParticleTypes.DRAGON_BREATH, x, y + 1.2, z, 150, 1.0, 1.6, 1.0, 0.05);
+                lv.sendParticles(ParticleTypes.WITCH, x, y + 1.2, z, 60, 0.8, 1.4, 0.8, 0.1);
+            }
             default -> { }
         }
         if (big && f.ordinal() >= Form.FALSE_SSJ.ordinal() && f.ordinal() <= Form.SSJ3.ordinal()) {
@@ -380,6 +388,16 @@ public final class PowerLogic {
             case BLUE -> {
                 lv.playSound(null, bp, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.8F, 1.3F);
                 lv.playSound(null, bp, SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 1.2F, 0.8F);
+            }
+            case SSJ4 -> {
+                lv.playSound(null, bp, SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 1.0F, 0.6F);
+                lv.playSound(null, bp, SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 1.2F, 0.7F);
+                lv.playSound(null, bp, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.0F, 0.6F);
+            }
+            case ULTRA_EGO -> {
+                lv.playSound(null, bp, SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.2F, 0.8F);
+                lv.playSound(null, bp, SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0F, 0.5F);
+                lv.playSound(null, bp, SoundEvents.TRIDENT_THUNDER, SoundSource.PLAYERS, 1.0F, 0.8F);
             }
             case ULTRA -> {
                 lv.playSound(null, bp, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 2.0F, 0.5F);
@@ -492,7 +510,7 @@ public final class PowerLogic {
         for (Form f : Form.values()) {
             if (f.tier() == targetTier) names.append(names.length() > 0 ? ", " : "").append(f.display);
         }
-        p.sendSystemMessage(Component.literal("§6§l¡Bloque " + targetTier + " desbloqueado! §r§e" + names));
+        p.sendSystemMessage(Component.literal("§6§l¡" + (targetTier == 5 ? "Bloque Especial" : "Bloque " + targetTier) + " desbloqueado! §r§e" + names));
         p.sendSystemMessage(Component.literal("§7Elígelas en el menú (K) y transfórmate con P."));
         return true;
     }

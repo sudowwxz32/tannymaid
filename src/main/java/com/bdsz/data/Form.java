@@ -16,7 +16,9 @@ public enum Form {
     SSJ3("Super Saiyajin Fase 3", 0xFFCF2E, 4.0F, 18, 0.40F, 30, 0.30F, 2.0F, 2, 400, 12.0F, 0.10F, 2, 0xFFC21E, 1.5F),
     GOD("Super Saiyajin Dios", 0xE0304C, 6.0F, 35, 0.55F, 50, 0.40F, 3.0F, 3, 600, 8.0F, 0.12F, 3, 0xFF4A3A, 1.2F),
     BLUE("Super Saiyajin Blue", 0x3FC8FF, 8.0F, 70, 0.65F, 70, 0.50F, 4.0F, 3, 800, 5.0F, 0.14F, 1, 0x3FC8FF, 1.35F),
-    ULTRA("Ultra Instinto", 0xDDE3F2, 12.0F, 600, 0.80F, 100, 0.70F, 6.0F, 4, 1200, 3.0F, 0.18F, 3, 0xC9D6FF, 1.1F);
+    ULTRA("Ultra Instinto", 0xDDE3F2, 12.0F, 600, 0.80F, 100, 0.70F, 6.0F, 4, 1200, 3.0F, 0.18F, 3, 0xC9D6FF, 1.1F),
+    SSJ4("Super Saiyajin Fase 4", 0x1C1C22, 14.0F, 800, 0.82F, 120, 0.60F, 6.0F, 4, 1500, 3.0F, 0.18F, 5, 0xE8442A, 1.45F),
+    ULTRA_EGO("Ultra Ego", 0x9040FF, 15.0F, 900, 0.80F, 120, 0.65F, 6.5F, 4, 1600, 2.5F, 0.19F, 6, 0x9B3CFF, 1.5F);
 
     public final String display;
     public final int color;
@@ -67,9 +69,35 @@ public enum Form {
             case FALSE_SSJ, SSJ1 -> 2;
             case SSJ2, SSJ3, GOD -> 3;
             case BLUE, ULTRA -> 4;
+            case SSJ4, ULTRA_EGO -> 5;
         };
     }
 
+    /** Musculatura: cuánto se ensancha el cuerpo en esta fase. */
+    public float muscle() {
+        return switch (this) {
+            case BASE -> 1.0F;
+            case FALSE_SSJ -> 1.03F;
+            case SSJ1 -> 1.05F;
+            case SSJ2 -> 1.07F;
+            case SSJ3 -> 1.08F;
+            case GOD, ULTRA -> 1.04F;
+            case BLUE -> 1.06F;
+            case SSJ4 -> 1.16F;
+            case ULTRA_EGO -> 1.14F;
+        };
+    }
+
+    /** Escala de altura (la Fase 4 es más alta y robusta). */
+    public float height() {
+        return this == SSJ4 ? 1.12F : this == ULTRA_EGO ? 1.05F : 1.0F;
+    }
+
+    /** Color de los rayos del aura. */
+    public int lightningColor() {
+        return this == ULTRA_EGO ? 0xB066FF : 0xC0E0FF;
+    }
+
     /** Fases con rayos eléctricos en el aura. */
-    public boolean lightningAura() { return this == SSJ2 || this == SSJ3; }
+    public boolean lightningAura() { return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO; }
 }

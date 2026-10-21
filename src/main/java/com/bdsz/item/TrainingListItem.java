@@ -52,9 +52,10 @@ public class TrainingListItem extends Item {
         String forms = switch (tier) {
             case 2 -> "Super Saiyajin Falso y Fase 1";
             case 3 -> "Fase 2, Fase 3 y Dios";
-            default -> "Blue y Ultra Instinto";
+            case 4 -> "Blue y Ultra Instinto";
+            default -> "Super Saiyajin Fase 4 y Ultra Ego";
         };
-        tip.add(Component.literal("§6Desbloquea el Bloque " + tier + ": §e" + forms));
+        tip.add(Component.literal("§6Desbloquea el " + (tier == 5 ? "Bloque Especial" : "Bloque " + tier) + ": §e" + forms));
         tip.add(Component.literal("§7Haz clic izquierdo con ella en la mano."));
     }
 }

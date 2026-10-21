@@ -111,9 +111,11 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
             renderAll(pose, buf.getBuffer(RenderType.energySwirl(TEX, (t * 0.002F) % 1.0F, (-t * 0.06F) % 1.0F)), r * a * 0.28F, g * a * 0.28F, b * a * 0.28F);
             pose.popPose();
         }
-        // rayos eléctricos en las fases 2 y 3
+        // ondas del aura: anillos que se expanden desde los pies y anillos que suben por el cuerpo
+        drawWaves(pose, buf, t, r * a, g * a, b * a, size, power, s.charging || s.powering > 0);
+        // rayos eléctricos (fases 2 y 3, morados en Ultra Ego)
         if (f.lightningAura() && (s.transformed || progress > 0.5F)) {
-            drawLightning(pose, buf, player.getId(), age, f == Form.SSJ3 ? 4 : 3, size);
+            drawLightning(pose, buf, player.getId(), age, f == Form.SSJ3 || f == Form.ULTRA_EGO ? 4 : 3, size, f.lightningColor());
         }
     }
 
@@ -124,7 +126,51 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
     }
 
     /** Rayos en zigzag que aparecen y desaparecen alrededor del cuerpo. */
-    private static void drawLightning(PoseStack pose, MultiBufferSource buf, int id, float age, int bolts, float size) {
+    /** Ondas: anillos de energía brillantes. */
+    private static void drawWaves(PoseStack pose, MultiBufferSource buf, float t, float r, float g, float b, float size, float power, boolean strong) {
+        VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(TEX, (t * 0.01F) % 1.0F, (t * 0.02F) % 1.0F));
+        PoseStack.Pose last = pose.last();
+        float period = strong ? 14.0F : 24.0F;
+        int rings = strong ? 3 : 2;
+        // anillos en el suelo (y = 1.5 en el espacio del modelo = los pies)
+        for (int i = 0; i < rings; i++) {
+            float ph = ((t / period) + (float) i / rings) % 1.0F;
+            float radius = (0.5F + ph * (1.6F + power)) * size;
+            float fade = (1.0F - ph) * (strong ? 0.9F : 0.6F);
+            ring(vc, last, 1.48F, radius, radius * 0.78F, r * fade, g * fade, b * fade);
+        }
+        // anillos que suben alrededor del cuerpo
+        for (int i = 0; i < 2; i++) {
+            float ph = ((t / (period * 0.9F)) + i * 0.5F) % 1.0F;
+            float y = 1.5F - ph * 2.3F * size;
+            float radius = (0.62F + 0.12F * (float) Math.sin(ph * Math.PI)) * size;
+            float fade = (float) Math.sin(ph * Math.PI) * 0.45F;
+            ring(vc, last, y, radius, radius * 0.86F, r * fade, g * fade, b * fade);
+        }
+    }
+
+    private static void ring(VertexConsumer vc, PoseStack.Pose pose, float y, float outer, float inner, float r, float g, float b) {
+        org.joml.Matrix4f m = pose.pose();
+        org.joml.Matrix3f n = pose.normal();
+        int seg = 28;
+        for (int i = 0; i < seg; i++) {
+            double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
+            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+            float u0 = (float) i / seg, u1 = (float) (i + 1) / seg;
+            v(vc, m, n, c0 * inner, y, s0 * inner, r, g, b, u0, 0);
+            v(vc, m, n, c0 * outer, y, s0 * outer, r, g, b, u0, 1);
+            v(vc, m, n, c1 * outer, y, s1 * outer, r, g, b, u1, 1);
+            v(vc, m, n, c1 * inner, y, s1 * inner, r, g, b, u1, 0);
+        }
+    }
+
+    private static void v(VertexConsumer vc, org.joml.Matrix4f m, org.joml.Matrix3f n, float x, float y, float z,
+                          float r, float g, float b, float u, float vv) {
+        vc.vertex(m, x, y, z).color(r, g, b, 1.0F).uv(u, vv).overlayCoords(OverlayTexture.NO_OVERLAY)
+                .uv2(LightTexture.FULL_BRIGHT).normal(n, 0, -1, 0).endVertex();
+    }
+
+    private static void drawLightning(PoseStack pose, MultiBufferSource buf, int id, float age, int bolts, float size, int color) {
         VertexConsumer vc = buf.getBuffer(RenderType.lightning());
         org.joml.Matrix4f mat = pose.last().pose();
         int frame = (int) (age / 2);
@@ -140,17 +186,17 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
                 float nx = x + (rnd.nextFloat() - 0.5F) * 0.35F;
                 float nz = z + (rnd.nextFloat() - 0.5F) * 0.35F;
                 float ny = y + 0.18F + rnd.nextFloat() * 0.22F;
-                quad(vc, mat, x, y, z, nx, ny, nz, 0.035F);
+                quad(vc, mat, x, y, z, nx, ny, nz, 0.035F, color);
                 if (rnd.nextFloat() < 0.3F) {                         // ramita
-                    quad(vc, mat, nx, ny, nz, nx + (rnd.nextFloat() - 0.5F) * 0.3F, ny + 0.15F, nz + (rnd.nextFloat() - 0.5F) * 0.3F, 0.02F);
+                    quad(vc, mat, nx, ny, nz, nx + (rnd.nextFloat() - 0.5F) * 0.3F, ny + 0.15F, nz + (rnd.nextFloat() - 0.5F) * 0.3F, 0.02F, color);
                 }
                 x = nx; y = ny; z = nz;
             }
         }
     }
 
-    private static void quad(VertexConsumer vc, org.joml.Matrix4f m, float x1, float y1, float z1, float x2, float y2, float z2, float w) {
-        float r = 0.75F, g = 0.88F, b = 1.0F, al = 0.9F;
+    private static void quad(VertexConsumer vc, org.joml.Matrix4f m, float x1, float y1, float z1, float x2, float y2, float z2, float w, int color) {
+        float r = ((color >> 16) & 255) / 255F, g = ((color >> 8) & 255) / 255F, b = (color & 255) / 255F, al = 0.9F;
         // dos planos cruzados para que el rayo se vea desde cualquier ángulo
         vc.vertex(m, x1 - w, y1, z1).color(r, g, b, al).endVertex();
         vc.vertex(m, x1 + w, y1, z1).color(r, g, b, al).endVertex();

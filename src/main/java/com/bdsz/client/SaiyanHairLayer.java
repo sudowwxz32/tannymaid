@@ -44,6 +44,8 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         String prefix = switch (f.hairStyle) {
             case 2 -> "l_";
             case 3 -> "g_";
+            case 5 -> "f_";
+            case 6 -> "e_";
             default -> "s_";
         };
         boolean extraBang = f.hairStyle == 4;
@@ -62,7 +64,8 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
             String n = en.getKey();
             ModelPart part = en.getValue();
-            boolean spike = n.startsWith("s_") || n.startsWith("g_") || n.startsWith("x_") || n.startsWith("l_");
+            boolean spike = n.startsWith("s_") || n.startsWith("g_") || n.startsWith("x_") || n.startsWith("l_")
+                    || n.startsWith("f_") || n.startsWith("e_");
             if (!spike) continue;
             float seed = n.hashCode() * 0.37F;
             part.zRot += Mth.sin(age * freq + seed) * amp;

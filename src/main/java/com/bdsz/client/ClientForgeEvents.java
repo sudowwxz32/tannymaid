@@ -125,6 +125,14 @@ public final class ClientForgeEvents {
                 level.addParticle(ParticleTypes.END_ROD, p.getX() + (rnd.nextDouble() - 0.5) * 1.4,
                         p.getY() + rnd.nextDouble() * maxH, p.getZ() + (rnd.nextDouble() - 0.5) * 1.4, 0, 0.03, 0);
             }
+            if (f == Form.ULTRA_EGO && rnd.nextInt(2) == 0) {
+                level.addParticle(ParticleTypes.WITCH, p.getX() + (rnd.nextDouble() - 0.5) * 1.4,
+                        p.getY() + rnd.nextDouble() * maxH, p.getZ() + (rnd.nextDouble() - 0.5) * 1.4, 0, 0.1, 0);
+            }
+            if (f == Form.SSJ4 && rnd.nextInt(2) == 0) {
+                level.addParticle(ParticleTypes.FLAME, p.getX() + (rnd.nextDouble() - 0.5) * 1.2, p.getY() + 0.1,
+                        p.getZ() + (rnd.nextDouble() - 0.5) * 1.2, 0, 0.1, 0);
+            }
             if (f == Form.GOD && rnd.nextInt(3) == 0) {
                 level.addParticle(ParticleTypes.FLAME, p.getX() + (rnd.nextDouble() - 0.5), p.getY() + 0.1,
                         p.getZ() + (rnd.nextDouble() - 0.5), 0, 0.12, 0);

@@ -46,6 +46,9 @@ public final class ModRegistry {
     public static final RegistryObject<Item> TRAINING_LIST_3 = ITEMS.register("training_list_3",
             () -> new TrainingListItem(4, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
 
+    public static final RegistryObject<Item> TRAINING_LIST_4 = ITEMS.register("training_list_4",
+            () -> new TrainingListItem(5, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+
     public static final RegistryObject<Codec<SenzuLootModifier>> SENZU_LOOT = LOOT.register("senzu_in_villages", () -> SenzuLootModifier.CODEC);
 
     private ModRegistry() {}

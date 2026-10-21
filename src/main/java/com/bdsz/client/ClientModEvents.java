@@ -24,6 +24,7 @@ public final class ClientModEvents {
     public static final KeyMapping BLAST = new KeyMapping("key.blockdragonsuperz.blast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
     public static final ModelLayerLocation AURA_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "aura"), "main");
     public static final ModelLayerLocation KI_BLAST = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ki_blast"), "main");
+    public static final ModelLayerLocation TAIL_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "tail"), "main");
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -42,6 +43,7 @@ public final class ClientModEvents {
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, HairModelData::createLayer);
         e.registerLayerDefinition(AURA_LAYER, AuraLayer::createLayer);
+        e.registerLayerDefinition(TAIL_LAYER, TailLayer::createLayer);
         e.registerLayerDefinition(KI_BLAST, KiBlastRenderer::createLayer);
     }
 
@@ -61,6 +63,7 @@ public final class ClientModEvents {
         for (String skin : e.getSkins()) {
             if (e.getSkin(skin) instanceof PlayerRenderer renderer) {
                 renderer.addLayer(new SaiyanHairLayer(renderer, e.getEntityModels()));
+                renderer.addLayer(new TailLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new AuraLayer(renderer, e.getEntityModels()));
             }
         }
