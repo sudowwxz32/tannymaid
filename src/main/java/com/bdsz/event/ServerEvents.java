@@ -67,6 +67,65 @@ public final class ServerEvents {
         }
     }
 
+    /** Último Entrenamiento y Dominio Total solo se pueden craftear con todo desbloqueado hasta Ultra Ego. */
+    @SubscribeEvent
+    public static void crafted(PlayerEvent.ItemCraftedEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        net.minecraft.world.item.Item result = e.getCrafting().getItem();
+        boolean ultimate = false, mastery = false;
+        if (result == com.bdsz.registry.ModRegistry.ULTIMATE_TRAINING.get()) ultimate = true;
+        else if (result == com.bdsz.registry.ModRegistry.TOTAL_MASTERY.get()) mastery = true;
+        else if (e.getCrafting().isEmpty()) {
+            // shift-clic: el resultado puede venir vacío; se identifica por la rejilla
+            net.minecraft.world.Container grid = e.getInventory();
+            int maps = 0, copper = 0, iron = 0, center = 0;
+            for (int i = 0; i < grid.getContainerSize(); i++) {
+                net.minecraft.world.item.Item it = grid.getItem(i).getItem();
+                if (it == net.minecraft.world.item.Items.MAP) maps++;
+                else if (it == net.minecraft.world.item.Items.COPPER_BLOCK) copper++;
+                else if (it == net.minecraft.world.item.Items.IRON_BLOCK) iron++;
+                else if (it == com.bdsz.registry.ModRegistry.ULTIMATE_TRAINING.get()) center++;
+            }
+            if (maps == 1 && copper == 4 && iron == 4) ultimate = true;
+            else if (center == 1) mastery = true;
+        }
+        if (!ultimate && !mastery) return;
+        if (p.isCreative() || SaiyanData.get(p).tier >= 5) return;
+
+        final net.minecraft.world.item.Item made = ultimate ? com.bdsz.registry.ModRegistry.ULTIMATE_TRAINING.get()
+                                                            : com.bdsz.registry.ModRegistry.TOTAL_MASTERY.get();
+        final java.util.List<net.minecraft.world.item.ItemStack> refund = new java.util.ArrayList<>();
+        if (ultimate) {
+            refund.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.MAP));
+            refund.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COPPER_BLOCK, 4));
+            refund.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_BLOCK, 4));
+        } else {
+            refund.add(new net.minecraft.world.item.ItemStack(com.bdsz.registry.ModRegistry.ULTIMATE_TRAINING.get()));
+            refund.add(new net.minecraft.world.item.ItemStack(com.bdsz.registry.ModRegistry.KI_ORE_ITEM.get(), 7));
+            refund.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GOLD_BLOCK));
+        }
+        p.getServer().execute(() -> {
+            boolean removed = false;
+            net.minecraft.world.item.ItemStack carried = p.containerMenu.getCarried();
+            if (carried.is(made)) { carried.shrink(1); p.containerMenu.setCarried(carried); removed = true; }
+            if (!removed) {
+                net.minecraft.world.entity.player.Inventory inv = p.getInventory();
+                for (int i = inv.getContainerSize() - 1; i >= 0; i--) {
+                    if (inv.getItem(i).is(made)) { inv.getItem(i).shrink(1); removed = true; break; }
+                }
+            }
+            if (!removed) return;   // no se encontró el objeto: no se devuelve nada
+            for (net.minecraft.world.item.ItemStack r : refund) {
+                if (!p.getInventory().add(r.copy())) p.drop(r.copy(), false);
+            }
+            p.containerMenu.broadcastChanges();
+            p.inventoryMenu.broadcastChanges();
+            p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                    "§cDebes completar todas las listas hasta el Ultra Ego para hacer este crafteo."), false);
+            p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
+        });
+    }
+
     /** Clic izquierdo sobre un bloque con una Lista de Entrenamiento. */
     @SubscribeEvent
     public static void leftClickBlock(net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock e) {

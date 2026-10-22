@@ -1,16 +1,24 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "DDD",
-    "DLD",
-    "DDD"
+    "KKK",
+    "KUK",
+    "KKG"
   ],
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
+    "K": [
+      {
+        "item": "blockdragonsuperz:ki_ore"
+      },
+      {
+        "item": "blockdragonsuperz:deepslate_ki_ore"
+      }
+    ],
+    "U": {
+      "item": "blockdragonsuperz:ultimate_training"
     },
-    "L": {
-      "item": "blockdragonsuperz:training_list_4"
+    "G": {
+      "item": "minecraft:gold_block"
     }
   },
   "result": {
