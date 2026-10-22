@@ -18,7 +18,11 @@ public enum Form {
     BLUE("Super Saiyajin Blue", 0x3FC8FF, 8.0F, 70, 0.65F, 70, 0.50F, 4.0F, 3, 800, 5.0F, 0.14F, 1, 0x3FC8FF, 1.35F),
     ULTRA("Ultra Instinto", 0xDDE3F2, 12.0F, 600, 0.80F, 100, 0.70F, 6.0F, 4, 1200, 3.0F, 0.18F, 3, 0xC9D6FF, 1.1F),
     SSJ4("Super Saiyajin Fase 4", 0x1C1C22, 14.0F, 800, 0.82F, 120, 0.60F, 6.0F, 4, 1500, 3.0F, 0.18F, 5, 0xE8442A, 1.45F),
-    ULTRA_EGO("Ultra Ego", 0x9040FF, 15.0F, 900, 0.80F, 120, 0.65F, 6.5F, 4, 1600, 2.5F, 0.19F, 6, 0x9B3CFF, 1.5F);
+    ULTRA_EGO("Ultra Ego", 0x9040FF, 15.0F, 900, 0.80F, 120, 0.65F, 6.5F, 4, 1600, 2.5F, 0.19F, 6, 0x9B3CFF, 1.5F),
+    // ---- se desbloquean con el Dominio Total
+    BEAST("Gohan Bestia", 0xD4D4DC, 17.0F, 1100, 0.84F, 140, 0.72F, 7.0F, 5, 1800, 2.5F, 0.20F, 7, 0x9C9CA8, 1.6F),
+    LEGENDARY("Super Saiyajin Legendario", 0x5CFF5A, 19.0F, 1300, 0.88F, 190, 0.85F, 7.5F, 5, 2200, 2.0F, 0.21F, 8, 0x6CFF4A, 1.8F),
+    ROSE("Super Saiyajin Rosé", 0xFF6EC4, 17.0F, 1100, 0.84F, 140, 0.74F, 7.0F, 5, 1800, 2.5F, 0.20F, 9, 0xFF5CB8, 1.55F);
 
     public final String display;
     public final int color;
@@ -70,6 +74,7 @@ public enum Form {
             case SSJ2, SSJ3, GOD -> 3;
             case BLUE, ULTRA -> 4;
             case SSJ4, ULTRA_EGO -> 5;
+            case BEAST, LEGENDARY, ROSE -> 6;     // 6 = requiere el Dominio Total
         };
     }
 
@@ -81,23 +86,82 @@ public enum Form {
             case SSJ1 -> 1.05F;
             case SSJ2 -> 1.07F;
             case SSJ3 -> 1.08F;
-            case GOD, ULTRA -> 1.04F;
+            case GOD -> 0.93F;                    // Dios: cuerpo delgado
+            case ULTRA -> 1.04F;
             case BLUE -> 1.06F;
             case SSJ4 -> 1.16F;
             case ULTRA_EGO -> 1.14F;
+            case BEAST -> 1.12F;
+            case LEGENDARY -> 1.34F;              // Legendario: musculatura enorme
+            case ROSE -> 1.05F;
         };
     }
 
     /** Escala de altura (la Fase 4 es más alta y robusta). */
     public float height() {
-        return this == SSJ4 ? 1.12F : this == ULTRA_EGO ? 1.05F : 1.0F;
+        return switch (this) {
+            case SSJ4 -> 1.12F;
+            case ULTRA_EGO -> 1.05F;
+            case BEAST -> 1.05F;
+            case LEGENDARY -> 1.18F;
+            default -> 1.0F;
+        };
     }
 
     /** Color de los rayos del aura. */
     public int lightningColor() {
-        return this == ULTRA_EGO ? 0xB066FF : 0xC0E0FF;
+        return switch (this) {
+            case ULTRA_EGO -> 0xB066FF;
+            case BEAST -> 0xFF2626;
+            case ROSE -> 0xFF7AD6;
+            case LEGENDARY -> 0xA8FF70;
+            case BLUE -> 0x9CE8FF;
+            default -> 0xC0E0FF;
+        };
     }
 
     /** Fases con rayos eléctricos en el aura. */
-    public boolean lightningAura() { return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO; }
+    public boolean lightningAura() {
+        return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO || this == BEAST || this == ROSE || this == LEGENDARY;
+    }
+
+    /** Color de la capa exterior del aura (el Rosé tiene una segunda aura rosa oscura). */
+    public int outerColor() {
+        return switch (this) {
+            case ROSE -> 0x9C0E5C;
+            case BEAST -> 0x5E5E68;
+            case LEGENDARY -> 0x1E9A2A;
+            case GOD -> 0xFF8A2A;
+            case ULTRA_EGO -> 0x5A1AA8;
+            default -> auraColor;
+        };
+    }
+
+    /** Color de las ondas del aura (la Bestia tiene ondas rojas). */
+    public int waveColor() {
+        return this == BEAST ? 0xFF2A2A : auraColor;
+    }
+
+    /** Ultra Instinto es la única transformación tranquila y relajada. */
+    public boolean calm() { return this == ULTRA; }
+
+    /** Qué tan dramática es la transformación (0..1): aura de fuego, escombros, temblor. */
+    public float drama() {
+        return switch (this) {
+            case BASE, ULTRA -> 0.0F;
+            case FALSE_SSJ -> 0.35F;
+            case SSJ1 -> 0.55F;
+            case SSJ2, GOD -> 0.65F;
+            case SSJ3, BLUE -> 0.75F;
+            case SSJ4, ULTRA_EGO -> 0.85F;
+            case BEAST, ROSE -> 0.95F;
+            case LEGENDARY -> 1.0F;
+        };
+    }
+
+    /** Sin límite de ki: la energía del Legendario nunca se acaba. */
+    public boolean infiniteKi() { return this == LEGENDARY; }
+
+    /** Cuerpo delgado (modelo de brazos finos, como Alex). */
+    public boolean slimBody() { return this == GOD; }
 }

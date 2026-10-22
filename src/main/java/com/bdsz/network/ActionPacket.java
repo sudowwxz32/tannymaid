@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 /** Cliente → servidor: elegir fase/kaioken (menú K), transformarse (P) o el aura (U). */
 public class ActionPacket {
-    public static final int SELECT = 0, TRANSFORM = 1, AURA = 2, BLAST = 3, FLY = 4, CHARGE_ON = 5, CHARGE_OFF = 6, CHARGE_TOGGLE = 7, USE_LIST = 8, KAMEHAMEHA = 9, BIG_BANG = 10, DRAGON_FIST = 11;
+    public static final int SELECT = 0, TRANSFORM = 1, AURA = 2, BLAST = 3, FLY = 4, CHARGE_ON = 5, CHARGE_OFF = 6, CHARGE_TOGGLE = 7, USE_LIST = 8, KAMEHAMEHA = 9, BIG_BANG = 10, DRAGON_FIST = 11, OZARU = 12;
 
     private final int action, form, kaioken;
 
@@ -45,6 +45,7 @@ public class ActionPacket {
                 case KAMEHAMEHA -> PowerLogic.kamehameha(sp);
                 case BIG_BANG -> PowerLogic.bigBang(sp);
                 case DRAGON_FIST -> PowerLogic.dragonFist(sp);
+                case OZARU -> PowerLogic.toggleOzaru(sp);
                 case USE_LIST -> com.bdsz.item.TrainingListItem.use(sp, sp.getMainHandItem());
                 default -> { }
             }

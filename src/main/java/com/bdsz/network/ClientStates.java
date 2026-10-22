@@ -10,6 +10,7 @@ public final class ClientStates {
     private static final Map<Integer, SaiyanState> STATES = new ConcurrentHashMap<>();
     private static final Map<Integer, Long> TRANSFORM_AT = new ConcurrentHashMap<>();
     private static final Map<Integer, Long> DRAGON_AT = new ConcurrentHashMap<>();
+    private static final Map<Integer, Long> OZARU_AT = new ConcurrentHashMap<>();
     /** Reloj del cliente (ticks), lo avanza ClientForgeEvents. */
     public static long clientTicks;
     private static final SaiyanState NONE = new SaiyanState();
@@ -21,6 +22,7 @@ public final class ClientStates {
         boolean newForm = old != null && s.transformed && (!old.transformed || old.selected != s.selected || old.kaioken != s.kaioken);
         if (newForm) TRANSFORM_AT.put(id, clientTicks);
         if (s.dragonFist > 0 && (old == null || old.dragonFist <= 0)) DRAGON_AT.put(id, clientTicks);
+        if (s.ozaru && old != null && !old.ozaru) OZARU_AT.put(id, clientTicks);
         STATES.put(id, s);
     }
 
@@ -36,6 +38,12 @@ public final class ClientStates {
         return t == null ? Long.MAX_VALUE : clientTicks - t;
     }
 
+    /** Ticks desde que ese jugador se convirtió en Ozaru (para la animación de crecer y rugir). */
+    public static long ticksSinceOzaru(int id) {
+        Long t = OZARU_AT.get(id);
+        return t == null ? Long.MAX_VALUE : clientTicks - t;
+    }
+
     public static SaiyanState get(int id) {
         return STATES.getOrDefault(id, NONE);
     }
@@ -43,5 +51,7 @@ public final class ClientStates {
     public static void clear() {
         STATES.clear();
         TRANSFORM_AT.clear();
+        OZARU_AT.clear();
+        DRAGON_AT.clear();
     }
 }

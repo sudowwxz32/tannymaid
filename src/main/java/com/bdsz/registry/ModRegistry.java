@@ -38,6 +38,10 @@ public final class ModRegistry {
             () -> EntityType.Builder.<KiBlastEntity>of(KiBlastEntity::new, MobCategory.MISC)
                     .sized(0.6F, 0.6F).clientTrackingRange(8).updateInterval(1).fireImmune().build("ki_blast"));
 
+    public static final RegistryObject<EntityType<com.bdsz.entity.DebrisEntity>> DEBRIS = ENTITIES.register("debris",
+            () -> EntityType.Builder.<com.bdsz.entity.DebrisEntity>of(com.bdsz.entity.DebrisEntity::new, MobCategory.MISC)
+                    .sized(0.3F, 0.3F).clientTrackingRange(6).updateInterval(4).fireImmune().noSave().build("debris"));
+
     public static final RegistryObject<EntityType<KameBeamEntity>> KAME_BEAM = ENTITIES.register("kamehameha",
             () -> EntityType.Builder.<KameBeamEntity>of(KameBeamEntity::new, MobCategory.MISC)
                     .sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(1).fireImmune().noSave().build("kamehameha"));

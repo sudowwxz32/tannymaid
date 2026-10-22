@@ -140,6 +140,11 @@ public final class ServerEvents {
         if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) return;
+        if (s.infiniteKi() && s.ki < s.maxKi()) {
+            // Legendario: la energía nunca se acaba
+            s.ki = s.maxKi();
+            SaiyanData.setQuiet(p, s);
+        }
         if (s.powering > 0) PowerLogic.tickPowerUp(p, s);
         else if (s.charging) PowerLogic.tickCharging(p, s);
         if (s.pose != 0 || s.dragonFist > 0 || s.dragonCooldown > 0 || s.attackCooldown > 0) {
@@ -156,7 +161,8 @@ public final class ServerEvents {
                 return;
             }
             SaiyanState s = SaiyanData.get(p);
-            if (s.transformed || s.flight || s.charging || s.powering > 0) {
+            if (s.transformed || s.flight || s.charging || s.powering > 0 || s.ozaru) {
+                s.ozaru = false;
                 s.transformed = false;
                 s.flight = false;
                 s.charging = false;
@@ -176,7 +182,24 @@ public final class ServerEvents {
             s.dragonFist = 0;
             SaiyanData.set(p, s);
             PowerLogic.applyFlight(p, s);
+            p.refreshDimensions();
         }
+    }
+
+    /** Modo Ozaru: el cuerpo (y su caja de choque) es gigante. Funciona en servidor y cliente. */
+    @SubscribeEvent
+    public static void size(net.minecraftforge.event.entity.EntityEvent.Size e) {
+        if (!(e.getEntity() instanceof net.minecraft.world.entity.player.Player p)) return;
+        SaiyanState s;
+        if (p.level() == null) return;
+        if (p.level().isClientSide) s = com.bdsz.network.ClientStates.get(p.getId());
+        else if (p instanceof ServerPlayer sp && sp.connection != null) s = SaiyanData.get(sp);
+        else return;
+        if (!s.ozaru) return;
+        float k = SaiyanState.OZARU_SCALE;
+        net.minecraft.world.entity.EntityDimensions d = net.minecraft.world.entity.EntityDimensions.scalable(0.6F * k, 1.8F * k);
+        e.setNewSize(d);
+        e.setNewEyeHeight(1.62F * k);
     }
 
     @SubscribeEvent

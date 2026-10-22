@@ -11,7 +11,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-/** /raza sayajin · /raza humano · /raza info */
+/** /raza saiyajin · /raza humano · /raza info · /raza libro */
 public final class RazaCommand {
     private RazaCommand() {}
 
@@ -46,9 +46,9 @@ public final class RazaCommand {
         s.saiyan = true;
         SaiyanData.set(p, s);
         PowerLogic.burst(p, s, false);
-        p.sendSystemMessage(Component.literal("§6§l¡Ahora eres un guerrero saiyajin!"));
-        p.sendSystemMessage(Component.literal("§eK§7 menú · §eP§7 transformarte · §eU§7 aura · §eI§7 volar · §eB§7 ráfaga · §eH§7 recargar ki"));
-        p.sendSystemMessage(Component.literal("§7Recibiste la §6Guía del Saiyajin§7: ahí están los crafteos para desbloquear las fases."));
+        p.sendSystemMessage(Component.literal("§6§l⚡ ¡Ahora eres un guerrero saiyajin!"));
+        p.sendSystemMessage(Component.literal("§8[§eK§8] §7menú  §8[§eP§8] §7transformarte  §8[§eU§8] §7aura  §8[§eI§8] §7volar  §8[§eH§8] §7recargar ki"));
+        p.sendSystemMessage(Component.literal("§7Lee la §6Guía del Saiyajin§7 que recibiste para desbloquear más fases."));
         GuideBook.give(p);
         return 1;
     }
@@ -64,12 +64,14 @@ public final class RazaCommand {
         ServerPlayer p = c.getSource().getPlayerOrException();
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) {
-            p.sendSystemMessage(Component.literal("§7Raza: humano. Usa §e/raza sayajin§7 para despertar tu sangre saiyajin."));
+            p.sendSystemMessage(Component.literal("§7Raza: humano. Usa §e/raza saiyajin§7 para despertar tu sangre saiyajin."));
             return 1;
         }
-        p.sendSystemMessage(Component.literal(String.format("§6Raza: saiyajin §7| Estado: %s%s §7| Daño x%.1f | Resistencia %d%% | Aura: %s",
-                s.activeForm().display, s.activeKaioken() > 0 ? " + Kaioken x" + s.activeKaioken() : "",
-                s.damageMultiplier(), Math.round(s.resistance() * 100), s.aura ? "sí" : "no")));
+        String estado = s.ozaru ? "Ozaru" : s.activeForm().display + (s.activeKaioken() > 0 ? " + Kaioken x" + s.activeKaioken() : "");
+        int fases = 0, total = 0;
+        for (com.bdsz.data.Form f : com.bdsz.data.Form.values()) { total++; if (s.unlocked(f)) fases++; }
+        p.sendSystemMessage(Component.literal(String.format("§6Saiyajin §8| §f%s §8| §c⚔ x%.1f §8| §b◈ %d%% §8| §e%d/%d fases%s",
+                estado, s.damageMultiplier(), Math.round(s.resistance() * 100), fases, total, s.mastery ? " §d· Dominio Total" : "")));
         return 1;
     }
 }

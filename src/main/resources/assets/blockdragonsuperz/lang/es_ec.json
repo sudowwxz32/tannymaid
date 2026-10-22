@@ -1,6 +1,6 @@
 {
   "key.categories.blockdragonsuperz": "Block Dragon Super Z",
-  "key.blockdragonsuperz.menu": "Menú de fases",
+  "key.blockdragonsuperz.menu": "Menú de transformaciones",
   "key.blockdragonsuperz.transform": "Transformarse",
   "key.blockdragonsuperz.aura": "Activar/desactivar aura",
   "key.blockdragonsuperz.fly": "Volar",
@@ -17,6 +17,7 @@
   "item.blockdragonsuperz.training_list_5": "Dominio Total",
   "key.blockdragonsuperz.kamehameha": "Kamehameha",
   "key.blockdragonsuperz.bigbang": "Big Bang Attack",
+  "key.blockdragonsuperz.ozaru": "Modo Ozaru",
   "key.blockdragonsuperz.dragonfist": "Puño del Dragón",
   "entity.blockdragonsuperz.kamehameha": "Kamehameha",
   "block.blockdragonsuperz.ki_ore": "Mineral de Ki",

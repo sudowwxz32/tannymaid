@@ -26,24 +26,33 @@ public class SaiyanState {
     public int dragonFist;      // ticks restantes para dar el golpe del Puño del Dragón
     public int dragonCooldown;  // ticks de espera para volver a usarlo
     public int attackCooldown;  // espera corta entre Kamehameha / Big Bang
+    public boolean ozaru;       // Modo Ozaru: mono gigante (tecla O)
 
     public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
-    public boolean unlocked(Form f) { return f.tier() <= tier; }
+    public boolean unlocked(Form f) { return f.tier() == 6 ? tier >= 5 && mastery : f.tier() <= tier; }
+
+    /** El Modo Ozaru se desbloquea con el Dominio Total. */
+    public boolean ozaruUnlocked() { return tier >= 5 && mastery; }
+
+    // ---- Modo Ozaru: gigante, muy fuerte y resistente, pero lento para atacar
+    public static final float OZARU_SCALE = 3.5F;
 
     public Form activeForm() { return transformed ? Form.byId(selected) : Form.BASE; }
     /** Fase que se ve en el aura (durante la carga ya se ve la fase destino). */
     public Form visibleForm() { return transformed || powering > 0 ? Form.byId(selected) : Form.BASE; }
     public int activeKaioken() { return transformed ? kaioken : 0; }
-    public boolean powered() { return transformed && (selected != 0 || kaioken > 0); }
+    public boolean powered() { return ozaru || transformed && (selected != 0 || kaioken > 0); }
 
-    public float damageMultiplier() { return activeForm().damage * (1.0F + activeKaioken() / 20.0F); }
-    public float punchBonus() { return activeForm().punch + activeKaioken() * 0.5F; }
-    public float resistance() { return Math.min(0.92F, activeForm().resist + activeKaioken() / 400.0F); }
-    public float speedBonus() { return activeForm().speed + activeKaioken() / 800.0F; }
-    public int extraHealth() { return activeForm().hearts + activeKaioken() / 5; }
-    public float agility() { return activeForm().agility + activeKaioken() / 50.0F; }
-    public int maxKi() { return activeForm().maxKi + activeKaioken() * 2; }
+    public float damageMultiplier() { return ozaru ? 12.0F : activeForm().damage * (1.0F + activeKaioken() / 20.0F); }
+    public float punchBonus() { return ozaru ? 400.0F : activeForm().punch + activeKaioken() * 0.5F; }
+    public float resistance() { return ozaru ? 0.75F : Math.min(0.92F, activeForm().resist + activeKaioken() / 400.0F); }
+    public float speedBonus() { return ozaru ? 0.35F : activeForm().speed + activeKaioken() / 800.0F; }
+    public int extraHealth() { return ozaru ? 240 : activeForm().hearts + activeKaioken() / 5; }
+    public float agility() { return ozaru ? 1.0F : activeForm().agility + activeKaioken() / 50.0F; }
+    public int maxKi() { return ozaru ? 1500 : activeForm().maxKi + activeKaioken() * 2; }
+    /** Ki infinito (Legendario). */
+    public boolean infiniteKi() { return transformed && activeForm().infiniteKi(); }
     public float flySpeed() { return activeForm().fly + activeKaioken() / 2000.0F; }
 
     /** Tiempo límite (ticks) de la fase elegida; el Kaioken lo reduce 10 s por cada x10. */
@@ -89,6 +98,7 @@ public class SaiyanState {
         t.putBoolean("Charging", charging);
         t.putInt("Powering", powering);
         t.putInt("PoweringTotal", poweringTotal);
+        t.putBoolean("Ozaru", ozaru);
         return t;
     }
 
@@ -115,6 +125,7 @@ public class SaiyanState {
         s.charging = t.getBoolean("Charging");
         s.powering = t.getInt("Powering");
         s.poweringTotal = t.getInt("PoweringTotal");
+        s.ozaru = t.getBoolean("Ozaru");
         return s;
     }
 
@@ -139,6 +150,7 @@ public class SaiyanState {
         b.writeVarInt(poseTimer);
         b.writeVarInt(dragonFist);
         b.writeVarInt(dragonCooldown);
+        b.writeBoolean(ozaru);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -163,6 +175,7 @@ public class SaiyanState {
         s.poseTimer = b.readVarInt();
         s.dragonFist = b.readVarInt();
         s.dragonCooldown = b.readVarInt();
+        s.ozaru = b.readBoolean();
         return s;
     }
 }

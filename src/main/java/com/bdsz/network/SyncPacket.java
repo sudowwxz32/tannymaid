@@ -26,7 +26,14 @@ public class SyncPacket {
     }
 
     public static void handle(SyncPacket p, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> ClientStates.put(p.entityId, p.state));
+        ctx.get().enqueueWork(() -> {
+            boolean before = ClientStates.get(p.entityId).ozaru;
+            ClientStates.put(p.entityId, p.state);
+            if (before != p.state.ozaru) {
+                net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                        () -> () -> com.bdsz.client.ClientHooks.refreshSize(p.entityId));
+            }
+        });
         ctx.get().setPacketHandled(true);
     }
 }

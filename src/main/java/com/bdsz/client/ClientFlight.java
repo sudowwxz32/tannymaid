@@ -151,10 +151,14 @@ public final class ClientFlight {
             if (d > 32) continue;
             SaiyanState s = ClientStates.get(p.getId());
             if (!s.saiyan) continue;
+            if (com.bdsz.data.Form.byId(s.selected).calm() && s.kaioken == 0 && !s.ozaru) continue;   // Ultra Instinto: calma total
             float near = (float) (1.0 - d / 32.0);
+            long oz = ClientStates.ticksSinceOzaru(p.getId());
+            if (oz < 60) amount = Math.max(amount, near * (60 - oz) / 60.0F * 3.0F);
+            if (s.ozaru && p.onGround() && p.getDeltaMovement().horizontalDistanceSqr() > 0.004) amount = Math.max(amount, near * 0.5F);
             if (s.powering > 0) {
                 float progress = 1.0F - (float) s.powering / Math.max(1, s.poweringTotal);
-                amount = Math.max(amount, near * (0.4F + progress * 1.6F) * (1 + s.selected * 0.15F));
+                amount = Math.max(amount, near * (0.4F + progress * 1.6F) * (0.6F + com.bdsz.data.Form.byId(s.selected).drama() * 1.8F));
             }
             long since = ClientStates.ticksSinceTransform(p.getId());
             if (since < 20) amount = Math.max(amount, near * (20 - since) / 20.0F * (2.5F + s.selected * 0.3F));

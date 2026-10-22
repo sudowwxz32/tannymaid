@@ -4,13 +4,13 @@ license="All Rights Reserved"
 
 [[mods]]
 modId="blockdragonsuperz"
-version="5.2.0"
+version="6.0.0"
 displayName="Block Dragon Super Z"
 authors="BDSZ"
 description='''
-Conviértete en saiyajin (/raza sayajin) y transfórmate: Falso Super Saiyajin, fases 1, 2 y 3,
-Dios, Blue y Ultra Instinto, combinables con Kaioken x10 a x100.
-K = menú, P = transformarse, U = aura.
+Conviértete en saiyajin (/raza saiyajin) y transfórmate: Falso Super Saiyajin, fases 1, 2, 3 y 4,
+Dios, Blue, Ultra Instinto, Ultra Ego, Gohan Bestia, Legendario y Rosé, combinables con Kaioken x10 a x100.
+Modo Ozaru gigante. K = menú, P = transformarse, U = aura, O = Ozaru.
 '''
 
 [[dependencies.blockdragonsuperz]]

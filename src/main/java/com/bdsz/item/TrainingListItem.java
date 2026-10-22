@@ -56,7 +56,10 @@ public class TrainingListItem extends Item {
             case 5 -> "Super Saiyajin Fase 4 y Ultra Ego";
             default -> "tiempo infinito en las transformaciones";
         };
-        if (tier == 6) tip.add(Component.literal("§d§lDominio Total: §r§e" + forms));
+        if (tier == 6) {
+            tip.add(Component.literal("§d§lDominio Total: §r§e" + forms));
+            tip.add(Component.literal("§dDesbloquea: Gohan Bestia, Legendario, Rosé y Modo Ozaru"));
+        }
         else tip.add(Component.literal("§6Desbloquea el " + (tier == 5 ? "Bloque Especial" : "Bloque " + tier) + ": §e" + forms));
         tip.add(Component.literal("§7Haz clic izquierdo con ella en la mano."));
     }

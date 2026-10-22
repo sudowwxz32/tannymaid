@@ -29,6 +29,8 @@ public final class ClientModEvents {
     public static final KeyMapping DRAGON_FIST = new KeyMapping("key.blockdragonsuperz.dragonfist", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, CATEGORY);
     public static final ModelLayerLocation SPIRIT_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "spirit_dragon"), "main");
     public static final ModelLayerLocation TAIL_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "tail"), "main");
+    public static final ModelLayerLocation OZARU_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ozaru"), "main");
+    public static final KeyMapping OZARU = new KeyMapping("key.blockdragonsuperz.ozaru", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, CATEGORY);
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -44,11 +46,13 @@ public final class ClientModEvents {
         e.register(KAMEHAMEHA);
         e.register(BIG_BANG);
         e.register(DRAGON_FIST);
+        e.register(OZARU);
     }
 
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, HairModelData::createLayer);
+        e.registerLayerDefinition(OZARU_LAYER, OzaruModelData::createLayer);
         e.registerLayerDefinition(AURA_LAYER, AuraLayer::createLayer);
         e.registerLayerDefinition(TAIL_LAYER, TailLayer::createLayer);
         e.registerLayerDefinition(SPIRIT_LAYER, DragonSpiritLayer::createLayer);
@@ -59,6 +63,7 @@ public final class ClientModEvents {
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KI_BLAST.get(), KiBlastRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAME_BEAM.get(), KameBeamRenderer::new);
+        e.registerEntityRenderer(com.bdsz.registry.ModRegistry.DEBRIS.get(), DebrisRenderer::new);
     }
 
     @SubscribeEvent
@@ -69,6 +74,7 @@ public final class ClientModEvents {
     /** Añade el cabello saiyajin a los jugadores (skins normal y delgada). */
     @SubscribeEvent
     public static void addLayers(EntityRenderersEvent.AddLayers e) {
+        OzaruRenderer.reset();
         for (String skin : e.getSkins()) {
             if (e.getSkin(skin) instanceof PlayerRenderer renderer) {
                 renderer.addLayer(new SaiyanHairLayer(renderer, e.getEntityModels()));
