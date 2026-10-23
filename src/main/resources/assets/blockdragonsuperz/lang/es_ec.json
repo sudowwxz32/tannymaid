@@ -33,5 +33,19 @@
   "item.blockdragonsuperz.battle_helmet": "Diadema del Uniforme",
   "item.blockdragonsuperz.battle_chestplate": "Uniforme Azul",
   "item.blockdragonsuperz.battle_leggings": "Pantalón del Uniforme Azul",
-  "item.blockdragonsuperz.battle_boots": "Botas Blancas"
+  "item.blockdragonsuperz.battle_boots": "Botas Blancas",
+  "entity.blockdragonsuperz.androide": "Androide de Combate",
+  "item.blockdragonsuperz.androide_spawn_egg": "Huevo de aparición: Androide de Combate",
+  "entity.blockdragonsuperz.robot_guardian": "Robot Guardián",
+  "item.blockdragonsuperz.robot_guardian_spawn_egg": "Huevo de aparición: Robot Guardián",
+  "entity.blockdragonsuperz.soldado_imperial": "Soldado del Imperio",
+  "item.blockdragonsuperz.soldado_imperial_spawn_egg": "Huevo de aparición: Soldado del Imperio",
+  "entity.blockdragonsuperz.engendro_bio": "Engendro Bio",
+  "item.blockdragonsuperz.engendro_bio_spawn_egg": "Huevo de aparición: Engendro Bio",
+  "entity.blockdragonsuperz.bio_titan": "Bio-Titán",
+  "item.blockdragonsuperz.bio_titan_spawn_egg": "Huevo de aparición: Bio-Titán",
+  "entity.blockdragonsuperz.demonio_arcano": "Demonio Arcano",
+  "item.blockdragonsuperz.demonio_arcano_spawn_egg": "Huevo de aparición: Demonio Arcano",
+  "entity.blockdragonsuperz.emperador_galactico": "Emperador Galáctico",
+  "item.blockdragonsuperz.emperador_galactico_spawn_egg": "Huevo de aparición: Emperador Galáctico"
 }

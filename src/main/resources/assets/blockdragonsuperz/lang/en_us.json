@@ -33,5 +33,19 @@
   "item.blockdragonsuperz.battle_helmet": "Uniform Headband",
   "item.blockdragonsuperz.battle_chestplate": "Blue Uniform",
   "item.blockdragonsuperz.battle_leggings": "Blue Uniform Pants",
-  "item.blockdragonsuperz.battle_boots": "White Boots"
+  "item.blockdragonsuperz.battle_boots": "White Boots",
+  "entity.blockdragonsuperz.androide": "Combat Android",
+  "item.blockdragonsuperz.androide_spawn_egg": "Combat Android Spawn Egg",
+  "entity.blockdragonsuperz.robot_guardian": "Guardian Robot",
+  "item.blockdragonsuperz.robot_guardian_spawn_egg": "Guardian Robot Spawn Egg",
+  "entity.blockdragonsuperz.soldado_imperial": "Imperial Soldier",
+  "item.blockdragonsuperz.soldado_imperial_spawn_egg": "Imperial Soldier Spawn Egg",
+  "entity.blockdragonsuperz.engendro_bio": "Bio Spawn",
+  "item.blockdragonsuperz.engendro_bio_spawn_egg": "Bio Spawn Spawn Egg",
+  "entity.blockdragonsuperz.bio_titan": "Bio-Titan",
+  "item.blockdragonsuperz.bio_titan_spawn_egg": "Bio-Titan Spawn Egg",
+  "entity.blockdragonsuperz.demonio_arcano": "Arcane Demon",
+  "item.blockdragonsuperz.demonio_arcano_spawn_egg": "Arcane Demon Spawn Egg",
+  "entity.blockdragonsuperz.emperador_galactico": "Galactic Emperor",
+  "item.blockdragonsuperz.emperador_galactico_spawn_egg": "Galactic Emperor Spawn Egg"
 }

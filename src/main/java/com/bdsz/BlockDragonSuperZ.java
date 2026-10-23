@@ -43,6 +43,9 @@ public class BlockDragonSuperZ {
             e.accept(ModRegistry.ORANGE_KI_INGOT.get());
             e.accept(ModRegistry.BLUE_KI_INGOT.get());
         }
+        if (e.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
+            for (var egg : ModRegistry.ENEMY_EGG.values()) e.accept(egg.get());
+        }
         if (e.getTabKey() == CreativeModeTabs.COMBAT) {
             e.accept(ModRegistry.WARRIOR_HELMET.get());
             e.accept(ModRegistry.WARRIOR_CHESTPLATE.get());

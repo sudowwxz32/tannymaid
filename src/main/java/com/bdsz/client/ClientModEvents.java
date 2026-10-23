@@ -59,6 +59,9 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, SaiyanHairLayer::createLayer);
+        for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
+            e.registerLayerDefinition(EnemyRenderer.layer(k), () -> EnemyModels.create(k.id));
+        }
         e.registerLayerDefinition(SSJ4_FUR, Ssj4FurLayer::createWide);
         e.registerLayerDefinition(SSJ4_FUR_SLIM, Ssj4FurLayer::createSlim);
         e.registerLayerDefinition(OZARU_LAYER, OzaruModelData::createLayer);
@@ -73,6 +76,9 @@ public final class ClientModEvents {
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KI_BLAST.get(), KiBlastRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAME_BEAM.get(), KameBeamRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.DEBRIS.get(), DebrisRenderer::new);
+        for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
+            e.registerEntityRenderer(com.bdsz.registry.ModRegistry.ENEMY.get(k).get(), ctx -> new EnemyRenderer(ctx, k));
+        }
     }
 
     @SubscribeEvent

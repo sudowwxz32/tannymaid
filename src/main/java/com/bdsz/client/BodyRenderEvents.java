@@ -41,6 +41,14 @@ public final class BodyRenderEvents {
         }
     }
 
+    /** Aura de ki con llamas (se dibuja en el mundo, alrededor del jugador). */
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void post(RenderPlayerEvent.Post e) {
+        if (e.getEntity() instanceof AbstractClientPlayer p) {
+            KiFlameAura.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
+        }
+    }
+
     /** Como Ozaru no se ve el brazo humano en primera persona. */
     @SubscribeEvent
     public static void arm(RenderArmEvent e) {

@@ -38,6 +38,29 @@ public final class ModRegistry {
             () -> EntityType.Builder.<KiBlastEntity>of(KiBlastEntity::new, MobCategory.MISC)
                     .sized(0.6F, 0.6F).clientTrackingRange(8).updateInterval(1).fireImmune().build("ki_blast"));
 
+    // ---- enemigos y sus huevos de aparición
+    public static final java.util.Map<com.bdsz.entity.EnemyKind, RegistryObject<EntityType<com.bdsz.entity.DbzEnemy>>> ENEMY =
+            new java.util.EnumMap<>(com.bdsz.entity.EnemyKind.class);
+    public static final java.util.Map<com.bdsz.entity.EnemyKind, RegistryObject<Item>> ENEMY_EGG =
+            new java.util.EnumMap<>(com.bdsz.entity.EnemyKind.class);
+    private static final int[][] EGG_COLORS = {
+            {0x22305A, 0x6FE8FF}, {0x686F52, 0xFF3A30}, {0x1C1C22, 0x28A0A0}, {0x2A3E80, 0xFF8A2A},
+            {0x201E26, 0xFF7A1A}, {0x6E3C8C, 0xD6AA3C}, {0x18161E, 0xE2B63E}};
+    static {
+        for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
+            var type = ENTITIES.register(k.id, () -> {
+                var b = EntityType.Builder.<com.bdsz.entity.DbzEnemy>of(com.bdsz.entity.DbzEnemy::new, MobCategory.MONSTER)
+                        .sized(k.width, k.height).clientTrackingRange(10);
+                if (k.boss || k == com.bdsz.entity.EnemyKind.ROBOT) b = b.fireImmune();
+                return b.build(k.id);
+            });
+            ENEMY.put(k, type);
+            int[] c = EGG_COLORS[k.ordinal()];
+            ENEMY_EGG.put(k, ITEMS.register(k.id + "_spawn_egg",
+                    () -> new net.minecraftforge.common.ForgeSpawnEggItem(type, c[0], c[1], new Item.Properties())));
+        }
+    }
+
     public static final RegistryObject<EntityType<com.bdsz.entity.DebrisEntity>> DEBRIS = ENTITIES.register("debris",
             () -> EntityType.Builder.<com.bdsz.entity.DebrisEntity>of(com.bdsz.entity.DebrisEntity::new, MobCategory.MISC)
                     .sized(0.3F, 0.3F).clientTrackingRange(6).updateInterval(4).fireImmune().noSave().build("debris"));

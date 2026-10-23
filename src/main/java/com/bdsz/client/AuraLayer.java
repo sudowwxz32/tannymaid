@@ -114,8 +114,8 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 
         // envoltura de fuego en forma de gota, con puntas que suben por encima de la cabeza
         float flame = drama * (s.powering > 0 ? 0.4F + progress * 0.8F : 1.0F) * (forced ? 1.2F : 1.0F);
-        renderShell(pose, buf, t, size, flame, 1.0F, r * a * 0.55F, g * a * 0.55F, b * a * 0.55F, player.getId());
-        renderShell(pose, buf, t * 0.8F + 40, size * 1.12F, flame * 1.1F, 1.25F, or * a * 0.45F, og * a * 0.45F, ob * a * 0.45F, player.getId() + 3);
+        renderShell(pose, buf, t, size, flame, 1.0F, r * a * 0.35F, g * a * 0.35F, b * a * 0.35F, player.getId());
+        renderShell(pose, buf, t * 0.8F + 40, size * 1.12F, flame * 1.1F, 1.25F, or * a * 0.25F, og * a * 0.25F, ob * a * 0.25F, player.getId() + 3);
 
         // lenguas de fuego finas que suben por la superficie del aura
         drawWisps(pose, buf, t, size, flame, r * a, g * a, b * a, or * a, og * a, ob * a, player.getId());
@@ -123,7 +123,11 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         // ondas del aura
         int wc = k > 0 && f == Form.BASE ? 0xFF3020 : f.waveColor();
         float wr = ((wc >> 16) & 255) / 255F, wg = ((wc >> 8) & 255) / 255F, wb = (wc & 255) / 255F;
-        drawWaves(pose, buf, t, wr * a, wg * a, wb * a, size, power, forced, f == Form.BEAST ? 1.5F : 1.0F);
+        // las ondas solo aparecen al cargar ki o al transformarse (no al caminar, volar o estar quieto)
+        long since = ClientStates.ticksSinceTransform(player.getId());
+        if (forced || since < 30) {
+            drawWaves(pose, buf, t, wr * a, wg * a, wb * a, size, power, true, f == Form.BEAST ? 1.5F : 1.0F);
+        }
 
         // rayos
         if (f.lightningAura() && (s.transformed || progress > 0.5F)) {
@@ -145,7 +149,8 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         scaleAround(pose, 1.12F);
         renderAll(pose, buf.getBuffer(RenderType.energySwirl(TEX, (t * -0.001F) % 1.0F, (-t * 0.004F) % 1.0F)), 0.5F * a, 0.55F * a, 0.7F * a);
         pose.popPose();
-        // un solo anillo suave en el suelo
+        if (!powering) return;
+        // un solo anillo suave en el suelo (solo mientras se transforma)
         VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(TEX, 0, (t * 0.005F) % 1.0F));
         float ph = (t / 60.0F) % 1.0F;
         float rad = 0.6F + ph * 1.2F;

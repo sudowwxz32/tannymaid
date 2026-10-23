@@ -25,7 +25,9 @@ public final class GuideBook {
             "§l§6Modo Ozaru§r\n§8(con el Dominio Total)\n\n§0Pulsa §lO§r§0 para convertirte en un mono gigante: muchísima vida, golpes enormes, pasos largos y más alcance.\n\n§0Pulsa §lO§r§0 otra vez para volver a tu tamaño.\n§8No puede volar.",
             "§l§1Ataques§r\n\n§0R §8- Kamehameha (80 ki)\n§0G §8- Big Bang Attack (60 ki)\n§0Z §8- Puño del Dragón (200 ki): todo se oscurece, un dragón te envuelve y tu siguiente golpe es devastador. Espera de 3 minutos; una semilla del ermitaño la recupera.\n§0B §8- ráfaga de ki (12 ki)",
             "§l§1Armaduras de Ki§r\n\n§0Busca §5Mineral de Ki§0 a la altura del diamante. Fúndelo en el horno: sale un §8Lingote de Ki Negro§0.\nLingote negro + tinte naranja o azul = lingote de color.\nPieza de armadura de diamante en el centro + 8 lingotes alrededor.",
-            "§l§1Consejos§r\n\n§0- Cada transformación tiene un §ltiempo límite§r§0 (barra dorada). El Kaioken lo reduce.\n- Las §2Semillas del Ermitaño§0 lo recuperan todo. Están en cofres de aldeas y se pueden plantar.\n- Desbloquea los bloques en orden."
+            "§l§4Enemigos§r\n\n§0Aparecen de noche:\n- Androide de Combate\n- Robot Guardián\n- Soldado del Imperio\n- Engendro Bio\n\n§0Lanzan ki, esquivan y algunos se teletransportan. Todos tienen más vida que un Warden.",
+            "§l§4Jefes§r\n\n§6Bio-Titán:§0 absorbe energía, se regenera e invoca engendros.\n§5Demonio Arcano:§0 vuela y se regenera muy rápido.\n§cEmperador Galáctico:§0 vuela, dispara rayos y llama a sus soldados.\n\n§8Con poca vida entran en furia.",
+                        "§l§1Consejos§r\n\n§0- Cada transformación tiene un §ltiempo límite§r§0 (barra dorada). El Kaioken lo reduce.\n- Las §2Semillas del Ermitaño§0 lo recuperan todo. Están en cofres de aldeas y se pueden plantar.\n- Desbloquea los bloques en orden."
     };
 
     public static void give(ServerPlayer p) {
