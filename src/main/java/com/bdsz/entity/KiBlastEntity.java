@@ -117,7 +117,7 @@ public class KiBlastEntity extends Projectile {
                 sl.playSound(null, at.x, at.y, at.z, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.0F, 1.2F);
             }
             for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(r),
-                    e -> e != owner && e.isAlive() && e.distanceToSqr(at) < r * r && !(owner instanceof DbzEnemy && e instanceof DbzEnemy))) {
+                    e -> e != owner && e.isAlive() && e.distanceToSqr(at) < r * r)) {
                 e.hurt(damageSources().thrown(this, owner), radius > 0 ? damage * 0.75F : damage * 0.4F);
                 if (radius > 0) {
                     Vec3 push = e.position().subtract(at).normalize().scale(1.5);
@@ -131,7 +131,7 @@ public class KiBlastEntity extends Projectile {
 
     @Override
     protected boolean canHitEntity(Entity e) {
-        return super.canHitEntity(e) && !(e instanceof KiBlastEntity) && !(getOwner() instanceof DbzEnemy && e instanceof DbzEnemy);
+        return super.canHitEntity(e) && !(e instanceof KiBlastEntity);
     }
 
     @Override

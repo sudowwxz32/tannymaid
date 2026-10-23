@@ -96,10 +96,13 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         if (s.charging) power += 0.25F;
         if (s.powering > 0) power *= 0.5F + progress;
         float size = f.auraSize * (s.charging ? 1.15F : 1.0F) * (s.powering > 0 ? 0.7F + progress * 0.5F : 1.0F);
-        float a = Math.min(1.0F, 0.45F + power * 0.35F);
+        float a = Math.min(1.0F, 0.45F + power * 0.35F)
+                * (0.93F + 0.05F * Mth.sin(age * 1.7F) + 0.04F * Mth.sin(age * 4.3F + 1.1F));   // parpadeo de llama
 
         int wc0 = k > 0 && f == Form.BASE ? 0xFF3020 : f.waveColor();
         float wr0 = ((wc0 >> 16) & 255) / 255F, wg0 = ((wc0 >> 8) & 255) / 255F, wb0 = (wc0 & 255) / 255F;
+        long sinceT = ClientStates.ticksSinceTransform(player.getId());
+        if (sinceT < 26) drawShockwave(pose, buf, sinceT + partial, wr0, wg0, wb0, drama(f, k), player.getId());
         if (onlyWaves) {
             // el aura ya se apagó: solo quedan las ondas desvaneciéndose
             float wf = waveFade * waveFade;
@@ -225,6 +228,50 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         float f = sf[k][j];
         vc.vertex(m, sx[k][j], sy[k][j], sz[k][j]).color(r * f, g * f, b * f, 1.0F).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY)
                 .uv2(LightTexture.FULL_BRIGHT).normal(n, 0, 1, 0).endVertex();
+    }
+
+    private static float drama(Form f, int k) {
+        return Math.max(f.drama(), k > 0 ? 0.45F : 0.25F);
+    }
+
+    /**
+     * Onda expansiva al terminar la transformación: una esfera de energía que crece desde el pecho
+     * y un anillo enorme en el suelo; ambos se desvanecen rápido.
+     */
+    private static void drawShockwave(PoseStack pose, MultiBufferSource buf, float since, float r, float g, float b, float drama, int seed) {
+        float p = Math.min(1.0F, since / 26.0F);
+        float ease = 1.0F - (1.0F - p) * (1.0F - p);
+        float fade = (1.0F - p) * (1.0F - p) * (0.55F + drama * 0.45F);
+        float radius = 0.4F + ease * (4.0F + drama * 6.0F);
+        VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(TEX, (since * 0.02F) % 1.0F, (since * 0.05F) % 1.0F));
+        org.joml.Matrix4f m = pose.last().pose();
+        org.joml.Matrix3f n = pose.last().normal();
+        int lat = 12, lon = 24;
+        float cy = 0.6F;                                   // a la altura del pecho
+        for (int i = 0; i < lat; i++) {
+            float a0 = -Mth.HALF_PI + Mth.PI * i / lat, a1 = -Mth.HALF_PI + Mth.PI * (i + 1) / lat;
+            for (int j = 0; j < lon; j++) {
+                float b0 = Mth.TWO_PI * j / lon, b1 = Mth.TWO_PI * (j + 1) / lon;
+                // más brillante en el ecuador, como un anillo de choque
+                float eq0 = 0.35F + 0.65F * Mth.cos(a0), eq1 = 0.35F + 0.65F * Mth.cos(a1);
+                sphere(vc, m, n, radius, cy, a0, b0, r, g, b, fade * eq0 * 0.5F, j / (float) lon, i / (float) lat);
+                sphere(vc, m, n, radius, cy, a0, b1, r, g, b, fade * eq0 * 0.5F, (j + 1) / (float) lon, i / (float) lat);
+                sphere(vc, m, n, radius, cy, a1, b1, r, g, b, fade * eq1 * 0.5F, (j + 1) / (float) lon, (i + 1) / (float) lat);
+                sphere(vc, m, n, radius, cy, a1, b0, r, g, b, fade * eq1 * 0.5F, j / (float) lon, (i + 1) / (float) lat);
+            }
+        }
+        // anillo en el suelo, más grande y con el borde de fuego
+        float gr = 0.6F + ease * (6.0F + drama * 8.0F);
+        fireRing(vc, pose.last(), 1.49F, gr, gr * 0.22F, r * fade, g * fade, b * fade, since, seed);
+        fireRing(vc, pose.last(), 1.48F, gr * 0.98F, gr * 0.05F, Math.min(1, r * fade * 1.8F + 0.2F * fade),
+                Math.min(1, g * fade * 1.8F + 0.2F * fade), Math.min(1, b * fade * 1.8F + 0.2F * fade), since, seed);
+    }
+
+    private static void sphere(VertexConsumer vc, org.joml.Matrix4f m, org.joml.Matrix3f n, float rad, float cy, float lat, float lon,
+                               float r, float g, float b, float k, float u, float vv) {
+        float y = cy - Mth.sin(lat) * rad, h = Mth.cos(lat) * rad;
+        vc.vertex(m, Mth.cos(lon) * h, y, Mth.sin(lon) * h).color(r * k, g * k, b * k, 1.0F).uv(u * 3, vv * 2)
+                .overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(n, 0, 1, 0).endVertex();
     }
 
     private static void scaleAround(PoseStack pose, float sc) {

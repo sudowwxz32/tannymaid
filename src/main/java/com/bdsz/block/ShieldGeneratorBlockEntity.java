@@ -1,6 +1,5 @@
 package com.bdsz.block;
 
-import com.bdsz.entity.DbzEnemy;
 import com.bdsz.registry.ModRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -118,7 +117,7 @@ public class ShieldGeneratorBlockEntity extends BlockEntity {
 
     /** No deja pasar a esta entidad (enemigos, sus proyectiles y otros jugadores). */
     private boolean blocked(Entity e) {
-        if (e instanceof Enemy || e instanceof DbzEnemy) return true;
+        if (e instanceof Enemy) return true;
         if (e instanceof Projectile pr) {
             Entity o = pr.getOwner();
             return o instanceof Enemy || (o instanceof Player op && owner != null && !op.getUUID().equals(owner));

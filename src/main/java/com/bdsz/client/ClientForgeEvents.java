@@ -48,9 +48,6 @@ public final class ClientForgeEvents {
             if (!mine.saiyan) notSaiyan(mc);
             else if (mc.screen == null) mc.setScreen(new PowerScreen());
         }
-        while (ClientModEvents.SENSE.consumeClick()) {
-            if (!mine.saiyan) notSaiyan(mc); else KiSense.toggle();
-        }
         while (ClientModEvents.QUICK.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc);
             else if (mc.screen == null) mc.setScreen(new QuickSwitchScreen());
@@ -120,6 +117,15 @@ public final class ClientForgeEvents {
             if (f.calm() && k == 0) {
                 calmAura(level, rnd, p, maxH, self);
                 continue;
+            }
+            if (s.powering > 0 && !self) {
+                // la energía del entorno se absorbe hacia el guerrero
+                for (int i = 0; i < 3; i++) {
+                    double ang = rnd.nextDouble() * Math.PI * 2, rr = 3.0 + rnd.nextDouble() * 2.0;
+                    double sx = p.getX() + Math.cos(ang) * rr, sy = p.getY() + rnd.nextDouble() * 2.5, sz = p.getZ() + Math.sin(ang) * rr;
+                    double tx = p.getX() - sx, ty = p.getY() + 1.0 - sy, tz = p.getZ() - sz;
+                    level.addParticle(rnd.nextInt(3) == 0 ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.END_ROD, sx, sy, sz, tx * 0.09, ty * 0.09, tz * 0.09);
+                }
             }
             float power = f == Form.BASE ? 0.6F : 1.0F + f.ordinal() * 0.12F + k / 100.0F;
             if (forced) power += 0.6F;

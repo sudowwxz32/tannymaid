@@ -175,6 +175,13 @@ public final class PowerLogic {
             }
             if (drama > 0.6F) lv.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, x, y + 0.1, z, 2, rad * 0.5, 0.05, rad * 0.5, 0.01);
         }
+        // rocas que se despegan del suelo y levitan alrededor hasta que termina la transformación
+        if (drama >= 0.5F && progress > 0.1F && progress < 0.85F && s.powering % Math.max(3, (int) (10 - drama * 6)) == 0) {
+            double a = lv.random.nextDouble() * Math.PI * 2;
+            double r = 1.8 + lv.random.nextDouble() * (1.5 + drama * 1.5);
+            com.bdsz.entity.DebrisEntity.levitate(lv, new Vec3(x + Math.cos(a) * r, y + 0.1, z + Math.sin(a) * r), ground,
+                    s.powering + 10, 0.25F + lv.random.nextFloat() * 0.35F * drama);
+        }
         // escombros que salen volando del suelo
         int every = Math.max(2, (int) (9 - drama * 6));
         if (progress > 0.15F && s.powering % every == 0) {
@@ -222,6 +229,11 @@ public final class PowerLogic {
 
     private static void completeTransform(ServerPlayer p, SaiyanState s) {
         s.powering = 0;
+        // las rocas que levitaban salen disparadas con la explosión de poder
+        for (com.bdsz.entity.DebrisEntity d : p.serverLevel().getEntitiesOfClass(com.bdsz.entity.DebrisEntity.class,
+                p.getBoundingBox().inflate(8.0), com.bdsz.entity.DebrisEntity::isFloating)) {
+            d.blast(p.position(), 0.6 + Form.byId(s.selected).drama() * 0.6);
+        }
         if (!p.isCreative()) s.ki = Math.max(0, s.ki - TRANSFORM_COST);
         s.transformed = true;
         s.totemReady = true;

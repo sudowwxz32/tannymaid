@@ -23,7 +23,7 @@ public class DebrisRenderer extends EntityRenderer<DebrisEntity> {
         float size = e.getSize();
         float t = e.tickCount + partial;
         boolean moving = !e.onGround() || e.getDeltaMovement().horizontalDistanceSqr() > 0.0004;
-        float spin = moving ? t * (9.0F + (e.getId() % 7)) : (e.getId() % 4) * 20.0F;
+        float spin = e.isFloating() ? t * 2.0F + e.getId() * 37 : moving ? t * (9.0F + (e.getId() % 7)) : (e.getId() % 4) * 20.0F;
         pose.pushPose();
         pose.translate(0, size / 2, 0);
         pose.mulPose(Axis.YP.rotationDegrees(e.getYRot()));

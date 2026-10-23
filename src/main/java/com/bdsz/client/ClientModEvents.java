@@ -37,8 +37,6 @@ public final class ClientModEvents {
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY);
     public static final ModelLayerLocation SSJ4_FUR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ssj4_fur"), "main");
     public static final ModelLayerLocation SSJ4_FUR_SLIM = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ssj4_fur_slim"), "main");
-    /** Sentir el ki: J. */
-    public static final KeyMapping SENSE = new KeyMapping("key.blockdragonsuperz.sense", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, CATEGORY);
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -56,15 +54,11 @@ public final class ClientModEvents {
         e.register(DRAGON_FIST);
         e.register(OZARU);
         e.register(QUICK);
-        e.register(SENSE);
     }
 
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, SaiyanHairLayer::createLayer);
-        for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
-            e.registerLayerDefinition(EnemyRenderer.layer(k), () -> EnemyModels.create(k.id));
-        }
         e.registerLayerDefinition(SSJ4_FUR, Ssj4FurLayer::createWide);
         e.registerLayerDefinition(SSJ4_FUR_SLIM, Ssj4FurLayer::createSlim);
         e.registerLayerDefinition(OZARU_LAYER, OzaruModelData::createLayer);
@@ -80,13 +74,11 @@ public final class ClientModEvents {
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAME_BEAM.get(), KameBeamRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.DEBRIS.get(), DebrisRenderer::new);
         e.registerBlockEntityRenderer(com.bdsz.registry.ModRegistry.SHIELD_BE.get(), ShieldDomeRenderer::new);
-        for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
-            e.registerEntityRenderer(com.bdsz.registry.ModRegistry.ENEMY.get(k).get(), ctx -> new EnemyRenderer(ctx, k));
-        }
     }
 
     @SubscribeEvent
     public static void overlays(net.minecraftforge.client.event.RegisterGuiOverlaysEvent e) {
+        e.registerBelowAll("transform_flash", new TransformFlash());
         e.registerAboveAll("saiyan_hud", new SaiyanHud());
     }
 
