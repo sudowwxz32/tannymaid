@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "blockdragonsuperz:block/shield_generator"
+    },
+    "lit=true": {
+      "model": "blockdragonsuperz:block/shield_generator_on"
+    }
+  }
+}

@@ -26,6 +26,25 @@ import net.minecraftforge.fml.common.Mod;
 public final class ServerEvents {
     private ServerEvents() {}
 
+    /** Dentro de un domo protector encendido no aparecen enemigos. */
+    @SubscribeEvent
+    public static void join(net.minecraftforge.event.entity.EntityJoinLevelEvent e) {
+        if (e.getLevel().isClientSide || e.loadedFromDisk()) return;
+        if (e.getEntity() instanceof net.minecraft.world.entity.monster.Enemy
+                && com.bdsz.block.ShieldGeneratorBlockEntity.protectedAt(e.getLevel(), e.getEntity().position())) {
+            e.setCanceled(true);
+        }
+    }
+
+    /** Las explosiones no dañan nada dentro de un domo protector. */
+    @SubscribeEvent
+    public static void explosion(net.minecraftforge.event.level.ExplosionEvent.Detonate e) {
+        net.minecraft.world.level.Level lv = e.getLevel();
+        e.getAffectedBlocks().removeIf(p -> com.bdsz.block.ShieldGeneratorBlockEntity.protectedAt(lv, p.getCenter()));
+        e.getAffectedEntities().removeIf(en -> !(en instanceof net.minecraft.world.entity.monster.Enemy)
+                && com.bdsz.block.ShieldGeneratorBlockEntity.protectedAt(lv, en.position()));
+    }
+
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent e) {
         RazaCommand.register(e.getDispatcher());

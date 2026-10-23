@@ -47,5 +47,7 @@
   "entity.blockdragonsuperz.demonio_arcano": "Arcane Demon",
   "item.blockdragonsuperz.demonio_arcano_spawn_egg": "Arcane Demon Spawn Egg",
   "entity.blockdragonsuperz.emperador_galactico": "Galactic Emperor",
-  "item.blockdragonsuperz.emperador_galactico_spawn_egg": "Galactic Emperor Spawn Egg"
+  "item.blockdragonsuperz.emperador_galactico_spawn_egg": "Galactic Emperor Spawn Egg",
+  "block.blockdragonsuperz.shield_generator": "Protective Generator",
+  "itemGroup.blockdragonsuperz": "Block Dragon Super Z"
 }

@@ -76,6 +76,7 @@ public final class ClientModEvents {
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KI_BLAST.get(), KiBlastRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAME_BEAM.get(), KameBeamRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.DEBRIS.get(), DebrisRenderer::new);
+        e.registerBlockEntityRenderer(com.bdsz.registry.ModRegistry.SHIELD_BE.get(), ShieldDomeRenderer::new);
         for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
             e.registerEntityRenderer(com.bdsz.registry.ModRegistry.ENEMY.get(k).get(), ctx -> new EnemyRenderer(ctx, k));
         }

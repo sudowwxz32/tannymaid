@@ -31,6 +31,10 @@ public final class ModRegistry {
     public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, BlockDragonSuperZ.MODID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BlockDragonSuperZ.MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, BlockDragonSuperZ.MODID);
+    public static final DeferredRegister<net.minecraft.world.level.block.entity.BlockEntityType<?>> BLOCK_ENTITIES =
+            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, BlockDragonSuperZ.MODID);
+    public static final DeferredRegister<net.minecraft.world.item.CreativeModeTab> TABS =
+            DeferredRegister.create(net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB, BlockDragonSuperZ.MODID);
     public static final DeferredRegister<Codec<? extends IGlobalLootModifier>> LOOT =
             DeferredRegister.create(ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, BlockDragonSuperZ.MODID);
 
@@ -119,6 +123,24 @@ public final class ModRegistry {
 
     public static final RegistryObject<Codec<SenzuLootModifier>> SENZU_LOOT = LOOT.register("senzu_in_villages", () -> SenzuLootModifier.CODEC);
 
+    // ---- Generador Protector
+    public static final RegistryObject<Block> SHIELD_GENERATOR = BLOCKS.register("shield_generator",
+            () -> new com.bdsz.block.ShieldGeneratorBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).strength(6.0F, 1200.0F)
+                    .requiresCorrectToolForDrops().lightLevel(st -> st.getValue(com.bdsz.block.ShieldGeneratorBlock.ON) ? 12 : 3)));
+    public static final RegistryObject<Item> SHIELD_GENERATOR_ITEM = ITEMS.register("shield_generator",
+            () -> new BlockItem(SHIELD_GENERATOR.get(), new Item.Properties().rarity(Rarity.EPIC)));
+    public static final RegistryObject<net.minecraft.world.level.block.entity.BlockEntityType<com.bdsz.block.ShieldGeneratorBlockEntity>> SHIELD_BE =
+            BLOCK_ENTITIES.register("shield_generator", () -> net.minecraft.world.level.block.entity.BlockEntityType.Builder
+                    .of(com.bdsz.block.ShieldGeneratorBlockEntity::new, SHIELD_GENERATOR.get()).build(null));
+
+    // ---- pestaña propia en el inventario creativo con todos los objetos del mod
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> TAB = TABS.register("main",
+            () -> net.minecraft.world.item.CreativeModeTab.builder()
+                    .title(net.minecraft.network.chat.Component.translatable("itemGroup.blockdragonsuperz"))
+                    .icon(() -> new net.minecraft.world.item.ItemStack(TOTAL_MASTERY.get()))
+                    .displayItems((params, out) -> ITEMS.getEntries().forEach(i -> out.accept(i.get())))
+                    .build());
+
     private ModRegistry() {}
 
     public static void register(IEventBus bus) {
@@ -126,5 +148,7 @@ public final class ModRegistry {
         BLOCKS.register(bus);
         ITEMS.register(bus);
         LOOT.register(bus);
+        BLOCK_ENTITIES.register(bus);
+        TABS.register(bus);
     }
 }

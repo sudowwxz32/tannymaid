@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "blockdragonsuperz:block/shield_generator_side_on",
+    "top": "blockdragonsuperz:block/shield_generator_top_on",
+    "bottom": "blockdragonsuperz:block/shield_generator_top"
+  }
+}

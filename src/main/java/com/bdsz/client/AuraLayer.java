@@ -58,7 +58,10 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         if (player.isInvisible()) return;
         SaiyanState s = ClientStates.get(player.getId());
         boolean forced = s.charging || s.powering > 0;
-        if (!s.saiyan || s.ozaru || !(s.aura || forced)) return;
+        if (!s.saiyan || s.ozaru) return;
+        float waveFade = ClientStates.waveFade(player.getId(), forced);
+        boolean onlyWaves = !(s.aura || forced);
+        if (onlyWaves && waveFade <= 0.0F) return;
         Form f = s.visibleForm();
         int k = s.transformed || s.powering > 0 ? s.kaioken : 0;
         float r, g, b;
@@ -94,6 +97,14 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         float size = f.auraSize * (s.charging ? 1.15F : 1.0F) * (s.powering > 0 ? 0.7F + progress * 0.5F : 1.0F);
         float a = Math.min(1.0F, 0.45F + power * 0.35F);
 
+        int wc0 = k > 0 && f == Form.BASE ? 0xFF3020 : f.waveColor();
+        float wr0 = ((wc0 >> 16) & 255) / 255F, wg0 = ((wc0 >> 8) & 255) / 255F, wb0 = (wc0 & 255) / 255F;
+        if (onlyWaves) {
+            // el aura ya se apagó: solo quedan las ondas desvaneciéndose
+            float wf = waveFade * waveFade;
+            drawWaves(pose, buf, t, wr0 * a * wf, wg0 * a * wf, wb0 * a * wf, size, power, true, f == Form.BEAST ? 1.5F : 1.0F);
+            return;
+        }
         // capa interior
         pose.pushPose();
         scaleAround(pose, 0.92F + size * 0.08F);
@@ -124,9 +135,9 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         int wc = k > 0 && f == Form.BASE ? 0xFF3020 : f.waveColor();
         float wr = ((wc >> 16) & 255) / 255F, wg = ((wc >> 8) & 255) / 255F, wb = (wc & 255) / 255F;
         // las ondas solo aparecen al cargar ki o al transformarse (no al caminar, volar o estar quieto)
-        long since = ClientStates.ticksSinceTransform(player.getId());
-        if (forced || since < 30) {
-            drawWaves(pose, buf, t, wr * a, wg * a, wb * a, size, power, true, f == Form.BEAST ? 1.5F : 1.0F);
+        if (waveFade > 0.0F) {
+            float wf = waveFade * waveFade;     // se desvanecen poco a poco
+            drawWaves(pose, buf, t, wr * a * wf, wg * a * wf, wb * a * wf, size, power, true, f == Form.BEAST ? 1.5F : 1.0F);
         }
 
         // rayos

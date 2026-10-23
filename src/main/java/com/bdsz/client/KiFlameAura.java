@@ -85,6 +85,22 @@ public final class KiFlameAura {
             float br = a * life * (outer ? 0.55F : 0.7F);
             sprite(vc, m, n, x, y, z, left, w, h, cr * br, cg * br, cb * br);
         }
+        // llamas que nacen en el suelo, se elevan alrededor del cuerpo y se apagan por encima de la cabeza
+        int rise = 8 + (int) (drama * 8) + (forced ? 4 : 0);
+        for (int i = 0; i < rise; i++) {
+            float c = (t * (0.022F + drama * 0.012F) + i * 0.382F + 0.13F) % 1.0F;
+            float life = Mth.sin(c * Mth.PI);
+            float ang = i * 2.399F + t * 0.01F;
+            float rad = (0.55F + 0.15F * Mth.sin(c * Mth.PI)) * size;
+            float sway = Mth.sin(t * 0.15F + i * 1.7F) * 0.12F * size;
+            float x = Mth.cos(ang) * rad + left.x * sway, z = Mth.sin(ang) * rad + left.z * sway;
+            float y = c * (2.6F + drama * 0.6F) * size * scaleH - 0.2F;
+            float h = (0.55F + drama * 0.35F) * size * (1.1F - c * 0.6F);
+            float w = 0.32F * size * (1.0F - c * 0.55F);
+            float br = a * life * 0.75F;
+            float mix = c;                                              // del color del aura al color exterior al subir
+            sprite(vc, m, n, x, y, z, left, w, h, (r * (1 - mix) + or * mix) * br, (g * (1 - mix) + og * mix) * br, (b * (1 - mix) + ob * mix) * br);
+        }
         // núcleo brillante pegado al cuerpo
         sprite(vc, m, n, 0, 0.0F, 0, left, 0.9F * size, (1.9F + drama * 0.3F) * size * scaleH, r * a * 0.35F + 0.08F * a, g * a * 0.35F + 0.08F * a, b * a * 0.35F + 0.08F * a);
     }

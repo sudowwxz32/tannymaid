@@ -11,6 +11,20 @@ public final class ClientStates {
     private static final Map<Integer, Long> TRANSFORM_AT = new ConcurrentHashMap<>();
     private static final Map<Integer, Long> DRAGON_AT = new ConcurrentHashMap<>();
     private static final Map<Integer, Long> OZARU_AT = new ConcurrentHashMap<>();
+    private static final Map<Integer, Long> FORCED_AT = new ConcurrentHashMap<>();
+    /** Ticks que tardan las ondas en desaparecer después de cargar o transformarse. */
+    public static final float WAVE_FADE_TICKS = 70.0F;
+
+    /** Intensidad de las ondas: 1 mientras cargas/te transformas, luego baja poco a poco hasta 0. */
+    public static float waveFade(int id, boolean forced) {
+        if (forced) {
+            FORCED_AT.put(id, clientTicks);
+            return 1.0F;
+        }
+        long last = Math.max(FORCED_AT.getOrDefault(id, -100000L), TRANSFORM_AT.getOrDefault(id, -100000L));
+        float d = clientTicks - last;
+        return d >= WAVE_FADE_TICKS ? 0.0F : 1.0F - d / WAVE_FADE_TICKS;
+    }
     /** Reloj del cliente (ticks), lo avanza ClientForgeEvents. */
     public static long clientTicks;
     private static final SaiyanState NONE = new SaiyanState();

@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "KDK",
+    "KIK",
+    "KRK"
+  ],
+  "key": {
+    "K": [
+      {
+        "item": "blockdragonsuperz:black_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:orange_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:blue_ki_ingot"
+      }
+    ],
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "item": "blockdragonsuperz:shield_generator",
+    "count": 1
+  }
+}
