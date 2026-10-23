@@ -86,6 +86,7 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         root.getChild("left_leg").copyFrom(m.leftLeg);
 
         if (f.calm() && k == 0) {
+            if (onlyWaves) return;
             renderCalm(pose, buf, t, progress, s.powering > 0);
             return;
         }
