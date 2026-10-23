@@ -1,97 +1,47 @@
-"""Cabello saiyajin 3D (gris claro; se tiñe con el color de cada fase al renderizar).
+"""Cabello saiyajin 3D LISO (sin segmentos de cubos).
 
-Cada mechón es una punta de 4 segmentos (raíz gruesa -> punta fina) que se mueve sola.
-Convención del modelo: -y = arriba, -z = cara.  xRot negativo inclina la punta hacia atrás,
-zRot negativo la inclina hacia el lado derecho (-x).
+Cada mechón es una punta continua: una malla de 4 lados que se afina hasta un pico y se curva suavemente.
+Este script describe los mechones y genera HairSpikes.java (datos) + las texturas; la malla se construye
+en el juego (SaiyanHairLayer) para que cada mechón pueda doblarse y moverse de forma fluida.
 
-Prefijos de estilo:
-  c_ común (cráneo)   s_ clásico (Falso, Fase 1, Blue)   x_ mechón extra de la Fase 2
-  l_ Fase 3 (largo)    g_ Dios / Ultra Instinto           f_ Fase 4
-  e_ Ultra Ego         b_ Bestia                          k_ Legendario      r_ Rosé
-Marcas en el nombre:  _h = mechón colgante (se mece al caminar)
-Sufijos de segmento:  (raíz) _m _t _p   ·  mechón que cae: (raíz) _e
+Convención: -y = arriba, -z = cara.  xRot negativo inclina hacia atrás, zRot negativo hacia la derecha (-x).
+Prefijos: c_ cráneo · s_ clásico · x_ Fase 2 · l_ Fase 3 · g_ Dios/UI · f_ Fase 4 · e_ Ultra Ego · b_ Bestia · k_ Legendario · r_ Rosé
 """
 import os, sys, math
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import modelgen_base as mg
-from modelgen_base import Box, Part, pack, build_texture, mirror
+from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEX = os.path.join(ROOT, "src/main/resources/assets/blockdragonsuperz/textures/entity/saiyan_hair.png")
-JAVA = os.path.join(ROOT, "src/main/java/com/bdsz/client/HairModelData.java")
+TEXDIR = os.path.join(ROOT, "src/main/resources/assets/blockdragonsuperz/textures/entity")
+JAVA = os.path.join(ROOT, "src/main/java/com/bdsz/client/HairSpikes.java")
 
-G = [(128, 128, 128), (160, 160, 160), (190, 190, 190), (216, 216, 216), (238, 238, 238), (255, 255, 255)]
-
-
-def shade(level):
-    """level 0 = raíz (oscura) .. 3 = punta (clara). Bordes más oscuros para que cada mechón se distinga."""
-    def fn(f, x, y, w, h):
-        base = G[1 + level] if level < 4 else G[5]
-        if f == "top":
-            return G[min(5, 2 + level)]
-        if f == "bottom":
-            return G[max(0, level)]
-        if x == 0 or x == w - 1:
-            return G[max(0, level)]                 # contorno
-        if y == h - 1 and level == 0:
-            return G[0]                             # raíz en sombra
-        if (x + y * 2) % 5 == 0:
-            return G[min(5, 2 + level)]             # brillo
-        return base
-    return fn
+SPIKES = []
 
 
-def strands(f, x, y, w, h):
-    if f == "top":
-        return G[4] if (x + y) % 3 else G[3]
-    if f == "bottom":
-        return G[1]
-    if x % 3 == 0:
-        return G[2]
-    return G[3] if y < h - 1 else G[2]
+class S:
+    def __init__(self, name, pos, rx, rz, length, width, bx=0.0, bz=0.0, flat=1.0, hang=False):
+        self.name, self.pos, self.rx, self.rz = name, pos, rx, rz
+        self.length, self.width, self.bx, self.bz, self.flat, self.hang = length, width, bx, bz, flat, hang
 
 
-TAILS = []
-
-
-def spike(name, pivot, rot, length, size, bend=(0.0, 0.0), parent="head", sink=0.6):
-    """Punta en 4 segmentos que se afina hasta un pico; bend = giro extra (x, z) en cada unión."""
-    ls = [length * 0.34, length * 0.28, length * 0.22, length * 0.18]
-    ss = [size, size * 0.74, size * 0.48, max(0.5, size * 0.24)]
-    bx, bz = bend
-    names = [name, name + "_m", name + "_t", name + "_p"]
-    for i in (1, 2, 3):
-        TAILS.append(Part(names[i], names[i - 1], (0, -ls[i - 1] + 0.25, 0), (bx, 0, bz),
-                          [Box(-ss[i] / 2, -ls[i] - 0.25, -ss[i] / 2, ss[i], ls[i] + 0.25, ss[i], shade(i))]))
-    return Part(name, parent, pivot, rot, [Box(-ss[0] / 2, -ls[0], -ss[0] / 2, ss[0], ls[0] + sink, ss[0], shade(0))])
-
-
-def out(name, pivot, rx, rz, length, size, bend=0.06, **kw):
-    """Punta que se curva un poco más hacia afuera en cada segmento (sigue el sentido de su giro)."""
+def out(name, pivot, rx, rz, length, size, bend=0.06, sink=0.6):
+    """Punta que se curva un poco hacia afuera (sigue el sentido de su giro)."""
     sx = -bend if rx < -0.05 else (bend * 0.6 if rx > 0.05 else 0.0)
     sz = -bend if rz < -0.05 else (bend if rz > 0.05 else 0.0)
-    return spike(name, pivot, (rx, 0, rz), length, size, (sx, sz), **kw)
-
-
-def strand(name, pivot, rot, length, w, d=1.0):
-    """Mechón que cae (flequillo / patilla), más fino hacia la punta."""
-    TAILS.append(Part(name + "_e", name, (0, length * 0.58 - 0.1, 0), (rot[0] * 0.6, 0, rot[2] * 0.7),
-                      [Box(-w * 0.3, 0, -d / 2 + 0.1, w * 0.6, length * 0.47, d - 0.2, shade(2))]))
-    return Part(name, "head", pivot, rot, [Box(-w / 2, 0, -d / 2, w, length * 0.6, d, shade(1))])
+    return S(name, pivot, rx, rz, length + sink, size * 0.66, sx * 3, sz * 3)
 
 
 def hang(name, pivot, rx, rz, length, size):
-    """Mechón largo colgante (cae por la espalda) que se mece al caminar."""
-    return spike(name, pivot, (rx, 0, rz), length, size, (-0.05, 0.0))
+    """Mechón largo colgante (se mece al caminar)."""
+    return S(name, pivot, rx, rz, length, size * 0.85, -0.15, 0.0, flat=0.6, hang=True)
 
 
-def parts():
-    TAILS.clear()
+def strand(name, pivot, rot, length, w, d=1.0):
+    """Mechón que cae sobre la frente (flequillo / patilla): plano y fino."""
+    return S(name, pivot, math.pi + rot[0], rot[2], length * 1.05, w * 0.75, 0.25, rot[2] * 0.8, flat=0.45)
+
+
+def spikes():
     P = []
-    # ---- común: cráneo cubierto (arriba, nuca y lados) + mechones redondeados + patillas
-    P.append(Part("c_cap", "head", (0, 0, 0), (0, 0, 0), [Box(-4.3, -8.6, -4.3, 8.6, 2.0, 8.6, strands)]))
-    P.append(Part("c_back", "head", (0, 0, 0), (0, 0, 0), [Box(-4.3, -8.0, 3.45, 8.6, 6.0, 0.9, strands)]))
-    P.append(Part("c_side_r", "head", (0, 0, 0), (0, 0, 0), [Box(-4.4, -8.0, -2.0, 0.9, 4.0, 5.6, strands)]))
     P.append(out("c_k1", (0, -8.3, -2.0), 0.15, 0, 3.0, 4.6, sink=0.8))
     P.append(out("c_k2", (0, -8.3, 1.4), -0.4, 0, 3.2, 4.6, sink=0.8))
     P.append(out("c_k3", (0, -6.4, 3.9), -1.2, 0, 3.0, 4.4, sink=0.8))
@@ -220,71 +170,104 @@ def parts():
     P.append(out("e_r5", (-2.4, -6.4, 3.7), -0.7, -0.28, 9.0, 3.4))
     P.append(strand("e_peak", (0, -8.3, -4.45), (-0.06, 0, 0), 3.4, 2.4))
 
-    P += TAILS
-    P += mirror([p for p in P if "_r" in p.name])
-    return P
+    out_ = []
+    for s in P:
+        out_.append(s)
+        if "_r" in s.name:
+            x, y, z = s.pos
+            out_.append(S(s.name.replace("_r", "_l"), (-x, y, z), s.rx, -s.rz, s.length, s.width, s.bx, -s.bz, s.flat, s.hang))
+    return out_
 
 
-CHUNK = 120
+# ------------------------------------------------------------------ malla (igual que en el juego)
+STEPS = 6
 
 
-def java_file(P, w, h):
-    lines = ["// GENERADO por tools/gen_hair.py — no editar a mano.", "package com.bdsz.client;", "",
-             "import net.minecraft.client.model.geom.ModelPart;", "import net.minecraft.client.model.geom.PartPose;",
-             "import net.minecraft.client.model.geom.builders.*;", "", "import java.util.HashMap;", "import java.util.Map;", "",
-             "public final class HairModelData {", "    private HairModelData() {}", "",
-             "    public static LayerDefinition createLayer() {",
-             "        MeshDefinition mesh = new MeshDefinition();",
-             "        Map<String, PartDefinition> d = new HashMap<>();",
-             '        d.put("head", mesh.getRoot().addOrReplaceChild("head", CubeListBuilder.create(), PartPose.ZERO));']
-    chunks = [P[i:i + CHUNK] for i in range(0, len(P), CHUNK)]
-    for i in range(len(chunks)):
-        lines.append("        def%d(d);" % i)
-    lines += ["        return LayerDefinition.create(mesh, %d, %d);" % (w, h), "    }", ""]
-    for i, ch in enumerate(chunks):
-        lines.append("    private static void def%d(Map<String, PartDefinition> d) {" % i)
-        for p in ch:
-            cubes = "CubeListBuilder.create()"
-            for b in p.boxes:
-                cubes += ".texOffs(%d, %d).addBox(%s, %s, %s, %s, %s, %s)" % (
-                    b.u, b.v, mg.fnum(b.x), mg.fnum(b.y), mg.fnum(b.z), mg.fnum(b.w), mg.fnum(b.h), mg.fnum(b.d))
-            lines.append('        d.put("%s", d.get("%s").addOrReplaceChild("%s", %s, PartPose.offsetAndRotation(%s, %s, %s, %s, %s, %s)));' % (
-                p.name, p.parent, p.name, cubes, mg.fnum(p.pivot[0]), mg.fnum(p.pivot[1]), mg.fnum(p.pivot[2]),
-                mg.fnum(p.rot[0]), mg.fnum(p.rot[1]), mg.fnum(p.rot[2])))
-        lines += ["    }", ""]
-    # bake: nombre -> pieza, más el padre de cada pieza
-    lines += ["    public static final Map<String, String> PARENT = new HashMap<>();", "    static {"]
-    for i in range(len(chunks)):
-        lines.append("        par%d();" % i)
-    lines += ["    }", ""]
-    for i, ch in enumerate(chunks):
-        lines.append("    private static void par%d() {" % i)
-        for p in ch:
-            lines.append('        PARENT.put("%s", "%s");' % (p.name, p.parent))
-        lines += ["    }", ""]
-    lines += ["    public static Map<String, ModelPart> bake(ModelPart root) {",
-              "        Map<String, ModelPart> m = new HashMap<>();",
-              '        m.put("root", root);',
-              '        m.put("head", root.getChild("head"));']
-    order = [p.name for p in P]
-    lines += ["        for (String n : ORDER) m.put(n, m.get(PARENT.get(n)).getChild(n));",
-              "        return m;", "    }", "",
-              "    private static final String[] ORDER = {"]
-    for i in range(0, len(order), 8):
-        lines.append("            " + ", ".join('"%s"' % n for n in order[i:i + 8]) + ",")
-    lines += ["    };", "}", ""]
-    return "\n".join(lines)
+def direction(a, b):
+    return (math.cos(a) * math.sin(b), -math.cos(a) * math.cos(b), -math.sin(a))
 
 
-def main(preview_dir=None):
-    P = parts()
-    w, h = pack(P, 128)
-    img = build_texture(P, w, h)
-    os.makedirs(os.path.dirname(TEX), exist_ok=True)
-    img.save(TEX)
-    open(JAVA, "w").write(java_file(P, w, h))
-    print("hair %dx%d, %d partes" % (w, h, len(P)))
-    return P, img
+def norm(v):
+    l = math.sqrt(sum(c * c for c in v)) or 1.0
+    return tuple(c / l for c in v)
+
+
+def cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+
+def mesh(s, sway=(0.0, 0.0)):
+    """Anillos (lista de 4 esquinas + normales) a lo largo del mechón."""
+    d0 = direction(s.rx, s.rz)
+    ref = (0, 0, 1) if abs(d0[2]) < 0.9 else (1, 0, 0)
+    c = tuple(s.pos[i] - d0[i] * 0.6 for i in range(3))
+    rings = []
+    for k in range(STEPS + 1):
+        t = k / STEPS
+        a = s.rx + s.bx * t * t + sway[0] * t ** 1.5
+        b = s.rz + s.bz * t * t + sway[1] * t ** 1.5
+        d = direction(a, b)
+        u = norm(cross(d, ref))
+        v = cross(d, u)
+        w = s.width * (1 - t) ** 0.85
+        corners, normals = [], []
+        for j in range(4):
+            ph = math.pi / 4 + j * math.pi / 2
+            n = tuple(u[i] * math.cos(ph) + v[i] * math.sin(ph) * s.flat for i in range(3))
+            corners.append(tuple(c[i] + u[i] * w * math.cos(ph) + v[i] * w * s.flat * math.sin(ph) for i in range(3)))
+            normals.append(norm(n))
+        rings.append((corners, normals, t))
+        c = tuple(c[i] + d[i] * s.length / STEPS for i in range(3))
+    return rings
+
+
+def java(sp):
+    groups = [s.name[:s.name.index("_") + 1] for s in sp]
+    L = ["// GENERADO por tools/gen_hair.py — no editar a mano.", "package com.bdsz.client;", "",
+         "/** Mechones del cabello: x, y, z (raíz), xRot, zRot, largo, ancho, curva x, curva z, aplanado, colgante. */",
+         "public final class HairSpikes {", "    private HairSpikes() {}", "",
+         "    public static final String[] GROUP = {"]
+    for i in range(0, len(groups), 12):
+        L.append("            " + ", ".join('"%s"' % g for g in groups[i:i + 12]) + ",")
+    L += ["    };", "", "    public static final float[][] S = {"]
+    for s in sp:
+        vals = [s.pos[0], s.pos[1], s.pos[2], s.rx, s.rz, s.length, s.width, s.bx, s.bz, s.flat, 1.0 if s.hang else 0.0]
+        L.append("            {" + ", ".join(("%.4f" % v).rstrip("0").rstrip(".") + "F" for v in vals) + "},  // " + s.name)
+    L += ["    };", "}", ""]
+    return "\n".join(L)
+
+
+def textures():
+    # degradado del mechón: raíz más oscura -> punta brillante, con vetas finas
+    img = Image.new("RGBA", (16, 32))
+    for y in range(32):
+        t = y / 31
+        for x in range(16):
+            base = 150 + 105 * t ** 0.8
+            if x % 4 == 0:
+                base -= 18
+            if x % 4 == 2:
+                base += 10
+            v = int(max(0, min(255, base)))
+            img.putpixel((x, y), (v, v, v, 255))
+    img.save(os.path.join(TEXDIR, "hair_strand.png"))
+    # cráneo (cubos del casquete)
+    cap = Image.new("RGBA", (64, 32))
+    for y in range(32):
+        for x in range(64):
+            v = 200 if (x + y) % 5 else 176
+            if x % 3 == 0:
+                v -= 14
+            cap.putpixel((x, y), (v, v, v, 255))
+    cap.save(os.path.join(TEXDIR, "saiyan_hair.png"))
+
+
+def main():
+    sp = spikes()
+    open(JAVA, "w").write(java(sp))
+    textures()
+    print("%d mechones" % len(sp))
+    return sp
 
 
 if __name__ == "__main__":

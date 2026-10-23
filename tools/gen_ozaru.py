@@ -67,37 +67,70 @@ def eyes(f, x, y, w, h):
     return (255, 40, 20)
 
 
+LEATHER, LEATHER_SH = (92, 62, 48), (70, 46, 36)
+CHEST, CHEST_DK = (126, 80, 44), (96, 58, 30)
+
+
+def chestfur(f, x, y, w, h):
+    """Pecho y vientre café (pelaje), con líneas de músculo marcadas."""
+    if f == "front" and (x == w // 2 or y == h // 2):
+        return j(CHEST_DK, 4)
+    return j(CHEST, 7) if (x + y) % 4 else j(FUR, 5)
+
+
+def leather(f, x, y, w, h):
+    return j(LEATHER_SH if y == h - 1 or f == "bottom" else LEATHER, 5)
+
+
+def nose(f, x, y, w, h):
+    if f == "front" and y == h - 1 and x in (0, w - 1):
+        return (20, 12, 10)
+    return j((58, 36, 28), 4)
+
+
+def ear(f, x, y, w, h):
+    if f in ("left", "right") and 0 < x < w - 1 and 0 < y < h - 1:
+        return j((176, 118, 92), 5)
+    return j(FUR, 6)
+
+
 def parts():
     P = []
     P.append(Part("body", "root", (0, 12, 2), (0.45, 0, 0), [
         Box(-5.5, -9, -3.5, 11, 9.5, 7, fur),
-        Box(-4, -8.5, -3.9, 8, 8, 0.6, skin)]))
+        Box(-4, -8.5, -3.9, 8, 8, 0.6, chestfur)]))
     P.append(Part("chest", "body", (0, -8, 0), (0.15, 0, 0), [
         Box(-7.5, -11, -4.5, 15, 11.5, 9, fur),
-        Box(-5.5, -10, -5.0, 11, 7, 0.6, skin),
-        Box(-6, -12.5, -2.5, 12, 2, 6, fur)]))
+        Box(-5.5, -10, -5.0, 11, 7, 0.6, chestfur),
+        Box(-6, -12.5, -2.5, 12, 2, 6, fur),
+        Box(-6.5, -12, -5.2, 13, 2.6, 4, furdark)]))
+    # ---- cabeza: cráneo grande, ceja gruesa, hocico largo, mandíbula y colmillos
     P.append(Part("head", "chest", (0, -10.5, -3), (-0.6, 0, 0), [
-        Box(-4.5, -8, -5, 9, 8.5, 8, fur),
-        Box(-3.5, -6.5, -5.6, 7, 5.5, 0.8, face),
-        Box(-3, -3.2, -7.6, 6, 3.4, 2.8, muzzle),
-        Box(-4, -6.9, -5.9, 8, 1.2, 1.0, furdark),
-        Box(-4.6, -9.2, -3.5, 9.2, 1.5, 6.5, fur)]))
+        Box(-5, -9, -5, 10, 9.5, 9, fur),
+        Box(-4, -10.6, -3.5, 8, 1.8, 6.5, furdark),
+        Box(-5.2, -7.6, -6.6, 10.4, 2.0, 1.8, furdark),
+        Box(-4.2, -5.8, -5.7, 8.4, 3.2, 0.8, face),
+        Box(-3.8, -3.8, -10.5, 7.6, 3.6, 5.2, muzzle),
+        Box(-1.8, -4.2, -10.9, 3.6, 1.4, 1.0, nose)]))
     P.append(Part("eyes", "head", (0, 0, 0), (0, 0, 0), [
-        Box(-2.7, -5.4, -5.75, 1.6, 1.0, 0.2, eyes), Box(1.1, -5.4, -5.75, 1.6, 1.0, 0.2, eyes)]))
-    P.append(Part("ear_r", "head", (-4.5, -5.5, 0), (0, 0, -0.2), [Box(-1.6, -1.3, -1, 1.6, 2.6, 2, skin)]))
-    P.append(Part("jaw", "head", (0, 0.1, -4.6), (0, 0, 0), [
-        Box(-2.8, 0, -3.0, 5.6, 1.6, 3.0, skin),
-        Box(-2.3, -1.0, -2.8, 0.8, 1.0, 0.6, white), Box(1.5, -1.0, -2.8, 0.8, 1.0, 0.6, white)]))
-    P.append(Part("fang_r", "head", (-2.0, 0.2, -7.3), (0, 0, 0), [Box(-0.4, 0, -0.3, 0.8, 1.3, 0.6, white)]))
-    # brazos largos de gorila (cuelgan hasta casi el suelo)
+        Box(-3.3, -4.9, -5.85, 2.0, 1.0, 0.15, eyes), Box(1.3, -4.9, -5.85, 2.0, 1.0, 0.15, eyes)]))
+    P.append(Part("cheek_r", "head", (-5.2, -4.5, -1.5), (0, 0, 0.15), [Box(-1.6, -2.5, -3.5, 1.6, 6, 6, fur)]))
+    P.append(Part("ear_r", "head", (-5.2, -6.0, 0.8), (0, 0.3, -0.25), [Box(-2.6, -2.2, -1.3, 2.6, 3.8, 2.6, ear)]))
+    P.append(Part("tuft", "head", (0, -10.2, -0.5), (-0.35, 0, 0), [Box(-1.3, -3.2, -1.3, 2.6, 3.4, 2.6, furdark)]))
+    P.append(Part("tuft_r", "head", (-2.6, -9.9, 0.2), (-0.2, 0, -0.45), [Box(-1.1, -2.6, -1.1, 2.2, 2.8, 2.2, furdark)]))
+    P.append(Part("fang_r", "head", (-2.6, -0.3, -9.6), (0, 0, 0), [Box(-0.45, 0, -0.4, 0.9, 1.9, 0.8, white)]))
+    P.append(Part("jaw", "head", (0, 0.0, -5.2), (0, 0, 0), [
+        Box(-3.4, -0.2, -4.9, 6.8, 2.0, 5.0, skin),
+        Box(-2.9, -1.3, -4.6, 0.8, 1.2, 0.7, white), Box(2.1, -1.3, -4.6, 0.8, 1.2, 0.7, white)]))
+    # ---- brazos largos de gorila
     P.append(Part("arm_r", "chest", (-8.6, -9, 0), (-0.6, 0, 0.12), [Box(-2.9, -1.5, -2.9, 5.8, 11, 5.8, fur)]))
     P.append(Part("fore_r", "arm_r", (0, 9.2, 0), (0, 0, 0), [Box(-2.7, 0, -2.7, 5.4, 10, 5.4, fur)]))
-    P.append(Part("hand_r", "fore_r", (0, 9.6, 0), (0, 0, 0), [Box(-3.0, 0, -3.3, 6, 3, 6.6, skin)]))
-    # piernas cortas y gruesas
+    P.append(Part("hand_r", "fore_r", (0, 9.6, 0), (0, 0, 0), [Box(-3.0, 0, -3.3, 6, 3, 6.6, leather)]))
+    # ---- piernas cortas y gruesas
     P.append(Part("leg_r", "root", (-3.6, 12, 2), (0, 0, 0), [Box(-2.9, -1, -3, 5.8, 7.5, 6, fur)]))
     P.append(Part("shin_r", "leg_r", (0, 6.0, 0), (0, 0, 0), [Box(-2.6, 0, -2.6, 5.2, 4.6, 5.2, fur)]))
-    P.append(Part("foot_r", "shin_r", (0, 4.2, 0), (0, 0, 0), [Box(-2.9, 0, -4.6, 5.8, 1.8, 6.8, skin)]))
-    # cola peluda que sale de la espalda baja
+    P.append(Part("foot_r", "shin_r", (0, 4.2, 0), (0, 0, 0), [Box(-2.9, 0, -4.6, 5.8, 1.8, 6.8, leather)]))
+    # ---- cola peluda
     parent = "body"
     for i in range(6):
         s = 2.4 - i * 0.22

@@ -48,6 +48,10 @@ public final class ClientForgeEvents {
             if (!mine.saiyan) notSaiyan(mc);
             else if (mc.screen == null) mc.setScreen(new PowerScreen());
         }
+        while (ClientModEvents.QUICK.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc);
+            else if (mc.screen == null) mc.setScreen(new QuickSwitchScreen());
+        }
         while (ClientModEvents.TRANSFORM.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc);
             else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.TRANSFORM, 0, 0));
@@ -188,9 +192,6 @@ public final class ClientForgeEvents {
             if (p.tickCount % 40 == 0) {
                 level.playLocalSound(p.getX(), p.getY(), p.getZ(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS,
                         0.35F + power * 0.1F, 0.6F + f.ordinal() * 0.06F, false);
-            }
-            if (drama > 0.5F && p.tickCount % 30 == 0) {
-                level.playLocalSound(p.getX(), p.getY(), p.getZ(), SoundEvents.FIRE_AMBIENT, SoundSource.PLAYERS, 0.5F + drama * 0.5F, 0.7F, false);
             }
         }
     }

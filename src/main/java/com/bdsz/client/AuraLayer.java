@@ -30,24 +30,11 @@ import net.minecraft.util.Mth;
 public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private static final ResourceLocation TEX = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/aura.png");
     private static final String[] LIMBS = {"head", "body", "right_arm", "left_arm", "right_leg", "left_leg"};
-    private static final int FLAMES = 14;
     private final ModelPart root;
-    private final ModelPart fbody;
-    private final ModelPart[] flames = new ModelPart[FLAMES];
-    private final float[] fx = new float[FLAMES], fy = new float[FLAMES], fz = new float[FLAMES], fa = new float[FLAMES];
 
     public AuraLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent, EntityModelSet models) {
         super(parent);
         this.root = models.bakeLayer(ClientModEvents.AURA_LAYER);
-        this.fbody = root.getChild("fbody");
-        for (int i = 0; i < FLAMES; i++) {
-            flames[i] = fbody.getChild("flame" + i);
-            double a = i * Math.PI * 2 / FLAMES + (i % 2) * 0.2;
-            fa[i] = (float) a;
-            fx[i] = (float) Math.cos(a) * 6.5F;
-            fz[i] = (float) Math.sin(a) * 4.5F;
-            fy[i] = i % 2 == 0 ? 12.0F : 5.0F;           // cintura y hombros
-        }
     }
 
     public static LayerDefinition createLayer() {
@@ -61,13 +48,6 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         r.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 16).mirror().addBox(-1, -2, -2, 4, 12, 4, mid), PartPose.offset(5, 2, 0));
         r.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 16).addBox(-2, 0, -2, 4, 12, 4, mid), PartPose.offset(-1.9F, 12, 0));
         r.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(0, 16).mirror().addBox(-2, 0, -2, 4, 12, 4, mid), PartPose.offset(1.9F, 12, 0));
-        // lenguas de fuego: base ancha, cuerpo y punta fina
-        PartDefinition fb = r.addOrReplaceChild("fbody", CubeListBuilder.create(), PartPose.ZERO);
-        for (int i = 0; i < FLAMES; i++) {
-            PartDefinition f = fb.addOrReplaceChild("flame" + i, CubeListBuilder.create().texOffs(32, 0).addBox(-2, -8, -2, 4, 8, 4), PartPose.ZERO);
-            PartDefinition m = f.addOrReplaceChild("m", CubeListBuilder.create().texOffs(32, 0).addBox(-1.4F, -7, -1.4F, 2.8F, 7, 2.8F), PartPose.offset(0, -7.5F, 0));
-            m.addOrReplaceChild("t", CubeListBuilder.create().texOffs(32, 0).addBox(-0.7F, -6, -0.7F, 1.4F, 6, 1.4F), PartPose.offset(0, -6.5F, 0));
-        }
         return LayerDefinition.create(mesh, 64, 32);
     }
 
@@ -131,8 +111,10 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
             pose.popPose();
         }
 
-        // lenguas de fuego
-        renderFlames(pose, buf, t, size, drama * (s.powering > 0 ? 0.4F + progress * 0.8F : 1.0F) * (forced ? 1.25F : 1.0F), r, g, b, or, og, ob, a);
+        // envoltura de fuego en forma de gota, con puntas que suben por encima de la cabeza
+        float flame = drama * (s.powering > 0 ? 0.4F + progress * 0.8F : 1.0F) * (forced ? 1.2F : 1.0F);
+        renderShell(pose, buf, t, size, flame, 1.0F, r * a * 0.55F, g * a * 0.55F, b * a * 0.55F, player.getId());
+        renderShell(pose, buf, t * 0.8F + 40, size * 1.12F, flame * 1.1F, 1.25F, or * a * 0.45F, og * a * 0.45F, ob * a * 0.45F, player.getId() + 3);
 
         // ondas del aura
         int wc = k > 0 && f == Form.BASE ? 0xFF3020 : f.waveColor();
@@ -167,45 +149,61 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         ring(vc, pose.last(), 1.48F, rad, rad * 0.9F, 0.85F * fade, 0.9F * fade, fade);
     }
 
-    private void renderFlames(PoseStack pose, MultiBufferSource buf, float t, float size, float drama,
-                              float r, float g, float b, float or, float og, float ob, float a) {
-        if (drama <= 0.05F) return;
-        pose.pushPose();
-        ModelPart body = root.getChild("body");
-        fbody.copyFrom(body);
-        fbody.translateAndRotate(pose);
-        float height = (0.55F + drama * 0.75F) * size;
-        VertexConsumer core = buf.getBuffer(RenderType.energySwirl(TEX, (t * 0.01F) % 1.0F, (-t * 0.09F) % 1.0F));
-        VertexConsumer glow = buf.getBuffer(RenderType.energySwirl(TEX, (t * -0.01F) % 1.0F, (-t * 0.07F) % 1.0F));
-        for (int i = 0; i < FLAMES; i++) {
-            ModelPart fl = flames[i];
-            ModelPart mid = fl.getChild("m"), tip = mid.getChild("t");
-            float c = (t * (0.035F + drama * 0.03F) + i * 0.618F) % 1.0F;        // ciclo de vida de cada llama
-            float life = Mth.sin(c * Mth.PI);
-            float sway = Mth.sin(t * 0.35F + i * 1.3F);
-            fl.resetPose();
-            mid.resetPose();
-            tip.resetPose();
-            fl.x = fx[i] * (0.9F + size * 0.15F);
-            fl.z = fz[i] * (0.9F + size * 0.15F);
-            fl.y = fy[i] - c * 7.0F * size;                                        // sube mientras vive
-            fl.zRot = Mth.cos(fa[i]) * 0.35F + sway * 0.12F;                       // se abre hacia afuera
-            fl.xRot = -Mth.sin(fa[i]) * 0.3F + Mth.cos(t * 0.3F + i) * 0.08F;
-            mid.zRot = sway * 0.22F;
-            tip.zRot = sway * 0.35F;
-            mid.xRot = Mth.cos(t * 0.4F + i) * 0.15F;
-            float hs = height * (0.45F + life * 0.85F);
-            fl.yScale = hs;
-            fl.xScale = fl.zScale = (0.7F + life * 0.5F) * (0.85F + size * 0.2F);
-            float bright = life * a;
-            fl.render(pose, core, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, r * bright, g * bright, b * bright, 1.0F);
-            // resplandor exterior del color secundario
-            float xs = fl.xScale;
-            fl.xScale = fl.zScale = xs * 1.45F;
-            fl.yScale = hs * 1.12F;
-            fl.render(pose, glow, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, or * bright * 0.6F, og * bright * 0.6F, ob * bright * 0.6F, 1.0F);
+    private static final int SEG = 28, RINGS = 14;
+    private final float[][] sx = new float[RINGS + 1][SEG + 1], sy = new float[RINGS + 1][SEG + 1], sz = new float[RINGS + 1][SEG + 1];
+    private final float[][] sf = new float[RINGS + 1][SEG + 1];
+
+    /**
+     * Aura de fuego: una superficie en forma de gota que envuelve al cuerpo. Es ancha en la cintura,
+     * se cierra arriba en varias puntas de fuego de distinto alto que suben y ondulan (no son piezas sueltas).
+     */
+    private void renderShell(PoseStack pose, MultiBufferSource buf, float t, float size, float flame, float scale,
+                             float r, float g, float b, int seed) {
+        if (flame <= 0.05F) return;
+        float feet = 1.55F;
+        float baseH = (2.0F + flame * 0.55F) * (0.85F + size * 0.15F) * (0.94F + 0.06F * scale);
+        float radius = (0.48F + flame * 0.1F) * (0.75F + size * 0.25F);
+        float sd = seed * 0.71F;
+        for (int j = 0; j <= SEG; j++) {
+            float th = j * Mth.TWO_PI / SEG;
+            // alto de cada columna: crea las puntas de fuego en la parte de arriba
+            float tongue = 0.16F * Mth.sin(3 * th + t * 0.23F + sd) + 0.13F * Mth.sin(5 * th - t * 0.37F + sd * 2)
+                    + 0.09F * Mth.sin(9 * th + t * 0.61F);
+            float hcol = baseH * (1.0F + tongue * (0.6F + flame * 0.8F));
+            for (int k = 0; k <= RINGS; k++) {
+                float v = (float) k / RINGS;
+                // perfil de gota: estrecho en los pies, ancho a media altura, cerrado arriba
+                float prof = (float) Math.pow(Math.sin(Math.min(1.0, v * 0.92 + 0.06) * Math.PI), 0.75);
+                if (v > 0.55F) prof *= 1.0F - (v - 0.55F) * 0.9F;
+                float ripple = 1.0F + 0.08F * Mth.sin(5 * th + v * 9.0F - t * 0.5F + sd) + 0.05F * Mth.sin(3 * th - v * 6.0F + t * 0.3F);
+                float rad = radius * prof * ripple;
+                sx[k][j] = Mth.cos(th) * rad;
+                sz[k][j] = Mth.sin(th) * rad * 0.8F;
+                sy[k][j] = feet - v * hcol;
+                // brillo: se apaga en los pies y en las puntas
+                float fade = Math.min(1.0F, v / 0.18F) * (1.0F - v * 0.55F);
+                sf[k][j] = fade;
+            }
         }
-        pose.popPose();
+        VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(TEX, (t * 0.006F) % 1.0F, (-t * 0.045F) % 1.0F));
+        org.joml.Matrix4f m = pose.last().pose();
+        org.joml.Matrix3f n = pose.last().normal();
+        for (int k = 0; k < RINGS; k++) {
+            float v0 = (float) k / RINGS * 2.0F, v1 = (float) (k + 1) / RINGS * 2.0F;
+            for (int j = 0; j < SEG; j++) {
+                float u0 = (float) j / SEG * 3.0F, u1 = (float) (j + 1) / SEG * 3.0F;
+                sv(vc, m, n, k, j, u0, v0, r, g, b);
+                sv(vc, m, n, k, j + 1, u1, v0, r, g, b);
+                sv(vc, m, n, k + 1, j + 1, u1, v1, r, g, b);
+                sv(vc, m, n, k + 1, j, u0, v1, r, g, b);
+            }
+        }
+    }
+
+    private void sv(VertexConsumer vc, org.joml.Matrix4f m, org.joml.Matrix3f n, int k, int j, float u, float v, float r, float g, float b) {
+        float f = sf[k][j];
+        vc.vertex(m, sx[k][j], sy[k][j], sz[k][j]).color(r * f, g * f, b * f, 1.0F).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY)
+                .uv2(LightTexture.FULL_BRIGHT).normal(n, 0, 1, 0).endVertex();
     }
 
     private static void scaleAround(PoseStack pose, float sc) {

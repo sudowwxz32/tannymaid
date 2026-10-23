@@ -192,7 +192,6 @@ public final class PowerLogic {
             lv.playSound(null, p.blockPosition(), SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.5F + progress * 0.8F, 0.8F + progress * 0.8F);
         }
         if (s.powering % 8 == 0 && drama > 0.5F) {
-            lv.playSound(null, p.blockPosition(), SoundEvents.FIRE_AMBIENT, SoundSource.PLAYERS, 1.0F + drama, 0.6F);
             lv.playSound(null, p.blockPosition(), SoundEvents.STONE_BREAK, SoundSource.PLAYERS, 0.6F + progress, 0.6F);
         }
         if (progress > 0.4F && s.powering % 9 == 0) {

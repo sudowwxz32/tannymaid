@@ -31,6 +31,10 @@ public final class ClientModEvents {
     public static final ModelLayerLocation TAIL_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "tail"), "main");
     public static final ModelLayerLocation OZARU_LAYER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ozaru"), "main");
     public static final KeyMapping OZARU = new KeyMapping("key.blockdragonsuperz.ozaru", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, CATEGORY);
+    /** Cambio rápido de transformación: Alt + V. */
+    public static final KeyMapping QUICK = new KeyMapping("key.blockdragonsuperz.quick",
+            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME, net.minecraftforge.client.settings.KeyModifier.ALT,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY);
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -47,11 +51,12 @@ public final class ClientModEvents {
         e.register(BIG_BANG);
         e.register(DRAGON_FIST);
         e.register(OZARU);
+        e.register(QUICK);
     }
 
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
-        e.registerLayerDefinition(HAIR, HairModelData::createLayer);
+        e.registerLayerDefinition(HAIR, SaiyanHairLayer::createLayer);
         e.registerLayerDefinition(OZARU_LAYER, OzaruModelData::createLayer);
         e.registerLayerDefinition(AURA_LAYER, AuraLayer::createLayer);
         e.registerLayerDefinition(TAIL_LAYER, TailLayer::createLayer);

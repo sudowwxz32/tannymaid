@@ -241,6 +241,13 @@ public class PowerScreen extends Screen {
         return super.mouseClicked(mx, my, button);
     }
 
+    /** Rueda del ratón: cambia de fase (con Shift, el Kaioken). */
+    @Override
+    public boolean mouseScrolled(double mx, double my, double delta) {
+        if (hasShiftDown()) return keyPressed(delta > 0 ? GLFW.GLFW_KEY_LEFT : GLFW.GLFW_KEY_RIGHT, 0, 0);
+        return keyPressed(delta > 0 ? GLFW.GLFW_KEY_UP : GLFW.GLFW_KEY_DOWN, 0, 0);
+    }
+
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         if (ClientModEvents.MENU.matches(key, scan)) { onClose(); return true; }

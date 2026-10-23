@@ -9,6 +9,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -18,41 +20,43 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 
 /**
- * Cabello saiyajin 3D, brillante y del color de la fase.
- * Cada mechón es una cadena de 4 segmentos: se mueve solo, con un efecto de látigo que crece hacia la punta.
+ * Cabello saiyajin 3D liso: cada mechón es una sola punta continua (malla de 4 lados que se afina hasta un pico),
+ * sin cubos apilados. Se dobla de forma fluida: la raíz casi no se mueve y la punta se mueve más.
  */
 public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-    private static final ResourceLocation TEX = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/saiyan_hair.png");
-    private final ModelPart root;
-    private final ModelPart head;
-    private final List<Seg> segs = new ArrayList<>();
-    private final List<Seg> roots = new ArrayList<>();
+    private static final ResourceLocation CAP_TEX = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/saiyan_hair.png");
+    private static final ResourceLocation STRAND_TEX = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/hair_strand.png");
+    private static final int STEPS = 6;
+    private static final float[] WT = new float[STEPS + 1];
+    static {
+        for (int k = 0; k <= STEPS; k++) WT[k] = (float) Math.pow(1.0 - (double) k / STEPS, 0.85);
+    }
 
-    /** Un segmento de mechón con sus datos de animación precalculados. */
-    private record Seg(ModelPart part, String group, int depth, float seed, boolean hanging) {}
+    private final ModelPart root;
+    private final ModelPart cap;
+    // búferes de la malla de un mechón (anillos x esquinas)
+    private final float[][] vx = new float[STEPS + 1][4], vy = new float[STEPS + 1][4], vz = new float[STEPS + 1][4];
+    private final float[][] nx = new float[STEPS + 1][4], ny = new float[STEPS + 1][4], nz = new float[STEPS + 1][4];
 
     public SaiyanHairLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent, EntityModelSet models) {
         super(parent);
         this.root = models.bakeLayer(ClientModEvents.HAIR);
-        Map<String, ModelPart> parts = HairModelData.bake(root);
-        this.head = parts.get("head");
-        for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
-            String n = en.getKey();
-            if (n.equals("root") || n.equals("head")) continue;
-            int depth = n.endsWith("_m") || n.endsWith("_e") ? 1 : n.endsWith("_t") ? 2 : n.endsWith("_p") ? 3 : 0;
-            String base = depth == 0 ? n : n.substring(0, n.length() - 2);
-            String group = n.substring(0, n.indexOf('_') + 1);
-            float seed = (base.hashCode() & 0xFFFF) * 0.0137F;
-            Seg s = new Seg(en.getValue(), group, depth, seed, base.contains("_h"));
-            segs.add(s);
-            if (depth == 0) roots.add(s);
-        }
+        this.cap = root.getChild("head");
+    }
+
+    /** Casquete: cubre la parte de arriba, la nuca y los lados de la cabeza. */
+    public static LayerDefinition createLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        mesh.getRoot().addOrReplaceChild("head", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-4.3F, -8.6F, -4.3F, 8.6F, 2.0F, 8.6F)
+                .texOffs(0, 12).addBox(-4.3F, -8.0F, 3.45F, 8.6F, 6.0F, 0.9F)
+                .texOffs(22, 12).addBox(-4.4F, -8.0F, -2.0F, 0.9F, 4.0F, 5.6F)
+                .texOffs(36, 12).addBox(3.5F, -8.0F, -2.0F, 0.9F, 4.0F, 5.6F), PartPose.ZERO);
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     private static String prefix(int style) {
@@ -75,47 +79,116 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         SaiyanState s = ClientStates.get(player.getId());
         Form f = s.visibleForm();   // durante la carga ya aparece el cabello de la fase destino
         if (!s.saiyan || f.hairStyle == 0 || s.ozaru) return;
-
         String prefix = prefix(f.hairStyle);
         boolean extraBang = f.hairStyle == 4;
-        root.getAllParts().forEach(ModelPart::resetPose);
-        for (Seg r : roots) {
-            r.part.visible = r.group.equals("c_") || r.group.equals(prefix) || (extraBang && r.group.equals("x_"));
-        }
 
-        // ---- movimiento: cada mechón con su propio ritmo; fuerte al recargar o transformarse, suave en Ultra Instinto
         long since = ClientStates.ticksSinceTransform(player.getId());
         boolean intense = s.charging || s.powering > 0 || since < 25;
         boolean calm = f == Form.ULTRA;
         float growth = s.powering > 0 ? 0.25F + 0.75F * (1.0F - (float) s.powering / Math.max(1, s.poweringTotal)) : 1.0F;
-        float amp = calm ? (intense ? 0.03F : 0.012F) : intense ? 0.085F + f.ordinal() * 0.003F : 0.022F;
-        float freq = calm ? 0.25F : intense ? 1.5F : 0.55F;
+        float amp = calm ? (intense ? 0.05F : 0.02F) : intense ? 0.16F : 0.045F;
+        float freq = calm ? 0.22F : intense ? 1.3F : 0.5F;
         boolean flying = s.flight && player.getAbilities().flying;
         float wind = flying ? (float) Math.min(1.0, player.getDeltaMovement().length() * 1.5) : 0.0F;
-        float t = age;
-        for (Seg sg : segs) {
-            if (!sg.group.equals(prefix) && !sg.group.equals("c_") && !(extraBang && sg.group.equals("x_"))) continue;
-            if (sg.group.equals("c_") && sg.depth == 0 && !intense) continue;      // el cráneo casi no se mueve
-            float k = 1.0F + sg.depth * 0.75F;                // látigo: la punta se mueve más que la raíz
-            float ph = sg.seed + sg.depth * 0.65F;
-            sg.part.zRot += Mth.sin(t * freq + ph) * amp * k;
-            sg.part.xRot += Mth.cos(t * freq * 0.83F + ph * 1.3F) * amp * 0.7F * k;
-            if (sg.hanging) {
-                // la melena se mece al caminar y vuela hacia atrás con el viento
-                if (sg.depth == 0) sg.part.xRot += limbAmount * 0.35F + wind * 0.55F;
-                sg.part.xRot += Mth.sin(t * 0.12F + ph) * 0.03F * k + Mth.sin(limbSwing * 0.6662F + ph) * limbAmount * 0.04F * k;
-            } else if (sg.depth == 0) {
-                if (intense && !calm) sg.part.xRot -= 0.04F;   // la energía levanta el cabello
-                sg.part.xRot -= wind * 0.18F;                      // el viento lo empuja hacia atrás al volar
-                if (s.powering > 0 && !sg.group.equals("c_")) sg.part.yScale = growth;   // crece mientras se transforma
+
+        float pulse = calm ? 0.95F + Mth.sin(age * 0.08F) * 0.05F
+                : intense ? 0.95F + Mth.sin(age * 0.9F) * 0.15F : 0.92F + Mth.sin(age * 0.25F) * 0.08F;
+        float r = Math.min(1.0F, f.r() * pulse + 0.05F), g = Math.min(1.0F, f.g() * pulse + 0.05F), b = Math.min(1.0F, f.b() * pulse + 0.05F);
+        int lt = f == Form.SSJ4 ? light : LightTexture.FULL_BRIGHT;
+        int overlay = LivingEntityRenderer.getOverlayCoords(player, 0.0F);
+
+        // casquete
+        cap.copyFrom(getParentModel().head);
+        cap.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(CAP_TEX)), lt, overlay, r * 0.85F, g * 0.85F, b * 0.85F, 1.0F);
+
+        // mechones
+        pose.pushPose();
+        cap.translateAndRotate(pose);
+        VertexConsumer vc = buf.getBuffer(RenderType.entityCutoutNoCull(STRAND_TEX));
+        Matrix4f mat = pose.last().pose();
+        Matrix3f nm = pose.last().normal();
+        String[] groups = HairSpikes.GROUP;
+        float[][] data = HairSpikes.S;
+        for (int i = 0; i < data.length; i++) {
+            String gr = groups[i];
+            boolean skull = gr.equals("c_");
+            if (!skull && !gr.equals(prefix) && !(extraBang && gr.equals("x_"))) continue;
+            float[] d = data[i];
+            boolean hanging = d[10] > 0.5F;
+            float seed = i * 1.37F;
+            float k = skull ? 0.4F : 1.0F;
+            float swayZ = Mth.sin(age * freq + seed) * amp * 2.2F * k;
+            float swayX = Mth.cos(age * freq * 0.83F + seed * 1.3F) * amp * 1.6F * k;
+            float baseX = 0, baseZ = 0;
+            if (hanging) {
+                baseX += limbAmount * 0.35F + wind * 0.55F + Mth.sin(limbSwing * 0.6662F + seed) * limbAmount * 0.08F;
+                swayX += Mth.sin(age * 0.12F + seed) * 0.06F;
+            } else if (!skull) {
+                if (intense && !calm) baseX -= 0.05F;          // la energía levanta el cabello
+                baseX -= wind * 0.2F;                            // el viento lo empuja hacia atrás
+            }
+            float len = d[5] * (s.powering > 0 && !skull ? growth : 1.0F);
+            spike(vc, mat, nm, d, len, baseX, baseZ, swayX, swayZ, r, g, b, lt, overlay);
+        }
+        pose.popPose();
+    }
+
+    /** Construye y dibuja un mechón liso. */
+    private void spike(VertexConsumer vc, Matrix4f mat, Matrix3f nm, float[] d, float len, float baseX, float baseZ,
+                       float swayX, float swayZ, float r, float g, float b, int light, int overlay) {
+        float a0 = d[3] + baseX, b0 = d[4] + baseZ;
+        float d0x = Mth.cos(a0) * Mth.sin(b0), d0y = -Mth.cos(a0) * Mth.cos(b0), d0z = -Mth.sin(a0);
+        // vector de referencia fijo para todo el mechón (evita giros bruscos de la sección)
+        float rx = 0, ry = 0, rz = 1;
+        if (Math.abs(d0z) > 0.9F) { rx = 1; rz = 0; }
+        float cx = d[0] - d0x * 0.6F, cy = d[1] - d0y * 0.6F, cz = d[2] - d0z * 0.6F;
+        float width = d[6], flat = d[9];
+        for (int k = 0; k <= STEPS; k++) {
+            float t = (float) k / STEPS;
+            float tw = t * (float) Math.sqrt(t);
+            float a = a0 + d[7] * t * t + swayX * tw;
+            float bb = b0 + d[8] * t * t + swayZ * tw;
+            float dx = Mth.cos(a) * Mth.sin(bb), dy = -Mth.cos(a) * Mth.cos(bb), dz = -Mth.sin(a);
+            // u = d x ref, v = d x u
+            float ux = dy * rz - dz * ry, uy = dz * rx - dx * rz, uz = dx * ry - dy * rx;
+            float ul = Mth.sqrt(ux * ux + uy * uy + uz * uz);
+            if (ul < 1.0E-4F) ul = 1.0F;
+            ux /= ul; uy /= ul; uz /= ul;
+            float wx = dy * uz - dz * uy, wy = dz * ux - dx * uz, wz = dx * uy - dy * ux;
+            float w = width * WT[k];
+            for (int j = 0; j < 4; j++) {
+                float ph = Mth.PI / 4 + j * Mth.HALF_PI;
+                float c = Mth.cos(ph), sn = Mth.sin(ph);
+                vx[k][j] = cx + (ux * c + wx * sn * flat) * w;
+                vy[k][j] = cy + (uy * c + wy * sn * flat) * w;
+                vz[k][j] = cz + (uz * c + wz * sn * flat) * w;
+                float px = ux * c + wx * sn * flat, py = uy * c + wy * sn * flat, pz = uz * c + wz * sn * flat;
+                float pl = Mth.sqrt(px * px + py * py + pz * pz);
+                // la normal se inclina un poco hacia la punta para un brillo suave
+                nx[k][j] = px / pl * 0.9F + dx * 0.1F;
+                ny[k][j] = py / pl * 0.9F + dy * 0.1F;
+                nz[k][j] = pz / pl * 0.9F + dz * 0.1F;
+            }
+            cx += dx * len / STEPS;
+            cy += dy * len / STEPS;
+            cz += dz * len / STEPS;
+        }
+        for (int k = 0; k < STEPS; k++) {
+            float v0 = (float) k / STEPS, v1 = (float) (k + 1) / STEPS;
+            for (int j = 0; j < 4; j++) {
+                int jj = (j + 1) & 3;
+                float u0 = j * 0.25F, u1 = u0 + 0.25F;
+                vert(vc, mat, nm, k, j, u0, v0, r, g, b, light, overlay);
+                vert(vc, mat, nm, k, jj, u1, v0, r, g, b, light, overlay);
+                vert(vc, mat, nm, k + 1, jj, u1, v1, r, g, b, light, overlay);
+                vert(vc, mat, nm, k + 1, j, u0, v1, r, g, b, light, overlay);
             }
         }
+    }
 
-        head.copyFrom(getParentModel().head);
-        float pulse = calm ? 0.95F + Mth.sin(age * 0.08F) * 0.05F
-                : intense ? 0.95F + Mth.sin(age * 0.9F) * 0.15F : 0.9F + Mth.sin(age * 0.25F) * 0.1F;
-        float r = Math.min(1.0F, f.r() * pulse + 0.05F), g = Math.min(1.0F, f.g() * pulse + 0.05F), b = Math.min(1.0F, f.b() * pulse + 0.05F);
-        VertexConsumer vc = buf.getBuffer(RenderType.entityCutoutNoCull(TEX));
-        head.render(pose, vc, f == Form.SSJ4 ? light : LightTexture.FULL_BRIGHT, LivingEntityRenderer.getOverlayCoords(player, 0.0F), r, g, b, 1.0F);
+    private void vert(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int k, int j, float u, float v,
+                      float r, float g, float b, int light, int overlay) {
+        vc.vertex(mat, vx[k][j] / 16.0F, vy[k][j] / 16.0F, vz[k][j] / 16.0F).color(r, g, b, 1.0F).uv(u, v)
+                .overlayCoords(overlay).uv2(light).normal(nm, nx[k][j], ny[k][j], nz[k][j]).endVertex();
     }
 }
