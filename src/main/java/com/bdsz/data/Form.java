@@ -86,7 +86,7 @@ public enum Form {
             case SSJ1 -> 1.05F;
             case SSJ2 -> 1.07F;
             case SSJ3 -> 1.08F;
-            case GOD -> 0.93F;                    // Dios: cuerpo delgado
+            case GOD -> 0.97F;                    // Dios: cuerpo delgado, sin exagerar
             case ULTRA -> 1.04F;
             case BLUE -> 1.06F;
             case SSJ4 -> 1.16F;

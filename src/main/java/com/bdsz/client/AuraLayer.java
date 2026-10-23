@@ -29,6 +29,7 @@ import net.minecraft.util.Mth;
  */
 public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private static final ResourceLocation TEX = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/aura.png");
+    private static final ResourceLocation FIRE = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/aura_fire.png");
     private static final String[] LIMBS = {"head", "body", "right_arm", "left_arm", "right_leg", "left_leg"};
     private final ModelPart root;
 
@@ -116,6 +117,9 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         renderShell(pose, buf, t, size, flame, 1.0F, r * a * 0.55F, g * a * 0.55F, b * a * 0.55F, player.getId());
         renderShell(pose, buf, t * 0.8F + 40, size * 1.12F, flame * 1.1F, 1.25F, or * a * 0.45F, og * a * 0.45F, ob * a * 0.45F, player.getId() + 3);
 
+        // lenguas de fuego finas que suben por la superficie del aura
+        drawWisps(pose, buf, t, size, flame, r * a, g * a, b * a, or * a, og * a, ob * a, player.getId());
+
         // ondas del aura
         int wc = k > 0 && f == Form.BASE ? 0xFF3020 : f.waveColor();
         float wr = ((wc >> 16) & 255) / 255F, wg = ((wc >> 8) & 255) / 255F, wb = (wc & 255) / 255F;
@@ -161,15 +165,15 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
                              float r, float g, float b, int seed) {
         if (flame <= 0.05F) return;
         float feet = 1.55F;
-        float baseH = (2.0F + flame * 0.55F) * (0.85F + size * 0.15F) * (0.94F + 0.06F * scale);
+        float baseH = (1.95F + flame * 0.4F) * (0.85F + size * 0.15F) * (0.94F + 0.06F * scale);
         float radius = (0.48F + flame * 0.1F) * (0.75F + size * 0.25F);
         float sd = seed * 0.71F;
         for (int j = 0; j <= SEG; j++) {
             float th = j * Mth.TWO_PI / SEG;
             // alto de cada columna: crea las puntas de fuego en la parte de arriba
-            float tongue = 0.16F * Mth.sin(3 * th + t * 0.23F + sd) + 0.13F * Mth.sin(5 * th - t * 0.37F + sd * 2)
-                    + 0.09F * Mth.sin(9 * th + t * 0.61F);
-            float hcol = baseH * (1.0F + tongue * (0.6F + flame * 0.8F));
+            float tongue = 0.09F * Mth.sin(3 * th + t * 0.23F + sd) + 0.07F * Mth.sin(5 * th - t * 0.37F + sd * 2)
+                    + 0.05F * Mth.sin(9 * th + t * 0.61F) + 0.035F * Mth.sin(14 * th - t * 0.83F + sd);
+            float hcol = baseH * (1.0F + tongue * (0.6F + flame * 0.6F));
             for (int k = 0; k <= RINGS; k++) {
                 float v = (float) k / RINGS;
                 // perfil de gota: estrecho en los pies, ancho a media altura, cerrado arriba
@@ -185,7 +189,7 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
                 sf[k][j] = fade;
             }
         }
-        VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(TEX, (t * 0.006F) % 1.0F, (-t * 0.045F) % 1.0F));
+        VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(FIRE, (t * 0.004F + seed * 0.13F) % 1.0F, (-t * 0.03F) % 1.0F));
         org.joml.Matrix4f m = pose.last().pose();
         org.joml.Matrix3f n = pose.last().normal();
         for (int k = 0; k < RINGS; k++) {
@@ -223,14 +227,101 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
             float ph = ((t / period) + (float) i / rings) % 1.0F;
             float radius = (0.5F + ph * (1.6F + power) * boost) * size;
             float fade = (1.0F - ph) * (strong ? 0.9F : 0.6F) * Math.min(1.3F, boost);
-            ring(vc, last, 1.48F, radius, radius * 0.78F, r * fade, g * fade, b * fade);
+            fireRing(vc, last, 1.48F, radius, radius * 0.16F, r * fade, g * fade, b * fade, t, i * 2.1F);
+            fireRing(vc, last, 1.47F, radius * 0.97F, radius * 0.05F, Math.min(1, r * fade * 1.6F + 0.15F * fade),
+                    Math.min(1, g * fade * 1.6F + 0.15F * fade), Math.min(1, b * fade * 1.6F + 0.15F * fade), t, i * 2.1F);   // borde brillante
         }
         for (int i = 0; i < 2; i++) {
             float ph = ((t / (period * 0.9F)) + i * 0.5F) % 1.0F;
             float y = 1.5F - ph * 2.3F * size;
             float radius = (0.62F + 0.12F * (float) Math.sin(ph * Math.PI)) * size;
             float fade = (float) Math.sin(ph * Math.PI) * 0.45F * boost;
-            ring(vc, last, y, radius, radius * 0.86F, r * fade, g * fade, b * fade);
+            fireRing(vc, last, y, radius, radius * 0.1F, r * fade, g * fade, b * fade, t * 1.3F, i * 3.3F);
+        }
+        // coronas de llamas pequeñas en el borde de las ondas del suelo
+        VertexConsumer lv = buf.getBuffer(RenderType.lightning());
+        org.joml.Matrix4f m = last.pose();
+        for (int i = 0; i < rings; i++) {
+            float ph = ((t / period) + (float) i / rings) % 1.0F;
+            float radius = (0.5F + ph * (1.6F + power) * boost) * size;
+            float fade = (1.0F - ph) * (strong ? 0.8F : 0.5F);
+            int n = 24;
+            for (int j = 0; j < n; j++) {
+                float th = j * Mth.TWO_PI / n + i;
+                float hgt = (0.1F + 0.12F * (0.5F + 0.5F * Mth.sin(th * 5 + t * 0.7F))) * fade * size;
+                float rr = radius * edge(th, t, i * 2.1F);
+                float cx = Mth.cos(th) * rr, cz = Mth.sin(th) * rr, w = 0.05F * size;
+                float tx = -Mth.sin(th) * w, tz = Mth.cos(th) * w;
+                lv.vertex(m, cx - tx, 1.48F, cz - tz).color(r * fade, g * fade, b * fade, 1.0F).endVertex();
+                lv.vertex(m, cx + tx, 1.48F, cz + tz).color(r * fade, g * fade, b * fade, 1.0F).endVertex();
+                lv.vertex(m, cx + Mth.cos(th) * 0.03F, 1.48F - hgt, cz + Mth.sin(th) * 0.03F).color(0, 0, 0, 1.0F).endVertex();
+                lv.vertex(m, cx + Mth.cos(th) * 0.03F, 1.48F - hgt, cz + Mth.sin(th) * 0.03F).color(0, 0, 0, 1.0F).endVertex();
+            }
+        }
+    }
+
+    /** Ondulación del borde de una onda (como el filo de una llama). */
+    private static float edge(float th, float t, float seed) {
+        return 1.0F + 0.07F * Mth.sin(7 * th + t * 0.2F + seed) + 0.04F * Mth.sin(13 * th - t * 0.31F + seed * 2);
+    }
+
+    /** Anillo con el borde exterior ondulado como fuego; se desvanece hacia adentro. */
+    private static void fireRing(VertexConsumer vc, PoseStack.Pose pose, float y, float radius, float thick,
+                                 float r, float g, float b, float t, float seed) {
+        org.joml.Matrix4f m = pose.pose();
+        org.joml.Matrix3f n = pose.normal();
+        int seg = 40;
+        for (int i = 0; i < seg; i++) {
+            float a0 = i * Mth.TWO_PI / seg, a1 = (i + 1) * Mth.TWO_PI / seg;
+            float o0 = radius * edge(a0, t, seed), o1 = radius * edge(a1, t, seed);
+            float i0 = o0 - thick, i1 = o1 - thick;
+            float u0 = (float) i / seg, u1 = (float) (i + 1) / seg;
+            v(vc, m, n, Mth.cos(a0) * i0, y, Mth.sin(a0) * i0, r * 0.2F, g * 0.2F, b * 0.2F, u0, 0);
+            v(vc, m, n, Mth.cos(a0) * o0, y, Mth.sin(a0) * o0, r, g, b, u0, 1);
+            v(vc, m, n, Mth.cos(a1) * o1, y, Mth.sin(a1) * o1, r, g, b, u1, 1);
+            v(vc, m, n, Mth.cos(a1) * i1, y, Mth.sin(a1) * i1, r * 0.2F, g * 0.2F, b * 0.2F, u1, 0);
+        }
+    }
+
+    /** Lenguas de fuego delgadas: nacen en los pies, suben ondulando por la superficie del aura y se apagan arriba. */
+    private static void drawWisps(PoseStack pose, MultiBufferSource buf, float t, float size, float flame,
+                                  float r, float g, float b, float or, float og, float ob, int seed) {
+        if (flame <= 0.1F) return;
+        VertexConsumer vc = buf.getBuffer(RenderType.lightning());
+        org.joml.Matrix4f m = pose.last().pose();
+        int count = 8 + (int) (flame * 8);
+        float radius = (0.48F + flame * 0.1F) * (0.75F + size * 0.25F);
+        float height = (1.95F + flame * 0.4F) * (0.85F + size * 0.15F);
+        for (int i = 0; i < count; i++) {
+            float c = (t * 0.025F + i * 0.618F + seed * 0.1F) % 1.0F;      // ciclo de vida
+            float th = i * 2.4F + Mth.sin(t * 0.05F + i) * 0.3F;
+            float life = Mth.sin(c * Mth.PI);
+            float len = 0.35F * size * (0.6F + flame * 0.4F);
+            int segs = 4;
+            float px = 0, py = 0, pz = 0;
+            for (int k = 0; k <= segs; k++) {
+                float v = c * 0.85F + (float) k / segs * len / height;
+                if (v > 1.0F) break;
+                float prof = (float) Math.pow(Math.sin(Math.min(1.0, v * 0.92 + 0.06) * Math.PI), 0.75);
+                if (v > 0.55F) prof *= 1.0F - (v - 0.55F) * 0.9F;
+                float wob = Mth.sin(t * 0.4F + i * 1.7F + k * 1.3F) * 0.12F;
+                float rad = radius * prof * 0.92F;
+                float x = Mth.cos(th + wob) * rad, z = Mth.sin(th + wob) * rad * 0.8F, y = 1.55F - v * height;
+                if (k > 0) {
+                    float w = 0.03F * size * (1.0F - (float) k / segs) * life + 0.004F;
+                    float kk = 1.0F - (float) k / segs;
+                    float cr = (r * kk + or * (1 - kk)) * life, cg = (g * kk + og * (1 - kk)) * life, cb = (b * kk + ob * (1 - kk)) * life;
+                    vc.vertex(m, px - w, py, pz).color(cr, cg, cb, 1.0F).endVertex();
+                    vc.vertex(m, px + w, py, pz).color(cr, cg, cb, 1.0F).endVertex();
+                    vc.vertex(m, x + w, y, z).color(cr * 0.7F, cg * 0.7F, cb * 0.7F, 1.0F).endVertex();
+                    vc.vertex(m, x - w, y, z).color(cr * 0.7F, cg * 0.7F, cb * 0.7F, 1.0F).endVertex();
+                    vc.vertex(m, px, py, pz - w).color(cr, cg, cb, 1.0F).endVertex();
+                    vc.vertex(m, px, py, pz + w).color(cr, cg, cb, 1.0F).endVertex();
+                    vc.vertex(m, x, y, z + w).color(cr * 0.7F, cg * 0.7F, cb * 0.7F, 1.0F).endVertex();
+                    vc.vertex(m, x, y, z - w).color(cr * 0.7F, cg * 0.7F, cb * 0.7F, 1.0F).endVertex();
+                }
+                px = x; py = y; pz = z;
+            }
         }
     }
 

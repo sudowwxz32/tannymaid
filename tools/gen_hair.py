@@ -27,7 +27,7 @@ def out(name, pivot, rx, rz, length, size, bend=0.06, sink=0.6):
     """Punta que se curva un poco hacia afuera (sigue el sentido de su giro)."""
     sx = -bend if rx < -0.05 else (bend * 0.6 if rx > 0.05 else 0.0)
     sz = -bend if rz < -0.05 else (bend if rz > 0.05 else 0.0)
-    return S(name, pivot, rx, rz, length + sink, size * 0.66, sx * 3, sz * 3)
+    return S(name, pivot, rx, rz, length + sink, size * 0.8, sx * 3, sz * 3)
 
 
 def hang(name, pivot, rx, rz, length, size):
@@ -154,6 +154,11 @@ def spikes():
     P.append(hang("f_h2_r", (-3.8, -5.8, 2.2), -2.9, -0.5, 16.0, 4.4))
     P.append(hang("f_h3", (0, -3.0, 4.0), -3.0, 0, 18.0, 4.8))
     P.append(hang("f_h4_r", (-4.1, -6.0, -0.6), -2.9, -0.35, 11.0, 3.4))
+    P.append(out("f_s1_r", (-4.3, -7.0, -1.6), -0.15, -1.15, 8.5, 3.6))
+    P.append(out("f_s2_r", (-4.4, -5.2, 0.4), -0.5, -1.4, 8.0, 3.4))
+    P.append(out("f_s3_r", (-4.3, -3.4, 2.2), -0.9, -1.6, 6.5, 3.0))
+    P.append(hang("f_h5_r", (-4.5, -4.2, -1.8), -3.0, -0.3, 11.0, 3.4))
+    P.append(hang("f_h6_r", (-4.4, -3.0, 1.0), -2.95, -0.45, 13.0, 3.6))
     P.append(strand("f_b1", (1.3, -8.2, -4.4), (-0.15, 0, -0.25), 5.5, 1.6))
     P.append(strand("f_b2_r", (-1.6, -8.2, -4.4), (-0.15, 0, 0.3), 5.0, 1.5))
     P.append(strand("f_b3", (-0.1, -8.3, -4.45), (-0.05, 0, 0.05), 4.0, 1.4))
@@ -170,6 +175,21 @@ def spikes():
     P.append(out("e_r5", (-2.4, -6.4, 3.7), -0.7, -0.28, 9.0, 3.4))
     P.append(strand("e_peak", (0, -8.3, -4.45), (-0.06, 0, 0), 3.4, 2.4))
 
+    # volumen: cada punta grande lleva mechones de relleno a su lado
+    extra = []
+    for s in P:
+        g = s.name[:s.name.index("_") + 1]
+        if g == "c_" or s.hang or s.rx > 2.0 or s.length < 6.0:
+            continue
+        if abs(s.pos[0]) < 0.5 and abs(s.rz) < 0.05:
+            for side in (-1, 1):
+                extra.append(S(s.name + "v" + ("a" if side < 0 else "b"), (s.pos[0] + side * 1.2, s.pos[1] + 0.3, s.pos[2] + 0.4),
+                               s.rx - 0.12, side * 0.28, s.length * 0.78, s.width * 0.82, s.bx, side * 0.15, s.flat))
+        else:
+            sg = -1 if s.rz < 0 else 1
+            extra.append(S(s.name + "v", (s.pos[0], s.pos[1] + 0.4, s.pos[2] + 0.9), s.rx - 0.2, s.rz + sg * 0.2,
+                           s.length * 0.8, s.width * 0.85, s.bx, s.bz, s.flat))
+    P = P + extra
     out_ = []
     for s in P:
         out_.append(s)

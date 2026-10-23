@@ -135,6 +135,11 @@ public final class SaiyanPoses {
     private static void setMuscle(PlayerModel<?> m, float k) {
         float arm = 1.0F + (k - 1.0F) * 1.6F;
         float leg = 1.0F + (k - 1.0F) * 0.9F;
+        if (k < 1.0F) {
+            // Dios: modelo de brazos finos, un poco ensanchados para que no se vea tan flaco
+            arm = 1.1F;
+            leg = 0.98F;
+        }
         scale(m.body, k, 1.0F, 1.0F + (k - 1.0F) * 1.3F);
         scale(m.jacket, k, 1.0F, 1.0F + (k - 1.0F) * 1.3F);
         scale(m.rightArm, arm, 1.0F, arm);
