@@ -26,6 +26,18 @@ public class EnemyModel extends HumanoidModel<DbzEnemy> {
             rightArm.z -= 1.5F;
             leftArm.z -= 1.5F;
         }
+        if (k == EnemyKind.DRON) {
+            // el dron no camina: solo se balancea y apunta sus cañones
+            rightArm.xRot = head.xRot * 0.5F;
+            leftArm.xRot = head.xRot * 0.5F;
+            rightArm.yRot = head.yRot;
+            leftArm.yRot = head.yRot;
+            rightArm.zRot = leftArm.zRot = 0;
+            head.zRot = Mth.sin(age * 0.1F) * 0.06F;
+            head.y = Mth.sin(age * 0.12F) * 0.8F;
+            hat.copyFrom(head);
+            return;
+        }
         boolean flying = e.isNoGravity() && !e.onGround();
         if (flying && e.getCast() == 0 && attackTime <= 0) {
             // flotando: piernas atrás, brazos abiertos

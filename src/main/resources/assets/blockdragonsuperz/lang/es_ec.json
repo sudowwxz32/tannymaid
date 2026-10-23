@@ -49,5 +49,14 @@
   "entity.blockdragonsuperz.emperador_galactico": "Emperador Galáctico",
   "item.blockdragonsuperz.emperador_galactico_spawn_egg": "Huevo de aparición: Emperador Galáctico",
   "block.blockdragonsuperz.shield_generator": "Generador Protector",
-  "itemGroup.blockdragonsuperz": "Block Dragon Super Z"
+  "itemGroup.blockdragonsuperz": "Block Dragon Super Z",
+  "entity.blockdragonsuperz.mercenario": "Mercenario Espacial",
+  "item.blockdragonsuperz.mercenario_spawn_egg": "Huevo de aparición: Mercenario Espacial",
+  "entity.blockdragonsuperz.guerrero_sombra": "Guerrero Sombra",
+  "item.blockdragonsuperz.guerrero_sombra_spawn_egg": "Huevo de aparición: Guerrero Sombra",
+  "entity.blockdragonsuperz.golem_ki": "Gólem de Ki",
+  "item.blockdragonsuperz.golem_ki_spawn_egg": "Huevo de aparición: Gólem de Ki",
+  "entity.blockdragonsuperz.dron_explorador": "Dron Explorador",
+  "item.blockdragonsuperz.dron_explorador_spawn_egg": "Huevo de aparición: Dron Explorador",
+  "key.blockdragonsuperz.sense": "Sentir ki"
 }

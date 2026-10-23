@@ -323,8 +323,126 @@ def emperador():
     return P
 
 
+
+# =================================================================== Mercenario Espacial
+def mercenario():
+    SK, SK_DK, LEA, LEA_DK, BLADE, BELT = (92, 140, 112), (64, 104, 82), (112, 72, 42), (78, 48, 26), (120, 255, 170), (60, 60, 64)
+
+    def head(f, x, y, w, h):
+        if f == "front" and y == 4 and (x in (1, 2) or x in (w - 3, w - 2)):
+            return G((255, 200, 40))
+        if f == "front" and y == 6 and 2 < x < w - 3:
+            return jit((40, 60, 50), 3)
+        if (x + y * 2) % 5 == 0:
+            return jit(SK_DK, 4)                                       # escamas
+        return jit(SK, 5)
+
+    def body(f, x, y, w, h):
+        if y == 8:
+            return jit(BELT, 3)
+        if f == "front" and (x == y % 8 or x == 7 - y % 8) and y < 8:
+            return jit(LEA_DK, 3)                                      # correas cruzadas
+        return jit(LEA, 6)
+
+    def arm(f, x, y, w, h):
+        return jit(SK, 5) if y >= 5 else jit(LEA, 6)
+
+    def leg(f, x, y, w, h):
+        return jit(LEA_DK, 4) if y >= h - 4 else jit((70, 66, 60), 5)
+
+    P = humanoid(head, body, arm, leg)
+    P.append(Part("blade", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-1.6, 8, -9, 1.2, 1.6, 9, lambda f, x, y, w, h: G(BLADE))]))
+    P.append(Part("hilt", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-3.3, 7, -2.4, 4.6, 3.5, 4.8, solid((90, 90, 96)))]))
+    P.append(Part("crest", "head", (0, -8, 0), (-0.3, 0, 0), [Box(-0.6, -3, -3, 1.2, 3, 6, solid(SK_DK))]))
+    P.append(Part("shoulder_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-3.6, -2.6, -2.6, 4.8, 2.6, 5.2, solid(LEA_DK))]))
+    return P
+
+
+# =================================================================== Guerrero Sombra
+def sombra():
+    BK, BK2, PUR, WHITE = (18, 16, 24), (34, 28, 46), (150, 80, 255), (240, 240, 255)
+
+    def dark(f, x, y, w, h):
+        if (x * 5 + y * 3) % 13 == 0:
+            return G(PUR)                                              # chispas de energía oscura
+        return jit(BK if (x + y) % 3 else BK2, 4)
+
+    def head(f, x, y, w, h):
+        if f == "front" and y == 4 and (x in (1, 2) or x in (w - 3, w - 2)):
+            return G(WHITE)
+        return dark(f, x, y, w, h)
+
+    P = humanoid(head, dark, dark, dark)
+    P.append(Part("scarf", "body", (0, 0.5, 2.1), (0.35, 0, 0), [Box(-2, 0, 0, 4, 14, 0.6, lambda f, x, y, w, h: G(PUR) if y == h - 1 else jit((60, 30, 96), 5))]))
+    P.append(Part("hood", "head", (0, 0, 0), (0, 0, 0), [Box(-4.4, -8.6, -4.4, 8.8, 4, 8.8, solid(BK2))]))
+    return P
+
+
+# =================================================================== Gólem de Ki
+def golem():
+    ST, ST_HI, ST_DK, CY = (110, 112, 120), (140, 142, 150), (70, 72, 80), (80, 230, 255)
+
+    def stone(f, x, y, w, h):
+        if (x * 7 + y * 3) % 19 == 0 and f != "top":
+            return G(CY)                                               # grietas de ki
+        if (x + y) % 6 == 0:
+            return jit(ST_DK, 4)
+        return jit(ST if (x * y) % 4 else ST_HI, 6)
+
+    def head(f, x, y, w, h):
+        if f == "front" and y == 2 and 0 < x < w - 1:
+            return G(CY)
+        return stone(f, x, y, w, h)
+
+    P = [
+        Part("head", "root", (0, 0, 0), (0, 0, 0), [Box(-3.5, -6, -3.5, 7, 6, 7, head)]),
+        Part("hat", "root", (0, 0, 0), (0, 0, 0), []),
+        Part("body", "root", (0, 0, 0), (0, 0, 0), [Box(-6, -1.5, -3.5, 12, 13.5, 7, stone)]),
+        Part("right_arm", "root", (-5, 2, 0), (0, 0, 0), [Box(-6.5, -3, -3, 6, 14, 6, stone)]),
+        Part("left_arm", "root", (5, 2, 0), (0, 0, 0), [Box(0.5, -3, -3, 6, 14, 6, stone)]),
+        Part("right_leg", "root", (-1.9, 12, 0), (0, 0, 0), [Box(-2.8, 0, -2.8, 5.6, 12, 5.6, stone)]),
+        Part("left_leg", "root", (1.9, 12, 0), (0, 0, 0), [Box(-2.8, 0, -2.8, 5.6, 12, 5.6, stone)]),
+    ]
+    crystal = lambda f, x, y, w, h: G((120, 240, 255)) if (x + y) % 2 else G(CY)
+    P.append(Part("shard_r", "right_arm", (-4, -3, 0), (0.2, 0, -0.5), [Box(-1, -5, -1, 2, 5, 2, crystal)]))
+    P.append(Part("shard_l", "left_arm", (4, -3, 0), (0.2, 0, 0.5), [Box(-1, -5, -1, 2, 5, 2, crystal)]))
+    P.append(Part("shard_back", "body", (0, 1, 3), (-0.6, 0, 0), [Box(-1.2, -6, -1.2, 2.4, 6, 2.4, crystal)]))
+    P.append(Part("shard_back2", "body", (-3, 3, 3), (-0.7, 0, -0.4), [Box(-0.9, -4, -0.9, 1.8, 4, 1.8, crystal)]))
+    P.append(Part("shard_back3", "body", (3, 3, 3), (-0.7, 0, 0.4), [Box(-0.9, -4, -0.9, 1.8, 4, 1.8, crystal)]))
+    return P
+
+
+# =================================================================== Dron Explorador
+def dron():
+    MT, MT_HI, MT_DK, YEL = (180, 184, 196), (220, 224, 232), (90, 94, 108), (255, 210, 60)
+    M = metal(MT, MT_HI, MT_DK, 0)
+
+    def core(f, x, y, w, h):
+        if f == "front" and 3 <= x <= w - 4 and 3 <= y <= h - 4:
+            return G(YEL) if (x in (4, 5) and y in (4, 5)) else jit((30, 30, 36), 3)   # lente
+        if y == h // 2:
+            return jit(YEL, 6)
+        return M(f, x, y, w, h)
+
+    P = [
+        Part("head", "root", (0, 0, 0), (0, 0, 0), [Box(-5, -10, -5, 10, 10, 10, core)]),
+        Part("hat", "root", (0, 0, 0), (0, 0, 0), []),
+        Part("body", "root", (0, 0, 0), (0, 0, 0), [Box(-1.5, 0, -1.5, 3, 3, 3, M)]),
+        Part("right_arm", "root", (-5, 2, 0), (0, 0, 0), [Box(-3, -6, -2, 3, 3, 6, M)]),
+        Part("left_arm", "root", (5, 2, 0), (0, 0, 0), [Box(0, -6, -2, 3, 3, 6, M)]),
+        Part("right_leg", "root", (-1.9, 12, 0), (0, 0, 0), []),
+        Part("left_leg", "root", (1.9, 12, 0), (0, 0, 0), []),
+    ]
+    P.append(Part("gun_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-2.3, -5.3, -5, 1.6, 1.6, 3.2, lambda f, x, y, w, h: G((255, 120, 40)) if f == "front" else jit(MT_DK))]))
+    P.append(Part("gun_l", "left_arm", (0, 0, 0), (0, 0, 0), [Box(0.7, -5.3, -5, 1.6, 1.6, 3.2, lambda f, x, y, w, h: G((255, 120, 40)) if f == "front" else jit(MT_DK))]))
+    P.append(Part("antenna", "head", (2, -10, 1), (0, 0, 0.3), [Box(-0.4, -4, -0.4, 0.8, 4, 0.8, lambda f, x, y, w, h: G((255, 60, 40)) if y == 0 else jit(MT_DK))]))
+    P.append(Part("thruster", "body", (0, 3, 0), (0, 0, 0), [Box(-2, 0, -2, 4, 2, 4, lambda f, x, y, w, h: G((120, 200, 255)) if f == "bottom" else jit(MT_DK))]))
+    return P
+
+
 KINDS = {"androide": androide, "robot_guardian": robot, "soldado_imperial": soldado, "engendro_bio": engendro,
-         "bio_titan": titan, "demonio_arcano": demonio, "emperador_galactico": emperador}
+         "bio_titan": titan, "demonio_arcano": demonio, "emperador_galactico": emperador,
+         "mercenario": mercenario, "guerrero_sombra": sombra, "golem_ki": golem, "dron_explorador": dron}
 
 
 # =================================================================== salida

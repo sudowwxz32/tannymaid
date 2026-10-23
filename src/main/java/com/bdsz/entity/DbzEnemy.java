@@ -320,6 +320,44 @@ public class DbzEnemy extends Monster {
         }
     }
 
+    // ------------------------------------------------------------ aparición
+
+    /** Color del contorno al sentir el ki (como con una flecha espectral). */
+    @Override
+    public int getTeamColor() {
+        return getTeam() != null ? super.getTeamColor() : (isEnraged() ? 0xFF2020 : kind().kiColor);
+    }
+
+    /** Jefes: solo de noche, al aire libre y nunca si ya hay otro jefe cerca. */
+    public static boolean checkSpawn(EntityType<DbzEnemy> type, net.minecraft.world.level.ServerLevelAccessor lv,
+                                     net.minecraft.world.entity.MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource rnd) {
+        if (!Monster.checkMonsterSpawnRules(type, lv, reason, pos, rnd)) return false;
+        EnemyKind k = EnemyKind.of(type);
+        if (!k.boss || reason == net.minecraft.world.entity.MobSpawnType.SPAWN_EGG || reason == net.minecraft.world.entity.MobSpawnType.COMMAND) return true;
+        ServerLevel sl = lv.getLevel();
+        if (!sl.isNight() || !sl.canSeeSky(pos)) return false;
+        if (rnd.nextInt(4) != 0) return false;                                   // muy poco frecuentes
+        return sl.getEntitiesOfClass(DbzEnemy.class, new net.minecraft.world.phys.AABB(pos).inflate(160), e -> e.kind().boss).isEmpty();
+    }
+
+    @Override
+    public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor lv, net.minecraft.world.DifficultyInstance diff,
+                                                                    net.minecraft.world.entity.MobSpawnType reason,
+                                                                    @javax.annotation.Nullable net.minecraft.world.entity.SpawnGroupData data,
+                                                                    @javax.annotation.Nullable CompoundTag tag) {
+        var res = super.finalizeSpawn(lv, diff, reason, data, tag);
+        if (kind().boss && reason == net.minecraft.world.entity.MobSpawnType.NATURAL) {
+            ServerLevel sl = lv.getLevel();
+            for (ServerPlayer p : sl.players()) {
+                if (p.distanceToSqr(this) < 200 * 200) {
+                    p.sendSystemMessage(Component.literal("§4§l⚠ §cSientes un ki enorme acercándose... §7(").append(getDisplayName()).append(Component.literal("§7)")));
+                    p.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.HOSTILE, 0.6F, 0.8F);
+                }
+            }
+        }
+        return res;
+    }
+
     // ------------------------------------------------------------ daño
 
     @Override
@@ -365,7 +403,9 @@ public class DbzEnemy extends Monster {
         } else {
             if (random.nextFloat() < 0.35F + looting * 0.1F) spawnAtLocation(new ItemStack(ModRegistry.BLACK_KI_INGOT.get()));
             if (random.nextFloat() < 0.1F) spawnAtLocation(new ItemStack(ModRegistry.SENZU_BEAN.get()));
-            if (k == EnemyKind.ROBOT || k == EnemyKind.ANDROIDE) spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(3)));
+            if (k == EnemyKind.ROBOT || k == EnemyKind.ANDROIDE || k == EnemyKind.DRON) spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(3)));
+            if (k == EnemyKind.GOLEM) spawnAtLocation(new ItemStack(Items.AMETHYST_SHARD, 2 + random.nextInt(4)));
+            if (k == EnemyKind.MERCENARIO) spawnAtLocation(new ItemStack(Items.EMERALD, 1 + random.nextInt(3)));
         }
     }
 
@@ -443,7 +483,9 @@ public class DbzEnemy extends Monster {
     @Override
     protected SoundEvent getAmbientSound() {
         return switch (kind()) {
-            case ROBOT, ANDROIDE -> SoundEvents.BEACON_AMBIENT;
+            case ROBOT, ANDROIDE, DRON -> SoundEvents.BEACON_AMBIENT;
+            case GOLEM -> SoundEvents.AMETHYST_BLOCK_CHIME;
+            case SOMBRA -> SoundEvents.SOUL_ESCAPE;
             case ENGENDRO -> SoundEvents.SILVERFISH_AMBIENT;
             case BIO_TITAN -> SoundEvents.RAVAGER_AMBIENT;
             case DEMONIO -> SoundEvents.EVOKER_AMBIENT;
@@ -454,7 +496,9 @@ public class DbzEnemy extends Monster {
     @Override
     protected SoundEvent getHurtSound(DamageSource src) {
         return switch (kind()) {
-            case ROBOT, ANDROIDE -> SoundEvents.IRON_GOLEM_HURT;
+            case ROBOT, ANDROIDE, DRON -> SoundEvents.IRON_GOLEM_HURT;
+            case GOLEM -> SoundEvents.AMETHYST_BLOCK_BREAK;
+            case SOMBRA -> SoundEvents.PHANTOM_HURT;
             case ENGENDRO -> SoundEvents.SPIDER_HURT;
             case BIO_TITAN -> SoundEvents.RAVAGER_HURT;
             case DEMONIO -> SoundEvents.EVOKER_HURT;
@@ -465,7 +509,9 @@ public class DbzEnemy extends Monster {
     @Override
     protected SoundEvent getDeathSound() {
         return switch (kind()) {
-            case ROBOT, ANDROIDE -> SoundEvents.IRON_GOLEM_DEATH;
+            case ROBOT, ANDROIDE, DRON -> SoundEvents.IRON_GOLEM_DEATH;
+            case GOLEM -> SoundEvents.AMETHYST_CLUSTER_BREAK;
+            case SOMBRA -> SoundEvents.PHANTOM_DEATH;
             case ENGENDRO -> SoundEvents.SPIDER_DEATH;
             case BIO_TITAN -> SoundEvents.RAVAGER_DEATH;
             case DEMONIO -> SoundEvents.EVOKER_DEATH;

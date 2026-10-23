@@ -37,6 +37,8 @@ public final class ClientModEvents {
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY);
     public static final ModelLayerLocation SSJ4_FUR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ssj4_fur"), "main");
     public static final ModelLayerLocation SSJ4_FUR_SLIM = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ssj4_fur_slim"), "main");
+    /** Sentir el ki: J. */
+    public static final KeyMapping SENSE = new KeyMapping("key.blockdragonsuperz.sense", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, CATEGORY);
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -54,6 +56,7 @@ public final class ClientModEvents {
         e.register(DRAGON_FIST);
         e.register(OZARU);
         e.register(QUICK);
+        e.register(SENSE);
     }
 
     @SubscribeEvent

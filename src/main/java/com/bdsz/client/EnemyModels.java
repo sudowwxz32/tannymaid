@@ -19,6 +19,10 @@ public final class EnemyModels {
             case "bio_titan" -> bio_titan();
             case "demonio_arcano" -> demonio_arcano();
             case "emperador_galactico" -> emperador_galactico();
+            case "mercenario" -> mercenario();
+            case "guerrero_sombra" -> guerrero_sombra();
+            case "golem_ki" -> golem_ki();
+            case "dron_explorador" -> dron_explorador();
             default -> throw new IllegalArgumentException(id);
         };
     }
@@ -175,6 +179,77 @@ public final class EnemyModels {
         d.put("pauldron_l", d.get("left_arm").addOrReplaceChild("pauldron_l", CubeListBuilder.create().texOffs(0, 71).addBox(-1.6F, -3.2F, -3F, 5.8F, 3.6F, 6F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
         d.put("cape", d.get("body").addOrReplaceChild("cape", CubeListBuilder.create().texOffs(0, 0).addBox(-5F, -0.4F, 0F, 10F, 22F, 0.7F), PartPose.offsetAndRotation(0F, 0F, 2.2F, 0.1F, 0F, 0F)));
         return LayerDefinition.create(mesh, 64, 128);
+    }
+
+    private static LayerDefinition mercenario() {
+        MeshDefinition mesh = new MeshDefinition();
+        Map<String, PartDefinition> d = new HashMap<>();
+        d.put("root", mesh.getRoot());
+        d.put("head", d.get("root").addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4F, -8F, -4F, 8F, 8F, 8F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("hat", d.get("root").addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("body", d.get("root").addOrReplaceChild("body", CubeListBuilder.create().texOffs(33, 0).addBox(-4F, 0F, -2F, 8F, 12F, 4F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("right_arm", d.get("root").addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 17).addBox(-3F, -2F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(-5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("left_arm", d.get("root").addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(17, 17).addBox(-1F, -2F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("right_leg", d.get("root").addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(34, 17).addBox(-2F, 0F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(-1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("left_leg", d.get("root").addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(0, 34).addBox(-2F, 0F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("blade", d.get("right_arm").addOrReplaceChild("blade", CubeListBuilder.create().texOffs(17, 34).addBox(-1.6F, 8F, -9F, 1.2F, 1.6F, 9F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("hilt", d.get("right_arm").addOrReplaceChild("hilt", CubeListBuilder.create().texOffs(39, 34).addBox(-3.3F, 7F, -2.4F, 4.6F, 3.5F, 4.8F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("crest", d.get("head").addOrReplaceChild("crest", CubeListBuilder.create().texOffs(0, 51).addBox(-0.6F, -3F, -3F, 1.2F, 3F, 6F), PartPose.offsetAndRotation(0F, -8F, 0F, -0.3F, 0F, 0F)));
+        d.put("shoulder_r", d.get("right_arm").addOrReplaceChild("shoulder_r", CubeListBuilder.create().texOffs(16, 51).addBox(-3.6F, -2.6F, -2.6F, 4.8F, 2.6F, 5.2F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        return LayerDefinition.create(mesh, 64, 64);
+    }
+
+    private static LayerDefinition guerrero_sombra() {
+        MeshDefinition mesh = new MeshDefinition();
+        Map<String, PartDefinition> d = new HashMap<>();
+        d.put("root", mesh.getRoot());
+        d.put("head", d.get("root").addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4F, -8F, -4F, 8F, 8F, 8F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("hat", d.get("root").addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("body", d.get("root").addOrReplaceChild("body", CubeListBuilder.create().texOffs(33, 0).addBox(-4F, 0F, -2F, 8F, 12F, 4F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("right_arm", d.get("root").addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 17).addBox(-3F, -2F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(-5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("left_arm", d.get("root").addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(17, 17).addBox(-1F, -2F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("right_leg", d.get("root").addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(34, 17).addBox(-2F, 0F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(-1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("left_leg", d.get("root").addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(0, 34).addBox(-2F, 0F, -2F, 4F, 12F, 4F), PartPose.offsetAndRotation(1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("scarf", d.get("body").addOrReplaceChild("scarf", CubeListBuilder.create().texOffs(17, 34).addBox(-2F, 0F, 0F, 4F, 14F, 0.6F), PartPose.offsetAndRotation(0F, 0.5F, 2.1F, 0.35F, 0F, 0F)));
+        d.put("hood", d.get("head").addOrReplaceChild("hood", CubeListBuilder.create().texOffs(28, 34).addBox(-4.4F, -8.6F, -4.4F, 8.8F, 4F, 8.8F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        return LayerDefinition.create(mesh, 64, 64);
+    }
+
+    private static LayerDefinition golem_ki() {
+        MeshDefinition mesh = new MeshDefinition();
+        Map<String, PartDefinition> d = new HashMap<>();
+        d.put("root", mesh.getRoot());
+        d.put("head", d.get("root").addOrReplaceChild("head", CubeListBuilder.create().texOffs(24, 43).addBox(-3.5F, -6F, -3.5F, 7F, 6F, 7F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("hat", d.get("root").addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("body", d.get("root").addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-6F, -1.5F, -3.5F, 12F, 13.5F, 7F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("right_arm", d.get("root").addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(39, 0).addBox(-6.5F, -3F, -3F, 6F, 14F, 6F), PartPose.offsetAndRotation(-5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("left_arm", d.get("root").addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 22).addBox(0.5F, -3F, -3F, 6F, 14F, 6F), PartPose.offsetAndRotation(5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("right_leg", d.get("root").addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(25, 22).addBox(-2.8F, 0F, -2.8F, 5.6F, 12F, 5.6F), PartPose.offsetAndRotation(-1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("left_leg", d.get("root").addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(0, 43).addBox(-2.8F, 0F, -2.8F, 5.6F, 12F, 5.6F), PartPose.offsetAndRotation(1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("shard_r", d.get("right_arm").addOrReplaceChild("shard_r", CubeListBuilder.create().texOffs(0, 62).addBox(-1F, -5F, -1F, 2F, 5F, 2F), PartPose.offsetAndRotation(-4F, -3F, 0F, 0.2F, 0F, -0.5F)));
+        d.put("shard_l", d.get("left_arm").addOrReplaceChild("shard_l", CubeListBuilder.create().texOffs(9, 62).addBox(-1F, -5F, -1F, 2F, 5F, 2F), PartPose.offsetAndRotation(4F, -3F, 0F, 0.2F, 0F, 0.5F)));
+        d.put("shard_back", d.get("body").addOrReplaceChild("shard_back", CubeListBuilder.create().texOffs(53, 43).addBox(-1.2F, -6F, -1.2F, 2.4F, 6F, 2.4F), PartPose.offsetAndRotation(0F, 1F, 3F, -0.6F, 0F, 0F)));
+        d.put("shard_back2", d.get("body").addOrReplaceChild("shard_back2", CubeListBuilder.create().texOffs(18, 62).addBox(-0.9F, -4F, -0.9F, 1.8F, 4F, 1.8F), PartPose.offsetAndRotation(-3F, 3F, 3F, -0.7F, 0F, -0.4F)));
+        d.put("shard_back3", d.get("body").addOrReplaceChild("shard_back3", CubeListBuilder.create().texOffs(27, 62).addBox(-0.9F, -4F, -0.9F, 1.8F, 4F, 1.8F), PartPose.offsetAndRotation(3F, 3F, 3F, -0.7F, 0F, 0.4F)));
+        return LayerDefinition.create(mesh, 64, 128);
+    }
+
+    private static LayerDefinition dron_explorador() {
+        MeshDefinition mesh = new MeshDefinition();
+        Map<String, PartDefinition> d = new HashMap<>();
+        d.put("root", mesh.getRoot());
+        d.put("head", d.get("root").addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-5F, -10F, -5F, 10F, 10F, 10F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("hat", d.get("root").addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("body", d.get("root").addOrReplaceChild("body", CubeListBuilder.create().texOffs(36, 21).addBox(-1.5F, 0F, -1.5F, 3F, 3F, 3F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("right_arm", d.get("root").addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(41, 0).addBox(-3F, -6F, -2F, 3F, 3F, 6F), PartPose.offsetAndRotation(-5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("left_arm", d.get("root").addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 21).addBox(0F, -6F, -2F, 3F, 3F, 6F), PartPose.offsetAndRotation(5F, 2F, 0F, 0F, 0F, 0F)));
+        d.put("right_leg", d.get("root").addOrReplaceChild("right_leg", CubeListBuilder.create(), PartPose.offsetAndRotation(-1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("left_leg", d.get("root").addOrReplaceChild("left_leg", CubeListBuilder.create(), PartPose.offsetAndRotation(1.9F, 12F, 0F, 0F, 0F, 0F)));
+        d.put("gun_r", d.get("right_arm").addOrReplaceChild("gun_r", CubeListBuilder.create().texOffs(49, 21).addBox(-2.3F, -5.3F, -5F, 1.6F, 1.6F, 3.2F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("gun_l", d.get("left_arm").addOrReplaceChild("gun_l", CubeListBuilder.create().texOffs(0, 31).addBox(0.7F, -5.3F, -5F, 1.6F, 1.6F, 3.2F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F)));
+        d.put("antenna", d.get("head").addOrReplaceChild("antenna", CubeListBuilder.create().texOffs(11, 31).addBox(-0.4F, -4F, -0.4F, 0.8F, 4F, 0.8F), PartPose.offsetAndRotation(2F, -10F, 1F, 0F, 0F, 0.3F)));
+        d.put("thruster", d.get("body").addOrReplaceChild("thruster", CubeListBuilder.create().texOffs(19, 21).addBox(-2F, 0F, -2F, 4F, 2F, 4F), PartPose.offsetAndRotation(0F, 3F, 0F, 0F, 0F, 0F)));
+        return LayerDefinition.create(mesh, 64, 64);
     }
 
 }

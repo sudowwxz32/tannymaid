@@ -16,7 +16,11 @@ public enum EnemyKind {
     ENGENDRO("engendro_bio",             0.55F, 1.5F, 0.8F,  600,  6,  16, 0.38, 0xFF8A2A, 14, 70, false, false, true,  false, 0,  null,             0.2F,  55,  BossEvent.BossBarColor.YELLOW),
     BIO_TITAN("bio_titan",               0.8F, 2.5F,  1.3F,  3000, 16, 40, 0.30, 0xFF7A1A, 30, 45, true,  false, true,  true,  6,  "engendro_bio",   0.1F,  500, BossEvent.BossBarColor.YELLOW),
     DEMONIO("demonio_arcano",            0.75F, 2.4F, 1.25F, 2800, 12, 34, 0.30, 0xC040FF, 28, 40, true,  true,  true,  false, 14, null,             0.15F, 500, BossEvent.BossBarColor.PURPLE),
-    EMPERADOR("emperador_galactico",     0.75F, 2.3F, 1.2F,  4000, 18, 44, 0.32, 0xFF2A4A, 34, 35, true,  true,  true,  false, 0,  "soldado_imperial", 0.2F, 800, BossEvent.BossBarColor.RED);
+    EMPERADOR("emperador_galactico",     0.75F, 2.3F, 1.2F,  4000, 18, 44, 0.32, 0xFF2A4A, 34, 35, true,  true,  true,  false, 0,  "soldado_imperial", 0.2F, 800, BossEvent.BossBarColor.RED),
+    MERCENARIO("mercenario",             0.6F, 1.95F, 1.0F,  580,  10, 22, 0.34, 0x7CFFA0, 14, 90, false, false, true,  false, 0,  null,             0.15F, 55,  BossEvent.BossBarColor.GREEN),
+    SOMBRA("guerrero_sombra",            0.6F, 1.95F, 1.0F,  620,  6,  20, 0.33, 0xA050FF, 16, 50, false, false, true,  false, 0,  null,             0.3F,  60,  BossEvent.BossBarColor.PURPLE),
+    GOLEM("golem_ki",                    1.2F, 2.7F,  1.35F, 950,  22, 30, 0.22, 0x50E0FF, 20, 80, false, false, false, true,  0,  null,             0.0F,  85,  BossEvent.BossBarColor.BLUE),
+    DRON("dron_explorador",              0.8F, 1.6F,  0.9F,  540,  12, 10, 0.30, 0xFFD040, 12, 30, false, true,  false, false, 0,  null,             0.1F,  50,  BossEvent.BossBarColor.YELLOW);
 
     public final String id;
     public final float width, height, scale;
@@ -60,6 +64,16 @@ public enum EnemyKind {
 
     /** Cuánto se divide el daño recibido para que aguante toda su vida. */
     public float hpScale() { return (float) (hp / attributeHealth()); }
+
+    /** Dónde aparece cada jefe (solo de noche, y nunca dos jefes cerca). */
+    public String bossBiomes() {
+        return switch (this) {
+            case BIO_TITAN -> "pantanos y junglas";
+            case DEMONIO -> "bosques oscuros, desiertos y badlands";
+            case EMPERADOR -> "llanuras, sabanas, praderas y colinas";
+            default -> "";
+        };
+    }
 
     public static EnemyKind byId(String id) {
         for (EnemyKind k : values()) if (k.id.equals(id)) return k;

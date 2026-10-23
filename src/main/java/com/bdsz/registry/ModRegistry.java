@@ -49,13 +49,14 @@ public final class ModRegistry {
             new java.util.EnumMap<>(com.bdsz.entity.EnemyKind.class);
     private static final int[][] EGG_COLORS = {
             {0x22305A, 0x6FE8FF}, {0x686F52, 0xFF3A30}, {0x1C1C22, 0x28A0A0}, {0x2A3E80, 0xFF8A2A},
-            {0x201E26, 0xFF7A1A}, {0x6E3C8C, 0xD6AA3C}, {0x18161E, 0xE2B63E}};
+            {0x201E26, 0xFF7A1A}, {0x6E3C8C, 0xD6AA3C}, {0x18161E, 0xE2B63E},
+            {0x5C8C70, 0x78FFA8}, {0x121018, 0x9650FF}, {0x6E7078, 0x50E6FF}, {0xB4B8C4, 0xFFD23C}};
     static {
         for (com.bdsz.entity.EnemyKind k : com.bdsz.entity.EnemyKind.values()) {
             var type = ENTITIES.register(k.id, () -> {
                 var b = EntityType.Builder.<com.bdsz.entity.DbzEnemy>of(com.bdsz.entity.DbzEnemy::new, MobCategory.MONSTER)
                         .sized(k.width, k.height).clientTrackingRange(10);
-                if (k.boss || k == com.bdsz.entity.EnemyKind.ROBOT) b = b.fireImmune();
+                if (k.boss || k == com.bdsz.entity.EnemyKind.ROBOT || k == com.bdsz.entity.EnemyKind.GOLEM) b = b.fireImmune();
                 return b.build(k.id);
             });
             ENEMY.put(k, type);

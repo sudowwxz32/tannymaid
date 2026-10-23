@@ -26,7 +26,7 @@ public final class ModBusEvents {
     public static void spawns(SpawnPlacementRegisterEvent e) {
         for (EnemyKind k : EnemyKind.values()) {
             e.register(ModRegistry.ENEMY.get(k).get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                    Monster::checkMonsterSpawnRules, SpawnPlacementRegisterEvent.Operation.REPLACE);
+                    DbzEnemy::checkSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
         }
     }
 }

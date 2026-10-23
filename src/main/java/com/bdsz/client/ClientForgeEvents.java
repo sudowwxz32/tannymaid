@@ -48,6 +48,9 @@ public final class ClientForgeEvents {
             if (!mine.saiyan) notSaiyan(mc);
             else if (mc.screen == null) mc.setScreen(new PowerScreen());
         }
+        while (ClientModEvents.SENSE.consumeClick()) {
+            if (!mine.saiyan) notSaiyan(mc); else KiSense.toggle();
+        }
         while (ClientModEvents.QUICK.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc);
             else if (mc.screen == null) mc.setScreen(new QuickSwitchScreen());
