@@ -110,7 +110,7 @@ public class QuickSwitchScreen extends Screen {
         } else {
             moveForm(dir);
         }
-        tick();
+        clickSound();
         return true;
     }
 
@@ -126,7 +126,7 @@ public class QuickSwitchScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) { kaiFocus = !kaiFocus; tick(); return true; }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) { kaiFocus = !kaiFocus; clickSound(); return true; }
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return true;
         SaiyanState s = state();
         int y = top + 16;
@@ -139,7 +139,7 @@ public class QuickSwitchScreen extends Screen {
         }
         int cy = top + 16 + listH + 13;
         for (int i = 0; i <= 10; i++) {
-            if (in(mx, my, left + 5 + i * 13, cy, 12, 12)) { kaioken = i * 10; tick(); return true; }
+            if (in(mx, my, left + 5 + i * 13, cy, 12, 12)) { kaioken = i * 10; clickSound(); return true; }
         }
         apply();
         return true;
@@ -148,16 +148,16 @@ public class QuickSwitchScreen extends Screen {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         if (key == GLFW.GLFW_KEY_ESCAPE) { onClose(); return true; }
-        if (key == GLFW.GLFW_KEY_TAB) { kaiFocus = !kaiFocus; tick(); return true; }
+        if (key == GLFW.GLFW_KEY_TAB) { kaiFocus = !kaiFocus; clickSound(); return true; }
         if (key == GLFW.GLFW_KEY_UP || key == GLFW.GLFW_KEY_DOWN) {
             if (kaiFocus) kaioken = Math.max(0, Math.min(100, kaioken + (key == GLFW.GLFW_KEY_UP ? 10 : -10)));
             else moveForm(key == GLFW.GLFW_KEY_UP ? -1 : 1);
-            tick();
+            clickSound();
             return true;
         }
         if (key == GLFW.GLFW_KEY_LEFT || key == GLFW.GLFW_KEY_RIGHT) {
             kaioken = Math.max(0, Math.min(100, kaioken + (key == GLFW.GLFW_KEY_LEFT ? -10 : 10)));
-            tick();
+            clickSound();
             return true;
         }
         if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER || key == GLFW.GLFW_KEY_SPACE
@@ -178,7 +178,7 @@ public class QuickSwitchScreen extends Screen {
         onClose();
     }
 
-    private static void tick() {
+    private static void clickSound() {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.6F, 0.25F));
     }
 
