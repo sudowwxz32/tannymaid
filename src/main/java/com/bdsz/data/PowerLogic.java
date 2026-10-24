@@ -3,6 +3,7 @@ package com.bdsz.data;
 import com.bdsz.entity.KiBlastEntity;
 import com.bdsz.entity.KameBeamEntity;
 import com.bdsz.registry.ModRegistry;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -205,6 +206,16 @@ public final class PowerLogic {
             lv.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y + 1.2, z, 15 + (int) (progress * 30), 0.6, 1.0, 0.6, 0.5);
             lv.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.2F + progress * 0.3F, 0.5F);
         }
+        if (f.legendary3()) {
+            // ciclón: la energía y el polvo giran y suben hacia el cielo
+            for (int i = 0; i < 6; i++) {
+                double h = lv.random.nextDouble() * (4 + progress * 30);
+                double ang = s.powering * 0.4 + h * 0.45 + i * 1.05;
+                double r = 0.9 + Math.pow(h / 40.0, 1.3) * 5.5;
+                lv.sendParticles(new DustParticleOptions(new Vector3f(0.35F, 1.0F, 0.35F), 2.2F), x + Math.cos(ang) * r, y + h, z + Math.sin(ang) * r, 1, 0, 0, 0, 0);
+            }
+            if (s.powering % 12 == 0) lv.playSound(null, p.blockPosition(), SoundEvents.ELYTRA_FLYING, SoundSource.PLAYERS, 1.5F, 0.5F + progress);
+        }
         if (f == Form.BEAST || f == Form.LEGENDARY || f == Form.ROSE) {
             if (s.powering % 15 == 0) {
                 lv.playSound(null, p.blockPosition(), f == Form.LEGENDARY ? SoundEvents.RAVAGER_ROAR : SoundEvents.WARDEN_ROAR,
@@ -229,6 +240,7 @@ public final class PowerLogic {
 
     private static void completeTransform(ServerPlayer p, SaiyanState s) {
         s.powering = 0;
+        if (Form.byId(s.selected).legendary3()) legendaryBlast(p);
         // las rocas que levitaban salen disparadas con la explosión de poder
         for (com.bdsz.entity.DebrisEntity d : p.serverLevel().getEntitiesOfClass(com.bdsz.entity.DebrisEntity.class,
                 p.getBoundingBox().inflate(8.0), com.bdsz.entity.DebrisEntity::isFloating)) {
@@ -550,6 +562,65 @@ public final class PowerLogic {
         }
     }
 
+    /**
+     * Legendario Fase 3: el suelo se destroza. Abre un cráter en la tierra y la piedra natural
+     * (respeta la regla mobGriefing), con rayos, explosiones y una lluvia de escombros.
+     */
+    private static void legendaryBlast(ServerPlayer p) {
+        ServerLevel lv = p.serverLevel();
+        BlockPos c = p.blockPosition().below();
+        boolean grief = lv.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_MOBGRIEFING);
+        int radius = 5;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                double d = Math.sqrt(dx * dx + dz * dz);
+                if (d > radius || (d < 1.2)) continue;                         // deja en pie el bloque bajo el jugador
+                int depth = d < 2.5 ? 2 : 1;
+                for (int dy = 0; dy < depth; dy++) {
+                    BlockPos bp = c.offset(dx, -dy, dz);
+                    net.minecraft.world.level.block.state.BlockState st = lv.getBlockState(bp);
+                    if (st.isAir()) continue;
+                    if (lv.random.nextFloat() < 0.35F) {
+                        com.bdsz.entity.DebrisEntity.launch(lv, bp.getCenter().add(0, 0.6, 0), st,
+                                dx / d * 0.35, 0.6 + lv.random.nextDouble() * 0.6, dz / d * 0.35, 0.4F + lv.random.nextFloat() * 0.4F);
+                    }
+                    boolean natural = st.is(net.minecraft.tags.BlockTags.DIRT) || st.is(net.minecraft.tags.BlockTags.SAND)
+                            || st.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD) || st.is(net.minecraft.world.level.block.Blocks.GRAVEL)
+                            || st.is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK) || st.is(net.minecraft.tags.BlockTags.SNOW);
+                    if (grief && natural && !st.hasBlockEntity() && st.getDestroySpeed(lv, bp) >= 0 && st.getDestroySpeed(lv, bp) < 3.0F) {
+                        lv.destroyBlock(bp, false);
+                    }
+                }
+            }
+        }
+        debrisBurst(lv, p, 1.0F);
+        debrisBurst(lv, p, 1.0F);
+        for (int i = 0; i < 10; i++) {
+            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(lv);
+            if (bolt != null) {
+                bolt.setVisualOnly(true);
+                bolt.moveTo(p.getX() + (lv.random.nextDouble() - 0.5) * 16, p.getY(), p.getZ() + (lv.random.nextDouble() - 0.5) * 16);
+                lv.addFreshEntity(bolt);
+            }
+        }
+        lv.sendParticles(ParticleTypes.EXPLOSION_EMITTER, p.getX(), p.getY() + 0.5, p.getZ(), 4, 3.0, 0.5, 3.0, 0);
+        lv.sendParticles(new DustParticleOptions(new Vector3f(0.3F, 1.0F, 0.3F), 3.5F), p.getX(), p.getY() + 2, p.getZ(), 400, 3.0, 6.0, 3.0, 0);
+        for (int i = 0; i < 30; i++) {
+            lv.sendParticles(new DustParticleOptions(new Vector3f(0.4F, 1.0F, 0.4F), 3.0F), p.getX(), p.getY() + 2 + i * 1.5, p.getZ(), 8, 0.8 + i * 0.1, 0.5, 0.8 + i * 0.1, 0);
+        }
+        lv.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 3.0F, 0.4F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 1.5F, 0.6F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 2.5F, 0.45F);
+        for (LivingEntity e : lv.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(12.0), e -> e != p && e.isAlive())) {
+            Vec3 d = e.position().subtract(p.position()).normalize();
+            e.push(d.x * 3.0, 1.0, d.z * 3.0);
+            e.hurtMarked = true;
+        }
+        for (ServerPlayer o : lv.players()) {
+            if (o.distanceTo(p) < 96) o.sendSystemMessage(Component.literal("§a§l⚡ ").append(p.getDisplayName()).append(Component.literal(" §a§lha despertado el poder legendario.")));
+        }
+    }
+
     /** Explosión de escombros y polvo alrededor del jugador (al terminar de transformarse). */
     public static void debrisBurst(ServerLevel lv, ServerPlayer p, float drama) {
         net.minecraft.world.level.block.state.BlockState ground = com.bdsz.entity.DebrisEntity.groundAt(lv, p.blockPosition());
@@ -738,7 +809,7 @@ public final class PowerLogic {
             lv.playSound(null, p.blockPosition(), SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1.2F, 0.6F);
             p.sendSystemMessage(Component.literal("§6§l¡DOMINIO TOTAL! §r§eTus transformaciones ya no tienen límite de tiempo."));
             p.sendSystemMessage(Component.literal("§7(Con Kaioken desde la Fase 3 en adelante el límite es de 40 minutos.)"));
-            p.sendSystemMessage(Component.literal("§d§l¡Nuevas transformaciones! §r§fGohan Bestia§7, §aSuper Saiyajin Legendario§7, §dSuper Saiyajin Rosé"));
+            p.sendSystemMessage(Component.literal("§d§l¡Nuevas transformaciones! §r§fGohan Bestia§7, §aSuper Saiyajin Legendario §7(y sus 3 fases)§7, §dSuper Saiyajin Rosé"));
             p.sendSystemMessage(Component.literal("§6§l¡Modo Ozaru desbloqueado! §r§7Pulsa §eO§7 para convertirte en un mono gigante (otra vez §eO§7 para volver)."));
             return true;
         }

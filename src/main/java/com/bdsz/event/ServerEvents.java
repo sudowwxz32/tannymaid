@@ -73,6 +73,21 @@ public final class ServerEvents {
         }
     }
 
+    /** Legendario Fase 3: no pierde vida (solo el vacío o /kill pueden con él). */
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void legendaryImmune(LivingAttackEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p && !e.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            SaiyanState s = SaiyanData.get(p);
+            if (s.saiyan && s.transformed && s.activeForm().legendary3()) {
+                e.setCanceled(true);
+                if (p.tickCount % 4 == 0) {
+                    p.serverLevel().sendParticles(new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(0.3F, 1.0F, 0.3F), 1.5F),
+                            p.getX(), p.getY() + 1, p.getZ(), 10, 0.4, 0.6, 0.4, 0);
+                }
+            }
+        }
+    }
+
     /** Ultra Instinto: esquiva automáticamente parte de los ataques. */
     @SubscribeEvent
     public static void attack(LivingAttackEvent e) {

@@ -45,6 +45,7 @@ public final class BodyRenderEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void post(RenderPlayerEvent.Post e) {
         if (e.getEntity() instanceof AbstractClientPlayer p) {
+            EnergyCyclone.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
             KiFlameAura.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
         }
     }

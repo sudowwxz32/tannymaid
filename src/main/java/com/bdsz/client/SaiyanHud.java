@@ -29,6 +29,7 @@ public class SaiyanHud implements IGuiOverlay {
         Form f = s.activeForm();
         int accent = s.ozaru ? 0xFFC8863C : f == Form.BASE ? (s.activeKaioken() > 0 ? 0xFFFF3A2A : 0xFF7FD8FF) : 0xFF000000 | f.color;
         if (f == Form.SSJ4 && !s.ozaru) accent = 0xFFE8442A;     // cabello negro: se usa el rojo del pelaje
+        if (f == Form.LEGEND1 && !s.ozaru) accent = 0xFF3CFF4A;     // cabello negro: se usa el verde del aura
 
         boolean busy = s.transformed || s.ozaru || s.powering > 0 || s.charging || s.cooldown > 0 || s.dragonFist > 0
                 || s.ki < s.maxKi() || p.getHealth() < p.getMaxHealth();

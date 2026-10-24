@@ -58,7 +58,7 @@ public class TrainingListItem extends Item {
         };
         if (tier == 6) {
             tip.add(Component.literal("§d§lDominio Total: §r§e" + forms));
-            tip.add(Component.literal("§dDesbloquea: Gohan Bestia, Legendario, Rosé y Modo Ozaru"));
+            tip.add(Component.literal("§dDesbloquea: Gohan Bestia, Legendario (3 fases), Rosé y Modo Ozaru"));
         }
         else tip.add(Component.literal("§6Desbloquea el " + (tier == 5 ? "Bloque Especial" : "Bloque " + tier) + ": §e" + forms));
         tip.add(Component.literal("§7Haz clic izquierdo con ella en la mano."));

@@ -22,8 +22,8 @@ public class PowerScreen extends Screen {
     private static final int W = 300, ROW = 12;
     /** Columnas de fases: izquierda bloques 1-3, derecha bloques 4 en adelante. */
     private static final Form[][] COLS = {
-            {Form.BASE, Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD},
-            {Form.BLUE, Form.ULTRA, Form.SSJ4, Form.ULTRA_EGO, Form.BEAST, Form.LEGENDARY, Form.ROSE}};
+            {Form.BASE, Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.ULTRA},
+            {Form.SSJ4, Form.ULTRA_EGO, Form.BEAST, Form.ROSE, Form.LEGENDARY, Form.LEGEND1, Form.LEGEND2, Form.LEGEND3}};
     private int form, kaioken;
     private int left, top, h;
     private String hint = "";
@@ -42,7 +42,7 @@ public class PowerScreen extends Screen {
         SaiyanState s = state();
         form = s.selected;
         kaioken = s.kaioken;
-        h = 24 + 7 * ROW + 3 * 9 + 8 + 20 + 26 + 16 + 14;
+        h = 24 + 8 * ROW + 4 * 9 + 8 + 20 + 26 + 16 + 14;
         left = (width - W) / 2;
         top = Math.max(4, (height - h) / 2);
     }
@@ -54,7 +54,7 @@ public class PowerScreen extends Screen {
         renderBackground(g);
         SaiyanState s = state();
         Form sel = Form.byId(form);
-        int accent = 0xFF000000 | (sel == Form.BASE ? 0x7FD8FF : sel == Form.SSJ4 ? 0xE8442A : sel.color);
+        int accent = 0xFF000000 | (sel == Form.BASE ? 0x7FD8FF : sel == Form.SSJ4 ? 0xE8442A : sel == Form.LEGEND1 ? 0x3CFF4A : sel.color);
         // panel
         g.fill(left - 1, top - 1, left + W + 1, top + h + 1, SaiyanHud.withAlpha(accent, 200));
         g.fill(left, top, left + W, top + h, 0xF0101216);
@@ -83,7 +83,7 @@ public class PowerScreen extends Screen {
         }
 
         // ---- Kaioken
-        int ky = top + 24 + 7 * ROW + 3 * 9 + 8;
+        int ky = top + 24 + 8 * ROW + 4 * 9 + 8;
         g.drawString(font, "§c§lKaioken", left + 8, ky + 3, 0xFFFFFFFF, true);
         for (int i = 0; i <= 10; i++) {
             int kx = left + 62 + i * 21, lvl = i * 10;
@@ -131,7 +131,7 @@ public class PowerScreen extends Screen {
 
     private void drawForm(GuiGraphics g, Form f, int x, int y, int w, int mx, int my, SaiyanState s) {
         boolean open = s.unlocked(f), on = f.ordinal() == form, hover = in(mx, my, x, y, w, ROW - 1);
-        int col = 0xFF000000 | (f == Form.BASE ? 0xBFE6FF : f == Form.SSJ4 ? 0xE8442A : f.color);
+        int col = 0xFF000000 | (f == Form.BASE ? 0xBFE6FF : f == Form.SSJ4 ? 0xE8442A : f == Form.LEGEND1 ? 0x3CFF4A : f.color);
         if (on) {
             g.fill(x, y, x + w, y + ROW - 1, SaiyanHud.withAlpha(col, 90));
             g.fill(x, y, x + 2, y + ROW - 1, col);
@@ -229,7 +229,7 @@ public class PowerScreen extends Screen {
                 y += ROW;
             }
         }
-        int ky = top + 24 + 7 * ROW + 3 * 9 + 8;
+        int ky = top + 24 + 8 * ROW + 4 * 9 + 8;
         for (int i = 0; i <= 10; i++) {
             if (in(mx, my, left + 62 + i * 21, ky, 19, 14)) { kaioken = i * 10; send(); click(); return true; }
         }

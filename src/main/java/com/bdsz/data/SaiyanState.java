@@ -59,6 +59,7 @@ public class SaiyanState {
     /** Tiempo límite en ticks; -1 = infinito (Dominio Total). */
     public static int timeLimit(int form, int kaioken, boolean mastery) {
         Form f = Form.byId(form);
+        if (f.legendary3()) return -1;                 // sin tiempo límite
         if (mastery) {
             // con Kaioken, de la Fase 3 al Ultra Ego deja de ser infinito pero sube a 40 minutos
             if (kaioken > 0 && f.ordinal() >= Form.SSJ3.ordinal()) return 40 * 60 * 20;

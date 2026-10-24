@@ -117,6 +117,17 @@ def spikes():
     P.append(out("k_f1", (0.8, -8.5, -3.3), 0.25, 0.12, 8.5, 3.7))
     P.append(out("k_f2_r", (-2.2, -8.4, -3.3), 0.3, -0.35, 8.0, 3.5))
 
+    # ---- Legendario Fase 3: puntas extra, más finas y erizadas entre las de la melena
+    P.append(out("q_c1", (0, -8.5, 0.6), -0.3, 0, 17.0, 3.2, bend=0.1))
+    P.append(out("q_c2", (0, -7.6, 3.2), -0.8, 0, 16.0, 3.0, bend=0.1))
+    P.append(out("q_c3", (0, -5.2, 4.1), -1.25, 0, 14.0, 2.8, bend=0.09))
+    P.append(out("q_r1", (-1.4, -8.5, -0.4), -0.1, -0.25, 16.5, 3.0, bend=0.11))
+    P.append(out("q_r2", (-3.2, -8.0, 0.4), -0.25, -0.65, 15.0, 2.9, bend=0.11))
+    P.append(out("q_r3", (-3.8, -6.2, 1.6), -0.5, -0.95, 14.0, 2.8, bend=0.1))
+    P.append(out("q_r4", (-2.6, -6.6, 3.6), -0.85, -0.45, 15.0, 2.8, bend=0.1))
+    P.append(out("q_r5", (-4.1, -3.8, 2.0), -1.1, -1.25, 11.0, 2.6, bend=0.08))
+    P.append(out("q_f1_r", (-1.0, -8.5, -3.0), 0.15, -0.15, 9.5, 2.8, bend=0.08))
+
     # ---- Fase 3: melena muy larga hasta la cintura, hecha de mechones en punta
     P.append(hang("l_h0", (0, -7.0, 3.9), -3.0, 0, 30.0, 7.0))
     P.append(hang("l_h1_r", (-2.6, -6.6, 3.6), -3.0, -0.16, 28.0, 6.0))

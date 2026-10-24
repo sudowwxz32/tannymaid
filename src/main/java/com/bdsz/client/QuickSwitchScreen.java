@@ -57,7 +57,7 @@ public class QuickSwitchScreen extends Screen {
         renderBackground(g);
         SaiyanState s = state();
         Form sel = Form.byId(form);
-        int accent = 0xFF000000 | (sel == Form.BASE ? 0x7FD8FF : sel == Form.SSJ4 ? 0xE8442A : sel.color);
+        int accent = 0xFF000000 | (sel == Form.BASE ? 0x7FD8FF : sel == Form.SSJ4 ? 0xE8442A : sel == Form.LEGEND1 ? 0x3CFF4A : sel.color);
         int h = 16 + listH + 30 + 12;
         g.fill(left - 1, top - 1, left + W + 1, top + h + 1, SaiyanHud.withAlpha(accent, 220));
         g.fill(left, top, left + W, top + h, 0xEE101216);
@@ -68,7 +68,7 @@ public class QuickSwitchScreen extends Screen {
         int y = top + 16;
         for (Form f : Form.values()) {
             boolean open = s.unlocked(f), on = f.ordinal() == form;
-            int col = 0xFF000000 | (f == Form.BASE ? 0xBFE6FF : f == Form.SSJ4 ? 0xE8442A : f.color);
+            int col = 0xFF000000 | (f == Form.BASE ? 0xBFE6FF : f == Form.SSJ4 ? 0xE8442A : f == Form.LEGEND1 ? 0x3CFF4A : f.color);
             if (on) {
                 g.fill(left + 3, y, left + W - 3, y + ROW - 1, SaiyanHud.withAlpha(col, kaiFocus ? 50 : 110));
                 g.fill(left + 3, y, left + 5, y + ROW - 1, col);

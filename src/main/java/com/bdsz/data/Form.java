@@ -22,7 +22,11 @@ public enum Form {
     // ---- se desbloquean con el Dominio Total
     BEAST("Gohan Bestia", 0xD4D4DC, 17.0F, 1100, 0.84F, 140, 0.72F, 7.0F, 5, 1800, 2.5F, 0.20F, 7, 0x9C9CA8, 1.6F),
     LEGENDARY("Super Saiyajin Legendario", 0x5CFF5A, 19.0F, 1300, 0.88F, 190, 0.85F, 7.5F, 5, 2200, 2.0F, 0.21F, 8, 0x6CFF4A, 1.8F),
-    ROSE("Super Saiyajin Rosé", 0xFF6EC4, 17.0F, 1100, 0.84F, 140, 0.74F, 7.0F, 5, 1800, 2.5F, 0.20F, 9, 0xFF5CB8, 1.55F);
+    ROSE("Super Saiyajin Rosé", 0xFF6EC4, 17.0F, 1100, 0.84F, 140, 0.74F, 7.0F, 5, 1800, 2.5F, 0.20F, 9, 0xFF5CB8, 1.55F),
+    // ---- fases del Super Saiyajin Legendario
+    LEGEND1("Legendario Fase 1", 0x1A1A22, 21.0F, 1500, 0.88F, 210, 0.82F, 7.5F, 5, 2400, 3.0F, 0.21F, 8, 0x3CFF4A, 1.75F),
+    LEGEND2("Legendario Fase 2", 0xFFE040, 25.0F, 1800, 0.91F, 250, 0.92F, 8.0F, 5, 2800, 2.5F, 0.22F, 8, 0xFFE84A, 1.9F),
+    LEGEND3("Legendario Fase 3", 0x4CFF4C, 34.0F, 2600, 0.95F, 320, 1.05F, 9.0F, 5, 3400, 0.0F, 0.25F, 10, 0x40FF40, 2.15F);
 
     public final String display;
     public final int color;
@@ -74,7 +78,7 @@ public enum Form {
             case SSJ2, SSJ3, GOD -> 3;
             case BLUE, ULTRA -> 4;
             case SSJ4, ULTRA_EGO -> 5;
-            case BEAST, LEGENDARY, ROSE -> 6;     // 6 = requiere el Dominio Total
+            case BEAST, LEGENDARY, ROSE, LEGEND1, LEGEND2, LEGEND3 -> 6;     // 6 = requiere el Dominio Total
         };
     }
 
@@ -94,6 +98,9 @@ public enum Form {
             case BEAST -> 1.12F;
             case LEGENDARY -> 1.34F;              // Legendario: musculatura enorme
             case ROSE -> 1.05F;
+            case LEGEND1 -> 1.22F;                // más músculo
+            case LEGEND2 -> 1.3F;
+            case LEGEND3 -> 1.48F;
         };
     }
 
@@ -104,6 +111,9 @@ public enum Form {
             case ULTRA_EGO -> 1.05F;
             case BEAST -> 1.05F;
             case LEGENDARY -> 1.18F;
+            case LEGEND1 -> 1.06F;
+            case LEGEND2 -> 1.14F;                // más alto
+            case LEGEND3 -> 1.3F;                 // todavía más alto
             default -> 1.0F;
         };
     }
@@ -114,6 +124,8 @@ public enum Form {
             case ULTRA_EGO -> 0xB066FF;
             case BEAST -> 0xFF2626;
             case ROSE -> 0xFF7AD6;
+            case LEGEND1, LEGEND3 -> 0x7CFF6A;
+            case LEGEND2 -> 0xE8FF60;
             case LEGENDARY -> 0xA8FF70;
             case BLUE -> 0x9CE8FF;
             default -> 0xC0E0FF;
@@ -122,13 +134,17 @@ public enum Form {
 
     /** Fases con rayos eléctricos en el aura. */
     public boolean lightningAura() {
-        return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO || this == BEAST || this == ROSE || this == LEGENDARY;
+        return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO || this == BEAST || this == ROSE || this == LEGENDARY
+                || this == LEGEND1 || this == LEGEND2 || this == LEGEND3;
     }
 
     /** Color de la capa exterior del aura (el Rosé tiene una segunda aura rosa oscura). */
     public int outerColor() {
         return switch (this) {
             case ROSE -> 0x9C0E5C;
+            case LEGEND1 -> 0x1E9A2A;
+            case LEGEND2 -> 0x3CFF4A;             // aura amarilla combinada con verde
+            case LEGEND3 -> 0x0E8A1E;
             case BEAST -> 0x5E5E68;
             case LEGENDARY -> 0x1E9A2A;
             case GOD -> 0xFF8A2A;
@@ -154,13 +170,17 @@ public enum Form {
             case SSJ2, GOD -> 0.65F;
             case SSJ3, BLUE -> 0.75F;
             case SSJ4, ULTRA_EGO -> 0.85F;
-            case BEAST, ROSE -> 0.95F;
+            case BEAST, ROSE, LEGEND1 -> 0.95F;
+            case LEGEND2, LEGEND3 -> 1.0F;
             case LEGENDARY -> 1.0F;
         };
     }
 
     /** Sin límite de ki: la energía del Legendario nunca se acaba. */
-    public boolean infiniteKi() { return this == LEGENDARY; }
+    public boolean infiniteKi() { return this == LEGENDARY || this == LEGEND3; }
+
+    /** Legendario Fase 3: no pierde vida, no pierde ki y no tiene tiempo límite. */
+    public boolean legendary3() { return this == LEGEND3; }
 
     /** Cuerpo delgado (modelo de brazos finos, como Alex). */
     public boolean slimBody() { return this == GOD; }

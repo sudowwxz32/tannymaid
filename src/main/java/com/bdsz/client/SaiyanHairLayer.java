@@ -68,6 +68,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             case 7 -> "b_";
             case 8 -> "k_";
             case 9 -> "r_";
+            case 10 -> "k_";
             default -> "s_";
         };
     }
@@ -80,7 +81,8 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         Form f = s.visibleForm();   // durante la carga ya aparece el cabello de la fase destino
         if (!s.saiyan || f.hairStyle == 0 || s.ozaru) return;
         String prefix = prefix(f.hairStyle);
-        boolean extraBang = f.hairStyle == 4;
+        boolean extraBang = f.hairStyle == 4 || f.hairStyle == 10;
+        String extra = f.hairStyle == 10 ? "q_" : "x_";
 
         long since = ClientStates.ticksSinceTransform(player.getId());
         boolean intense = s.charging || s.powering > 0 || since < 25;
@@ -94,7 +96,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         float pulse = calm ? 0.95F + Mth.sin(age * 0.08F) * 0.05F
                 : intense ? 0.95F + Mth.sin(age * 0.9F) * 0.15F : 0.92F + Mth.sin(age * 0.25F) * 0.08F;
         float r = Math.min(1.0F, f.r() * pulse + 0.05F), g = Math.min(1.0F, f.g() * pulse + 0.05F), b = Math.min(1.0F, f.b() * pulse + 0.05F);
-        int lt = f == Form.SSJ4 ? light : LightTexture.FULL_BRIGHT;
+        int lt = f == Form.SSJ4 || f == Form.LEGEND1 ? light : LightTexture.FULL_BRIGHT;     // el cabello negro no brilla
         int overlay = LivingEntityRenderer.getOverlayCoords(player, 0.0F);
 
         // casquete
@@ -112,7 +114,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         for (int i = 0; i < data.length; i++) {
             String gr = groups[i];
             boolean skull = gr.equals("c_");
-            if (!skull && !gr.equals(prefix) && !(extraBang && gr.equals("x_"))) continue;
+            if (!skull && !gr.equals(prefix) && !(extraBang && gr.equals(extra))) continue;
             float[] d = data[i];
             boolean hanging = d[10] > 0.5F;
             float seed = i * 1.37F;
