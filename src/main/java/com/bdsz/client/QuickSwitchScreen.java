@@ -66,7 +66,7 @@ public class QuickSwitchScreen extends Screen {
 
         // ---- catálogo de fases en orden
         int y = top + 16;
-        for (Form f : Form.values()) {
+        for (Form f : Form.ORDERED) {
             boolean open = s.unlocked(f), on = f.ordinal() == form;
             int col = 0xFF000000 | (f == Form.BASE ? 0xBFE6FF : f == Form.SSJ4 ? 0xE8442A : f == Form.LEGEND1 ? 0x3CFF4A : f.color);
             if (on) {
@@ -116,11 +116,11 @@ public class QuickSwitchScreen extends Screen {
 
     private void moveForm(int dir) {
         SaiyanState s = state();
-        int n = Form.values().length;
+        int n = Form.ORDERED.length, cur = Form.byId(form).order();
         for (int i = 1; i < n; i++) {
-            int cand = form + dir * i;
+            int cand = cur + dir * i;
             if (cand < 0 || cand >= n) break;                 // en orden, sin dar la vuelta
-            if (s.unlocked(Form.byId(cand))) { form = cand; return; }
+            if (s.unlocked(Form.ORDERED[cand])) { form = Form.ORDERED[cand].ordinal(); return; }
         }
     }
 
@@ -130,7 +130,7 @@ public class QuickSwitchScreen extends Screen {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return true;
         SaiyanState s = state();
         int y = top + 16;
-        for (Form f : Form.values()) {
+        for (Form f : Form.ORDERED) {
             if (in(mx, my, left + 3, y, W - 6, ROW - 1)) {
                 if (s.unlocked(f)) { form = f.ordinal(); apply(); }
                 return true;

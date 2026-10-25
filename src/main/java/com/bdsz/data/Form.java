@@ -26,7 +26,51 @@ public enum Form {
     // ---- fases del Super Saiyajin Legendario
     LEGEND1("Legendario Fase 1", 0x1A1A22, 21.0F, 1500, 0.88F, 210, 0.82F, 7.5F, 5, 2400, 3.0F, 0.21F, 8, 0x3CFF4A, 1.75F),
     LEGEND2("Legendario Fase 2", 0xFFE040, 25.0F, 1800, 0.91F, 250, 0.92F, 8.0F, 5, 2800, 2.5F, 0.22F, 8, 0xFFE84A, 1.9F),
-    LEGEND3("Legendario Fase 3", 0x4CFF4C, 34.0F, 2600, 0.95F, 320, 1.05F, 9.0F, 5, 3400, 0.0F, 0.25F, 10, 0x40FF40, 2.15F);
+    LEGEND3("Legendario Fase 3", 0x4CFF4C, 34.0F, 2600, 0.95F, 320, 1.05F, 9.0F, 5, 3400, 0.0F, 0.25F, 10, 0x40FF40, 2.15F),
+    BLUE_EVO("Super Saiyajin Blue Evolución", 0x2F6BFF, 10.0F, 90, 0.72F, 85, 0.58F, 4.8F, 4, 1000, 4.5F, 0.16F, 11, 0x3A86FF, 1.45F);
+
+    /** Orden en que se muestran las fases en los menús. */
+    public static final Form[] ORDERED = {BASE, FALSE_SSJ, SSJ1, SSJ2, SSJ3, GOD, BLUE, BLUE_EVO, ULTRA, SSJ4, ULTRA_EGO,
+            BEAST, ROSE, LEGENDARY, LEGEND1, LEGEND2, LEGEND3};
+
+    public int order() {
+        for (int i = 0; i < ORDERED.length; i++) if (ORDERED[i] == this) return i;
+        return 0;
+    }
+
+    /** Cuánto se levanta el peinado elegido al transformarse (0 = nada, 1 = recto hacia arriba). */
+    public float hairRise() {
+        return switch (this) {
+            case BASE -> 0.0F;
+            case FALSE_SSJ -> 0.15F;
+            case SSJ1, BLUE, SSJ3 -> 0.25F;
+            case SSJ2, ROSE, LEGENDARY, LEGEND1 -> 0.3F;
+            case GOD, SSJ4 -> 0.1F;
+            case ULTRA -> 0.15F;
+            case ULTRA_EGO, BLUE_EVO -> 0.45F;
+            case LEGEND2 -> 0.35F;
+            case LEGEND3 -> 0.4F;
+            case BEAST -> 0.6F;
+        };
+    }
+
+    /** Cuánto crecen las puntas del peinado elegido al transformarse. */
+    public float hairLength() {
+        return switch (this) {
+            case BASE -> 1.0F;
+            case FALSE_SSJ -> 1.1F;
+            case SSJ1, SSJ3 -> 1.2F;
+            case SSJ2, BLUE, ROSE -> 1.25F;
+            case GOD -> 1.0F;
+            case ULTRA -> 1.05F;
+            case SSJ4 -> 1.1F;
+            case ULTRA_EGO, BLUE_EVO -> 1.35F;
+            case LEGENDARY, LEGEND1 -> 1.35F;
+            case LEGEND2 -> 1.45F;
+            case LEGEND3 -> 1.55F;
+            case BEAST -> 1.7F;
+        };
+    }
 
     public final String display;
     public final int color;
@@ -76,7 +120,7 @@ public enum Form {
             case BASE -> 1;
             case FALSE_SSJ, SSJ1 -> 2;
             case SSJ2, SSJ3, GOD -> 3;
-            case BLUE, ULTRA -> 4;
+            case BLUE, ULTRA, BLUE_EVO -> 4;
             case SSJ4, ULTRA_EGO -> 5;
             case BEAST, LEGENDARY, ROSE, LEGEND1, LEGEND2, LEGEND3 -> 6;     // 6 = requiere el Dominio Total
         };
@@ -101,6 +145,7 @@ public enum Form {
             case LEGEND1 -> 1.22F;                // más músculo
             case LEGEND2 -> 1.3F;
             case LEGEND3 -> 1.48F;
+            case BLUE_EVO -> 1.08F;
         };
     }
 
@@ -126,6 +171,7 @@ public enum Form {
             case ROSE -> 0xFF7AD6;
             case LEGEND1, LEGEND3 -> 0x7CFF6A;
             case LEGEND2 -> 0xE8FF60;
+            case BLUE_EVO -> 0xE8F4FF;
             case LEGENDARY -> 0xA8FF70;
             case BLUE -> 0x9CE8FF;
             default -> 0xC0E0FF;
@@ -135,7 +181,7 @@ public enum Form {
     /** Fases con rayos eléctricos en el aura. */
     public boolean lightningAura() {
         return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO || this == BEAST || this == ROSE || this == LEGENDARY
-                || this == LEGEND1 || this == LEGEND2 || this == LEGEND3;
+                || this == LEGEND1 || this == LEGEND2 || this == LEGEND3 || this == BLUE_EVO;
     }
 
     /** Color de la capa exterior del aura (el Rosé tiene una segunda aura rosa oscura). */
@@ -145,6 +191,7 @@ public enum Form {
             case LEGEND1 -> 0x1E9A2A;
             case LEGEND2 -> 0x3CFF4A;             // aura amarilla combinada con verde
             case LEGEND3 -> 0x0E8A1E;
+            case BLUE_EVO -> 0xDDEBFF;            // brillo blanco alrededor del azul
             case BEAST -> 0x5E5E68;
             case LEGENDARY -> 0x1E9A2A;
             case GOD -> 0xFF8A2A;
@@ -172,6 +219,7 @@ public enum Form {
             case SSJ4, ULTRA_EGO -> 0.85F;
             case BEAST, ROSE, LEGEND1 -> 0.95F;
             case LEGEND2, LEGEND3 -> 1.0F;
+            case BLUE_EVO -> 0.8F;
             case LEGENDARY -> 1.0F;
         };
     }

@@ -472,6 +472,11 @@ public final class PowerLogic {
                 lv.sendParticles(ParticleTypes.EXPLOSION_EMITTER, x, y + 0.5, z, 1, 0, 0, 0, 0);
                 lv.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, y + 1.2, z, 80, 1.5, 1.8, 1.5, 0.1);
             }
+            case BLUE_EVO -> {
+                lv.sendParticles(ParticleTypes.END_ROD, x, y + 1.2, z, 140, 1.0, 1.6, 1.0, 0.12);
+                lv.sendParticles(new DustParticleOptions(new Vector3f(0.25F, 0.5F, 1.0F), 2.6F), x, y + 1.2, z, 160, 1.2, 1.8, 1.2, 0);
+                lv.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F), 2.0F), x, y + 1.0, z, 100, 1.6, 1.6, 1.6, 0);
+            }
             case ROSE -> {
                 lv.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.4F, 0.75F), 2.6F), x, y + 1.2, z, 160, 1.2, 1.8, 1.2, 0);
                 lv.sendParticles(new DustParticleOptions(new Vector3f(0.6F, 0.05F, 0.35F), 3.0F), x, y + 1.0, z, 120, 1.8, 1.6, 1.8, 0);
@@ -510,6 +515,11 @@ public final class PowerLogic {
             case GOD -> {
                 lv.playSound(null, bp, SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.PLAYERS, 1.2F, 0.8F);
                 lv.playSound(null, bp, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.2F, 0.6F);
+            }
+            case BLUE_EVO -> {
+                lv.playSound(null, bp, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 2.0F, 1.2F);
+                lv.playSound(null, bp, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.9F, 1.1F);
+                lv.playSound(null, bp, SoundEvents.TRIDENT_THUNDER, SoundSource.PLAYERS, 1.0F, 1.3F);
             }
             case BLUE -> {
                 lv.playSound(null, bp, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.8F, 1.3F);

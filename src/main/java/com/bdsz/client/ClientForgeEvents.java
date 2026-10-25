@@ -177,6 +177,15 @@ public final class ClientForgeEvents {
                 level.addParticle(ParticleTypes.FLAME, p.getX() + (rnd.nextDouble() - 0.5) * 1.1, p.getY() + 0.1,
                         p.getZ() + (rnd.nextDouble() - 0.5) * 1.1, 0, 0.12, 0);
             }
+            if (f == Form.BLUE_EVO) {
+                // partículas blancas brillantes alrededor del azul metalizado
+                for (int i = 0; i < (self ? 1 : 3); i++) {
+                    level.addParticle(ParticleTypes.END_ROD, p.getX() + (rnd.nextDouble() - 0.5) * 1.3, p.getY() + rnd.nextDouble() * maxH,
+                            p.getZ() + (rnd.nextDouble() - 0.5) * 1.3, 0, 0.06, 0);
+                }
+                if (rnd.nextInt(2) == 0) level.addParticle(new DustParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F), 1.0F),
+                        p.getX() + (rnd.nextDouble() - 0.5) * 1.1, p.getY() + rnd.nextDouble() * maxH, p.getZ() + (rnd.nextDouble() - 0.5) * 1.1, 0, 0.1, 0);
+            }
             if (f == Form.ROSE && rnd.nextInt(3) == 0) {
                 level.addParticle(ParticleTypes.CHERRY_LEAVES, p.getX() + (rnd.nextDouble() - 0.5) * 1.6,
                         p.getY() + rnd.nextDouble() * maxH, p.getZ() + (rnd.nextDouble() - 0.5) * 1.6, 0, 0.05, 0);

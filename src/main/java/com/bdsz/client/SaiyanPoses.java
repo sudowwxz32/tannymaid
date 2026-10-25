@@ -23,6 +23,7 @@ public final class SaiyanPoses {
             }
         }
         setMuscle(m, muscle);
+        if (e instanceof Player pf && ClientStates.get(pf.getId()).saiyan && ClientStates.get(pf.getId()).gender == 2) feminine(m);
         if (!(e instanceof Player p)) return;
         SaiyanState s = ClientStates.get(p.getId());
         if (!s.saiyan) return;
@@ -150,6 +151,28 @@ public final class SaiyanPoses {
         scale(m.leftLeg, leg, 1.0F, leg);
         scale(m.rightPants, leg, 1.0F, leg);
         scale(m.leftPants, leg, 1.0F, leg);
+        m.rightLeg.x = -1.9F;
+        m.leftLeg.x = 1.9F;
+        m.rightPants.x = -1.9F;
+        m.leftPants.x = 1.9F;
+    }
+
+    /** Cuerpo femenino: cintura un poco más fina, caderas algo más anchas y brazos más delgados. */
+    private static void feminine(PlayerModel<?> m) {
+        m.body.xScale *= 0.92F;
+        m.jacket.xScale *= 0.92F;
+        m.rightArm.xScale *= 0.88F;
+        m.leftArm.xScale *= 0.88F;
+        m.rightSleeve.xScale *= 0.88F;
+        m.leftSleeve.xScale *= 0.88F;
+        m.rightLeg.xScale *= 1.05F;
+        m.leftLeg.xScale *= 1.05F;
+        m.rightPants.xScale *= 1.05F;
+        m.leftPants.xScale *= 1.05F;
+        m.rightLeg.x = -2.05F;          // valor fijo: el modelo se comparte y no reinicia esta posición
+        m.leftLeg.x = 2.05F;
+        m.rightPants.x = m.rightLeg.x;
+        m.leftPants.x = m.leftLeg.x;
     }
 
     private static void scale(net.minecraft.client.model.geom.ModelPart p, float x, float y, float z) {

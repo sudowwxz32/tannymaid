@@ -52,7 +52,7 @@ public class TrainingListItem extends Item {
         String forms = switch (tier) {
             case 2 -> "Super Saiyajin Falso y Fase 1";
             case 3 -> "Fase 2, Fase 3 y Dios";
-            case 4 -> "Blue y Ultra Instinto";
+            case 4 -> "Blue, Blue Evolución y Ultra Instinto";
             case 5 -> "Super Saiyajin Fase 4 y Ultra Ego";
             default -> "tiempo infinito en las transformaciones";
         };

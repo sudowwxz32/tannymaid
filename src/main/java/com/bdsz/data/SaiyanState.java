@@ -27,6 +27,9 @@ public class SaiyanState {
     public int dragonCooldown;  // ticks de espera para volver a usarlo
     public int attackCooldown;  // espera corta entre Kamehameha / Big Bang
     public boolean ozaru;       // Modo Ozaru: mono gigante (tecla O)
+    public int gender;          // 0 sin definir, 1 masculino, 2 femenino
+    public int hair = -1;       // peinado base elegido (-1 = el predeterminado de cada transformación)
+    public boolean tail;        // cola de saiyajin (café)
 
     public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
@@ -100,6 +103,10 @@ public class SaiyanState {
         t.putInt("Powering", powering);
         t.putInt("PoweringTotal", poweringTotal);
         t.putBoolean("Ozaru", ozaru);
+        t.putInt("Gender", gender);
+        t.putInt("Hair", hair);
+        t.putBoolean("HasHair", true);
+        t.putBoolean("Tail", tail);
         return t;
     }
 
@@ -127,6 +134,9 @@ public class SaiyanState {
         s.powering = t.getInt("Powering");
         s.poweringTotal = t.getInt("PoweringTotal");
         s.ozaru = t.getBoolean("Ozaru");
+        s.gender = t.getInt("Gender");
+        s.hair = t.getBoolean("HasHair") ? t.getInt("Hair") : -1;
+        s.tail = t.getBoolean("Tail");
         return s;
     }
 
@@ -152,6 +162,9 @@ public class SaiyanState {
         b.writeVarInt(dragonFist);
         b.writeVarInt(dragonCooldown);
         b.writeBoolean(ozaru);
+        b.writeVarInt(gender);
+        b.writeVarInt(hair + 1);
+        b.writeBoolean(tail);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -177,6 +190,9 @@ public class SaiyanState {
         s.dragonFist = b.readVarInt();
         s.dragonCooldown = b.readVarInt();
         s.ozaru = b.readBoolean();
+        s.gender = b.readVarInt();
+        s.hair = b.readVarInt() - 1;
+        s.tail = b.readBoolean();
         return s;
     }
 }

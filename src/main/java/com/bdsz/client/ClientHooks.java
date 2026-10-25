@@ -7,6 +7,11 @@ import net.minecraft.world.entity.Entity;
 public final class ClientHooks {
     private ClientHooks() {}
 
+    /** Abre la pantalla de apariencia (género, peinado y cola). */
+    public static void openAppearance() {
+        Minecraft.getInstance().setScreen(new AppearanceScreen());
+    }
+
     /** Recalcula el tamaño del jugador (al entrar o salir del Modo Ozaru). */
     public static void refreshSize(int id) {
         Minecraft mc = Minecraft.getInstance();

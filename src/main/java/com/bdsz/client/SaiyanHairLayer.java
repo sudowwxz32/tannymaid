@@ -69,6 +69,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             case 8 -> "k_";
             case 9 -> "r_";
             case 10 -> "k_";
+            case 11 -> "v_";
             default -> "s_";
         };
     }
@@ -78,25 +79,52 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                        float limbAmount, float partial, float age, float headYaw, float headPitch) {
         if (player.isInvisible()) return;
         SaiyanState s = ClientStates.get(player.getId());
+        if (!s.saiyan || s.ozaru) return;
         Form f = s.visibleForm();   // durante la carga ya aparece el cabello de la fase destino
-        if (!s.saiyan || f.hairStyle == 0 || s.ozaru) return;
-        String prefix = prefix(f.hairStyle);
-        boolean extraBang = f.hairStyle == 4 || f.hairStyle == 10;
-        String extra = f.hairStyle == 10 ? "q_" : "x_";
+        com.bdsz.data.HairStyles.Style chosen = com.bdsz.data.HairStyles.get(s.hair);
+        boolean base = f == Form.BASE;
+        if (base && chosen == null) return;
+        if (!base && chosen == null && f.hairStyle == 0) return;
+
+        // grupos visibles
+        String main = chosen != null ? chosen.group() : prefix(f.hairStyle);
+        boolean skullSpikes = chosen == null || !chosen.smooth();
+        String extra = null;
+        boolean extraHangOnly = false;
+        if (chosen == null) {
+            if (f.hairStyle == 4) extra = "x_";
+            if (f.hairStyle == 10) extra = "q_";
+        } else if (!base) {
+            // el peinado elegido se adapta a cada transformación
+            if (f == Form.SSJ3) { extra = "l_"; extraHangOnly = true; }          // melena larga por la espalda
+            else if (f == Form.SSJ4) { extra = "f_"; extraHangOnly = true; }     // melena salvaje
+            else if (f == Form.LEGEND3) extra = "q_";                             // puntas extra erizadas
+            else if (f == Form.SSJ2 && !chosen.female()) extra = "x_";
+        }
+        float rise = chosen != null ? f.hairRise() : 0.0F;
+        float lenMul = chosen != null ? f.hairLength() : 1.0F;
 
         long since = ClientStates.ticksSinceTransform(player.getId());
-        boolean intense = s.charging || s.powering > 0 || since < 25;
-        boolean calm = f == Form.ULTRA;
+        boolean intense = !base && (s.charging || s.powering > 0 || since < 25);
+        boolean calm = f == Form.ULTRA || base;
         float growth = s.powering > 0 ? 0.25F + 0.75F * (1.0F - (float) s.powering / Math.max(1, s.poweringTotal)) : 1.0F;
         float amp = calm ? (intense ? 0.05F : 0.02F) : intense ? 0.16F : 0.045F;
         float freq = calm ? 0.22F : intense ? 1.3F : 0.5F;
         boolean flying = s.flight && player.getAbilities().flying;
         float wind = flying ? (float) Math.min(1.0, player.getDeltaMovement().length() * 1.5) : 0.0F;
 
-        float pulse = calm ? 0.95F + Mth.sin(age * 0.08F) * 0.05F
+        int color = base ? chosen.color() : f.color;
+        float pulse = base ? 1.0F : calm ? 0.95F + Mth.sin(age * 0.08F) * 0.05F
                 : intense ? 0.95F + Mth.sin(age * 0.9F) * 0.15F : 0.92F + Mth.sin(age * 0.25F) * 0.08F;
-        float r = Math.min(1.0F, f.r() * pulse + 0.05F), g = Math.min(1.0F, f.g() * pulse + 0.05F), b = Math.min(1.0F, f.b() * pulse + 0.05F);
-        int lt = f == Form.SSJ4 || f == Form.LEGEND1 ? light : LightTexture.FULL_BRIGHT;     // el cabello negro no brilla
+        float cr = ((color >> 16) & 255) / 255F, cg = ((color >> 8) & 255) / 255F, cb = (color & 255) / 255F;
+        float r = Math.min(1.0F, cr * pulse + 0.05F), g = Math.min(1.0F, cg * pulse + 0.05F), b = Math.min(1.0F, cb * pulse + 0.05F);
+        if (f == Form.BLUE_EVO) {
+            // azul metalizado: un brillo blanco que recorre el cabello
+            float shine = Math.max(0, Mth.sin(age * 0.18F)) * 0.35F;
+            r = Math.min(1, r + shine * 0.8F); g = Math.min(1, g + shine * 0.85F); b = Math.min(1, b + shine);
+        }
+        boolean dark = base || f == Form.SSJ4 || f == Form.LEGEND1;
+        int lt = dark ? light : LightTexture.FULL_BRIGHT;        // el cabello natural / negro no brilla
         int overlay = LivingEntityRenderer.getOverlayCoords(player, 0.0F);
 
         // casquete
@@ -113,10 +141,12 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         float[][] data = HairSpikes.S;
         for (int i = 0; i < data.length; i++) {
             String gr = groups[i];
-            boolean skull = gr.equals("c_");
-            if (!skull && !gr.equals(prefix) && !(extraBang && gr.equals(extra))) continue;
             float[] d = data[i];
             boolean hanging = d[10] > 0.5F;
+            boolean skull = gr.equals("c_");
+            boolean isMain = gr.equals(main);
+            boolean isExtra = extra != null && gr.equals(extra) && (!extraHangOnly || hanging);
+            if (skull ? !skullSpikes : !(isMain || isExtra)) continue;
             float seed = i * 1.37F;
             float k = skull ? 0.4F : 1.0F;
             float swayZ = Mth.sin(age * freq + seed) * amp * 2.2F * k;
@@ -129,16 +159,22 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                 if (intense && !calm) baseX -= 0.05F;          // la energía levanta el cabello
                 baseX -= wind * 0.2F;                            // el viento lo empuja hacia atrás
             }
-            float len = d[5] * (s.powering > 0 && !skull ? growth : 1.0F);
-            spike(vc, mat, nm, d, len, baseX, baseZ, swayX, swayZ, r, g, b, lt, overlay);
+            float len = d[5];
+            float rx = d[3];
+            if (isMain && rise > 0 && !hanging && rx < 2.0F) {
+                rx *= 1.0F - rise;                               // las puntas se levantan
+                len *= lenMul;                                   // y crecen
+            }
+            if (s.powering > 0 && !skull) len *= growth;
+            spike(vc, mat, nm, d, rx, len, baseX, baseZ, swayX, swayZ, r, g, b, lt, overlay);
         }
         pose.popPose();
     }
 
     /** Construye y dibuja un mechón liso. */
-    private void spike(VertexConsumer vc, Matrix4f mat, Matrix3f nm, float[] d, float len, float baseX, float baseZ,
+    private void spike(VertexConsumer vc, Matrix4f mat, Matrix3f nm, float[] d, float rx0, float len, float baseX, float baseZ,
                        float swayX, float swayZ, float r, float g, float b, int light, int overlay) {
-        float a0 = d[3] + baseX, b0 = d[4] + baseZ;
+        float a0 = rx0 + baseX, b0 = d[4] + baseZ;
         float d0x = Mth.cos(a0) * Mth.sin(b0), d0y = -Mth.cos(a0) * Mth.cos(b0), d0z = -Mth.sin(a0);
         // vector de referencia fijo para todo el mechón (evita giros bruscos de la sección)
         float rx = 0, ry = 0, rz = 1;
@@ -157,7 +193,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             if (ul < 1.0E-4F) ul = 1.0F;
             ux /= ul; uy /= ul; uz /= ul;
             float wx = dy * uz - dz * uy, wy = dz * ux - dx * uz, wz = dx * uy - dy * ux;
-            float w = width * WT[k];
+            float w = width * (d[11] > 0 ? 1.0F - d[11] * t : WT[k]);
             for (int j = 0; j < 4; j++) {
                 float ph = Mth.PI / 4 + j * Mth.HALF_PI;
                 float c = Mth.cos(ph), sn = Mth.sin(ph);

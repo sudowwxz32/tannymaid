@@ -37,6 +37,8 @@ public final class ClientModEvents {
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY);
     public static final ModelLayerLocation SSJ4_FUR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ssj4_fur"), "main");
     public static final ModelLayerLocation SSJ4_FUR_SLIM = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "ssj4_fur_slim"), "main");
+    public static final ModelLayerLocation BUST_SKIN = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "bust_skin"), "main");
+    public static final ModelLayerLocation BUST_ARMOR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "bust_armor"), "main");
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     private ClientModEvents() {}
@@ -59,6 +61,8 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, SaiyanHairLayer::createLayer);
+        e.registerLayerDefinition(BUST_SKIN, FemaleBodyLayer::createSkin);
+        e.registerLayerDefinition(BUST_ARMOR, FemaleBodyLayer::createArmor);
         e.registerLayerDefinition(SSJ4_FUR, Ssj4FurLayer::createWide);
         e.registerLayerDefinition(SSJ4_FUR_SLIM, Ssj4FurLayer::createSlim);
         e.registerLayerDefinition(OZARU_LAYER, OzaruModelData::createLayer);
@@ -88,6 +92,7 @@ public final class ClientModEvents {
         OzaruRenderer.reset();
         for (String skin : e.getSkins()) {
             if (e.getSkin(skin) instanceof PlayerRenderer renderer) {
+                renderer.addLayer(new FemaleBodyLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new Ssj4FurLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new SaiyanHairLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new TailLayer(renderer, e.getEntityModels()));

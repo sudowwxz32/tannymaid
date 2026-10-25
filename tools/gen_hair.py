@@ -18,9 +18,10 @@ SPIKES = []
 
 
 class S:
-    def __init__(self, name, pos, rx, rz, length, width, bx=0.0, bz=0.0, flat=1.0, hang=False):
+    def __init__(self, name, pos, rx, rz, length, width, bx=0.0, bz=0.0, flat=1.0, hang=False, taper=0.0):
         self.name, self.pos, self.rx, self.rz = name, pos, rx, rz
         self.length, self.width, self.bx, self.bz, self.flat, self.hang = length, width, bx, bz, flat, hang
+        self.taper = taper          # 0 = termina en punta; >0 = lámina que solo se adelgaza un poco
 
 
 def out(name, pivot, rx, rz, length, size, bend=0.06, sink=0.6):
@@ -33,6 +34,11 @@ def out(name, pivot, rx, rz, length, size, bend=0.06, sink=0.6):
 def hang(name, pivot, rx, rz, length, size):
     """Mechón largo colgante (se mece al caminar)."""
     return S(name, pivot, rx, rz, length, size * 0.85, -0.15, 0.0, flat=0.6, hang=True)
+
+
+def sheet(name, pivot, rx, rz, length, size):
+    """Mechón liso y ancho (cabello largo o corte recto): casi plano y sin punta."""
+    return S(name, pivot, rx, rz, length, size * 0.95, -0.12, 0.0, flat=0.38, hang=True, taper=0.5)
 
 
 def strand(name, pivot, rot, length, w, d=1.0):
@@ -186,6 +192,117 @@ def spikes():
     P.append(out("e_r5", (-2.4, -6.4, 3.7), -0.7, -0.28, 9.0, 3.4))
     P.append(strand("e_peak", (0, -8.3, -4.45), (-0.06, 0, 0), 3.4, 2.4))
 
+    # =========================================================== PEINADOS BASE (elegidos con /raza saiyajin)
+    # ---- m1 Puntas salvajes: grandes puntas hacia los lados y atrás, flequillo de tres mechones
+    P.append(out("m1_c1", (0, -8.3, -0.4), -0.25, 0, 8.0, 3.8))
+    P.append(out("m1_c2", (0, -7.6, 3.0), -1.0, 0, 8.0, 3.8))
+    P.append(out("m1_c3", (0, -4.6, 4.1), -1.55, 0, 6.5, 3.4))
+    P.append(out("m1_r1", (-2.4, -8.2, -1.0), -0.1, -0.75, 7.5, 3.6))
+    P.append(out("m1_r2", (-3.6, -7.0, 1.4), -0.5, -1.2, 7.0, 3.4))
+    P.append(out("m1_r3", (-3.8, -4.8, 2.6), -1.0, -1.35, 6.0, 3.0))
+    P.append(out("m1_r4", (-2.6, -6.4, 3.6), -1.1, -0.6, 7.0, 3.2))
+    P.append(strand("m1_b1", (1.6, -8.1, -4.35), (-0.12, 0, -0.3), 5.0, 1.8))
+    P.append(strand("m1_b2_r", (-1.8, -8.1, -4.35), (-0.12, 0, 0.35), 4.6, 1.7))
+    P.append(strand("m1_b3", (0, -8.2, -4.45), (-0.1, 0, 0.1), 4.0, 1.6))
+    # ---- m2 Puntas con mechón: puntas medianas y un mechón largo sobre la frente
+    P.append(out("m2_c1", (0, -8.3, -0.2), -0.35, 0, 6.5, 3.6))
+    P.append(out("m2_c2", (0, -7.4, 3.1), -1.05, 0, 6.5, 3.6))
+    P.append(out("m2_c3", (0, -4.6, 4.1), -1.6, 0, 5.0, 3.2))
+    P.append(out("m2_r1", (-2.4, -8.2, -0.8), -0.2, -0.7, 6.0, 3.4))
+    P.append(out("m2_r2", (-3.6, -6.8, 1.6), -0.6, -1.15, 5.5, 3.2))
+    P.append(out("m2_r3", (-2.6, -6.2, 3.6), -1.15, -0.55, 5.5, 3.0))
+    P.append(strand("m2_bang", (-0.8, -8.2, -4.45), (-0.12, 0, 0.15), 7.5, 1.9))
+    P.append(strand("m2_b1", (2.0, -8.1, -4.35), (-0.1, 0, -0.3), 4.0, 1.6))
+    # ---- m3 Llama alta: todo el cabello sube recto, con pico en la frente
+    P.append(out("m3_c1", (0, -8.5, -1.8), 0.05, 0, 9.5, 4.2, bend=0.03))
+    P.append(out("m3_c2", (0, -8.4, 1.0), -0.15, 0, 10.5, 4.3, bend=0.03))
+    P.append(out("m3_c3", (0, -7.6, 3.2), -0.45, 0, 9.0, 4.0))
+    P.append(out("m3_r1", (-2.3, -8.4, -1.4), 0.05, -0.22, 9.0, 3.8, bend=0.03))
+    P.append(out("m3_r2", (-2.4, -8.2, 1.4), -0.22, -0.26, 9.5, 3.8, bend=0.03))
+    P.append(out("m3_r3", (-3.5, -7.4, 0.0), 0.0, -0.45, 7.5, 3.4))
+    P.append(out("m3_r4", (-3.0, -6.6, 2.8), -0.5, -0.4, 7.0, 3.2))
+    P.append(strand("m3_peak", (0, -8.3, -4.45), (-0.06, 0, 0), 3.4, 2.4))
+    # ---- m4 Melena tranquila: mechones medianos que caen hacia atrás, sin picos parados
+    P.append(out("m4_c1", (0, -8.2, 0.4), -0.9, 0, 7.0, 4.2))
+    P.append(out("m4_c2", (0, -6.4, 3.8), -1.5, 0, 7.5, 4.0))
+    P.append(out("m4_c3", (0, -3.6, 4.1), -2.0, 0, 6.5, 3.6))
+    P.append(out("m4_r1", (-2.6, -8.0, 0.2), -0.8, -0.8, 6.5, 3.8))
+    P.append(out("m4_r2", (-3.8, -6.4, 1.6), -1.3, -1.1, 6.5, 3.4))
+    P.append(out("m4_r3", (-3.2, -4.2, 3.4), -1.9, -0.7, 6.0, 3.2))
+    P.append(strand("m4_b1_r", (-1.4, -8.1, -4.4), (-0.12, 0, 0.3), 5.0, 2.0))
+    P.append(strand("m4_b2", (1.4, -8.1, -4.4), (-0.12, 0, -0.25), 4.6, 1.9))
+    # ---- m5 Corte liso con raya al medio: cortinas lisas a los lados y atrás
+    P.append(strand("m5_b_r", (-1.3, -8.3, -4.45), (-0.15, 0, 0.5), 6.0, 3.0))
+    P.append(strand("m5_b2_r", (-3.2, -8.0, -4.2), (-0.1, 0, 0.2), 6.5, 2.4))
+    P.append(sheet("m5_s_r", (-4.3, -7.6, -0.8), -3.06, -0.1, 7.5, 4.6))
+    P.append(sheet("m5_k", (0, -7.2, 3.9), -3.02, 0, 8.0, 7.0))
+    P.append(sheet("m5_k_r", (-2.8, -7.2, 3.6), -3.04, -0.12, 7.5, 4.6))
+    # ---- m6 Desordenado con picos: muchas puntas cortas en todas direcciones
+    for i, (x, y, z, rx, rz, L) in enumerate([(0, -8.4, -1.4, 0.1, 0.1, 5.0), (0.6, -8.3, 1.2, -0.5, 0.2, 5.5), (0, -6.8, 3.7, -1.1, -0.1, 5.0),
+                                              (0, -4.2, 4.1, -1.7, 0.1, 4.0), (-2.4, -8.2, -2.2, 0.3, -0.6, 4.5), (-2.6, -8.1, 0.8, -0.4, -0.9, 5.0),
+                                              (-3.8, -6.6, -0.6, -0.1, -1.3, 4.5), (-3.6, -5.2, 2.6, -1.0, -1.1, 4.0), (-1.8, -7.4, 3.4, -0.9, -0.4, 5.0)]):
+        P.append(out("m6_s%d_r" % i if x != 0 else "m6_s%d" % i, (x, y, z), rx, rz, L, 3.2, bend=0.1))
+    P.append(strand("m6_b1", (1.2, -8.1, -4.4), (-0.15, 0, -0.4), 4.2, 1.7))
+    P.append(strand("m6_b2_r", (-1.5, -8.1, -4.4), (-0.15, 0, 0.45), 4.0, 1.7))
+    P.append(strand("m6_b3", (0, -8.2, -4.45), (-0.1, 0, -0.05), 3.4, 1.5))
+
+    # ---- w1 Corte corto liso: melena corta hasta el cuello con flequillo
+    P.append(sheet("w1_k", (0, -7.6, 3.9), -3.04, 0, 7.5, 7.4))
+    P.append(sheet("w1_s_r", (-4.3, -7.6, 0.4), -3.1, -0.16, 7.0, 5.0))
+    P.append(sheet("w1_f_r", (-4.2, -7.6, -2.6), -3.12, -0.12, 6.2, 3.4))
+    P.append(strand("w1_b1", (0.4, -8.3, -4.45), (-0.1, 0, -0.1), 4.4, 3.0))
+    P.append(strand("w1_b2_r", (-2.4, -8.2, -4.4), (-0.1, 0, 0.25), 4.0, 2.4))
+    P.append(strand("w1_b3", (2.8, -8.2, -4.4), (-0.1, 0, -0.3), 3.8, 2.2))
+    # ---- w2 Coletas: dos coletas que caen detrás de las orejas y flequillo
+    P.append(sheet("w2_t_r", (-3.8, -5.6, 2.6), -2.85, -0.35, 13.0, 3.6))
+    P.append(sheet("w2_k", (0, -7.4, 3.9), -3.05, 0, 5.0, 6.6))
+    P.append(sheet("w2_s_r", (-4.3, -7.4, -1.6), -3.1, -0.1, 5.0, 3.0))
+    P.append(strand("w2_b1", (0, -8.3, -4.45), (-0.1, 0, 0.05), 4.0, 2.6))
+    P.append(strand("w2_b2_r", (-2.4, -8.2, -4.4), (-0.1, 0, 0.3), 3.6, 2.2))
+    # ---- w3 Puntas rebeldes: puntas hacia arriba y atrás, como una cola de picos
+    P.append(out("w3_c1", (0, -8.4, 0.2), -0.55, 0, 9.5, 4.2, bend=0.08))
+    P.append(out("w3_c2", (0, -7.4, 3.2), -1.2, 0, 9.0, 4.0, bend=0.08))
+    P.append(out("w3_r1", (-2.4, -8.2, 0.4), -0.5, -0.6, 8.0, 3.6, bend=0.08))
+    P.append(out("w3_r2", (-3.6, -6.8, 1.8), -0.9, -1.0, 7.0, 3.2))
+    P.append(out("w3_t", (0, -5.0, 4.0), -1.85, 0, 8.0, 3.8, bend=0.1))
+    P.append(strand("w3_b1", (1.6, -8.1, -4.4), (-0.12, 0, -0.3), 5.0, 1.8))
+    P.append(strand("w3_b2_r", (-1.6, -8.1, -4.4), (-0.12, 0, 0.3), 5.0, 1.8))
+    P.append(sheet("w3_s_r", (-4.3, -7.2, -1.8), -3.08, -0.12, 6.0, 2.8))
+    # ---- w4 Melena larga con flequillo: cabello largo hasta la cintura
+    P.append(sheet("w4_k", (0, -7.6, 3.9), -3.02, 0, 18.0, 7.4))
+    P.append(sheet("w4_k_r", (-2.8, -7.4, 3.6), -3.04, -0.1, 16.0, 4.8))
+    P.append(sheet("w4_s_r", (-4.3, -7.6, -0.6), -3.1, -0.12, 14.0, 4.4))
+    P.append(strand("w4_b1", (0.6, -8.3, -4.45), (-0.08, 0, -0.08), 5.4, 3.0))
+    P.append(strand("w4_b2_r", (-2.4, -8.3, -4.45), (-0.08, 0, 0.2), 5.0, 2.6))
+    # ---- w5 Cola de caballo alta
+    P.append(sheet("w5_t", (0, -8.2, 3.4), -2.5, 0, 15.0, 4.4))
+    P.append(sheet("w5_k", (0, -7.0, 3.9), -3.05, 0, 4.0, 6.6))
+    P.append(strand("w5_b1", (1.4, -8.2, -4.45), (-0.1, 0, -0.25), 4.6, 2.0))
+    P.append(strand("w5_b2_r", (-1.6, -8.2, -4.45), (-0.1, 0, 0.3), 4.2, 2.0))
+    P.append(sheet("w5_s_r", (-4.3, -7.2, -2.0), -3.08, -0.1, 6.5, 2.4))
+    # ---- w6 Melena larga ondulada con raya al lado
+    P.append(sheet("w6_k", (0, -7.6, 3.9), -2.98, 0, 20.0, 7.6))
+    P.append(sheet("w6_s_r", (-4.3, -7.6, 0.0), -3.0, -0.22, 17.0, 4.8))
+    P.append(sheet("w6_f_r", (-4.1, -7.8, -2.6), -3.05, -0.18, 15.0, 3.4))
+    P.append(strand("w6_b1", (1.0, -8.3, -4.45), (-0.12, 0, -0.45), 6.0, 3.4))
+    # ---- w7 Moño con flequillo
+    P.append(out("w7_bun", (0, -7.6, 3.6), -1.15, 0, 4.2, 6.0, bend=0.0, sink=1.4))
+    P.append(out("w7_bun2", (0, -8.6, 2.6), -0.85, 0, 3.0, 5.0, bend=0.0, sink=1.2))
+    P.append(sheet("w7_s_r", (-4.3, -7.4, -1.6), -3.1, -0.1, 6.0, 2.8))
+    P.append(strand("w7_b1", (0, -8.3, -4.45), (-0.1, 0, 0.05), 4.0, 3.2))
+    P.append(strand("w7_b2_r", (-2.6, -8.2, -4.4), (-0.1, 0, 0.3), 3.6, 2.2))
+
+    # ---- Blue Evolución: puntas altas y afiladas que suben como llamas
+    P.append(out("v_c1", (0, -8.5, -1.8), 0.0, 0, 13.0, 4.0, bend=0.04))
+    P.append(out("v_c2", (0, -8.5, 0.8), -0.15, 0, 14.5, 4.2, bend=0.04))
+    P.append(out("v_c3", (0, -7.8, 3.2), -0.42, 0, 12.5, 3.9, bend=0.05))
+    P.append(out("v_c4", (0, -5.6, 4.1), -0.85, 0, 9.0, 3.4))
+    P.append(out("v_r1", (-2.3, -8.4, -1.4), 0.02, -0.2, 12.5, 3.8, bend=0.04))
+    P.append(out("v_r2", (-2.4, -8.3, 1.4), -0.2, -0.26, 13.0, 3.8, bend=0.04))
+    P.append(out("v_r3", (-3.6, -7.6, -0.2), 0.0, -0.45, 10.5, 3.4))
+    P.append(out("v_r4", (-3.3, -7.0, 2.6), -0.45, -0.5, 10.0, 3.2))
+    P.append(strand("v_peak", (0, -8.3, -4.45), (-0.06, 0, 0), 3.6, 2.4))
+
     # volumen: cada punta grande lleva mechones de relleno a su lado
     extra = []
     for s in P:
@@ -199,14 +316,14 @@ def spikes():
         else:
             sg = -1 if s.rz < 0 else 1
             extra.append(S(s.name + "v", (s.pos[0], s.pos[1] + 0.4, s.pos[2] + 0.9), s.rx - 0.2, s.rz + sg * 0.2,
-                           s.length * 0.8, s.width * 0.85, s.bx, s.bz, s.flat))
+                           s.length * 0.8, s.width * 0.85, s.bx, s.bz, s.flat, False, s.taper))
     P = P + extra
     out_ = []
     for s in P:
         out_.append(s)
         if "_r" in s.name:
             x, y, z = s.pos
-            out_.append(S(s.name.replace("_r", "_l"), (-x, y, z), s.rx, -s.rz, s.length, s.width, s.bx, -s.bz, s.flat, s.hang))
+            out_.append(S(s.name.replace("_r", "_l"), (-x, y, z), s.rx, -s.rz, s.length, s.width, s.bx, -s.bz, s.flat, s.hang, s.taper))
     return out_
 
 
@@ -240,7 +357,7 @@ def mesh(s, sway=(0.0, 0.0)):
         d = direction(a, b)
         u = norm(cross(d, ref))
         v = cross(d, u)
-        w = s.width * (1 - t) ** 0.85
+        w = s.width * ((1 - s.taper * t) if s.taper > 0 else (1 - t) ** 0.85)
         corners, normals = [], []
         for j in range(4):
             ph = math.pi / 4 + j * math.pi / 2
@@ -262,7 +379,7 @@ def java(sp):
         L.append("            " + ", ".join('"%s"' % g for g in groups[i:i + 12]) + ",")
     L += ["    };", "", "    public static final float[][] S = {"]
     for s in sp:
-        vals = [s.pos[0], s.pos[1], s.pos[2], s.rx, s.rz, s.length, s.width, s.bx, s.bz, s.flat, 1.0 if s.hang else 0.0]
+        vals = [s.pos[0], s.pos[1], s.pos[2], s.rx, s.rz, s.length, s.width, s.bx, s.bz, s.flat, 1.0 if s.hang else 0.0, s.taper]
         L.append("            {" + ", ".join(("%.4f" % v).rstrip("0").rstrip(".") + "F" for v in vals) + "},  // " + s.name)
     L += ["    };", "}", ""]
     return "\n".join(L)

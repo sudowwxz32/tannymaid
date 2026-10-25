@@ -22,6 +22,7 @@ import net.minecraft.util.Mth;
 /** Cola de mono peluda de la Fase 4: cuelga y se balancea. */
 public class TailLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private static final ResourceLocation TEX = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/tail.png");
+    private static final ResourceLocation BROWN = new ResourceLocation(BlockDragonSuperZ.MODID, "textures/entity/tail_brown.png");
     private static final int SEGMENTS = 7;
     private final ModelPart root;
     private final ModelPart[] seg = new ModelPart[SEGMENTS];
@@ -52,13 +53,15 @@ public class TailLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
                        float limbAmount, float partial, float age, float headYaw, float headPitch) {
         if (player.isInvisible()) return;
         SaiyanState s = ClientStates.get(player.getId());
-        if (!s.saiyan || s.visibleForm() != Form.SSJ4 || !(s.transformed || s.powering > 0)) return;
+        if (!s.saiyan || s.ozaru) return;
+        boolean ssj4 = s.visibleForm() == Form.SSJ4 && (s.transformed || s.powering > 0);
+        if (!ssj4 && !s.tail) return;                                  // cola café elegida en /raza saiyajin
         root.getAllParts().forEach(ModelPart::resetPose);
         root.getChild("body").copyFrom(getParentModel().body);
         for (int i = 0; i < SEGMENTS; i++) {
             seg[i].yRot += Mth.sin(age * 0.12F - i * 0.55F) * (0.18F + limbAmount * 0.2F);
             seg[i].xRot += Mth.sin(age * 0.09F - i * 0.4F) * 0.05F + (i > 3 ? -0.08F : 0);
         }
-        root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(TEX)), light, LivingEntityRenderer.getOverlayCoords(player, 0.0F));
+        root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(ssj4 ? TEX : BROWN)), light, LivingEntityRenderer.getOverlayCoords(player, 0.0F));
     }
 }

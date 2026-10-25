@@ -22,7 +22,7 @@ public class PowerScreen extends Screen {
     private static final int W = 300, ROW = 12;
     /** Columnas de fases: izquierda bloques 1-3, derecha bloques 4 en adelante. */
     private static final Form[][] COLS = {
-            {Form.BASE, Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.ULTRA},
+            {Form.BASE, Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.BLUE_EVO, Form.ULTRA},
             {Form.SSJ4, Form.ULTRA_EGO, Form.BEAST, Form.ROSE, Form.LEGENDARY, Form.LEGEND1, Form.LEGEND2, Form.LEGEND3}};
     private int form, kaioken;
     private int left, top, h;
@@ -42,7 +42,7 @@ public class PowerScreen extends Screen {
         SaiyanState s = state();
         form = s.selected;
         kaioken = s.kaioken;
-        h = 24 + 8 * ROW + 4 * 9 + 8 + 20 + 26 + 16 + 14;
+        h = 24 + 9 * ROW + 4 * 9 + 8 + 20 + 26 + 16 + 14;
         left = (width - W) / 2;
         top = Math.max(4, (height - h) / 2);
     }
@@ -83,7 +83,7 @@ public class PowerScreen extends Screen {
         }
 
         // ---- Kaioken
-        int ky = top + 24 + 8 * ROW + 4 * 9 + 8;
+        int ky = top + 24 + 9 * ROW + 4 * 9 + 8;
         g.drawString(font, "§c§lKaioken", left + 8, ky + 3, 0xFFFFFFFF, true);
         for (int i = 0; i <= 10; i++) {
             int kx = left + 62 + i * 21, lvl = i * 10;
@@ -229,7 +229,7 @@ public class PowerScreen extends Screen {
                 y += ROW;
             }
         }
-        int ky = top + 24 + 8 * ROW + 4 * 9 + 8;
+        int ky = top + 24 + 9 * ROW + 4 * 9 + 8;
         for (int i = 0; i <= 10; i++) {
             if (in(mx, my, left + 62 + i * 21, ky, 19, 14)) { kaioken = i * 10; send(); click(); return true; }
         }
@@ -254,10 +254,10 @@ public class PowerScreen extends Screen {
         SaiyanState s = state();
         if (key == GLFW.GLFW_KEY_UP || key == GLFW.GLFW_KEY_DOWN) {
             int dir = key == GLFW.GLFW_KEY_UP ? -1 : 1;
-            int n = Form.values().length;
+            int n = Form.ORDERED.length, cur = Form.byId(form).order();
             for (int i = 1; i < n; i++) {
-                int cand = Math.floorMod(form + dir * i, n);
-                if (s.unlocked(Form.byId(cand))) { form = cand; send(); click(); break; }
+                Form cand = Form.ORDERED[Math.floorMod(cur + dir * i, n)];
+                if (s.unlocked(cand)) { form = cand.ordinal(); send(); click(); break; }
             }
             return true;
         }

@@ -22,6 +22,7 @@ public final class RazaCommand {
                 .then(Commands.literal("saiyajin").executes(RazaCommand::saiyan))
                 .then(Commands.literal("saiyan").executes(RazaCommand::saiyan))
                 .then(Commands.literal("humano").executes(RazaCommand::human))
+                .then(Commands.literal("apariencia").executes(RazaCommand::appearance))
                 .then(Commands.literal("info").executes(RazaCommand::info))
                 .then(Commands.literal("libro").executes(c -> { GuideBook.give(c.getSource().getPlayerOrException()); return 1; }))
                 .then(Commands.literal("bloque").requires(src -> src.hasPermission(2))
@@ -40,7 +41,8 @@ public final class RazaCommand {
         ServerPlayer p = c.getSource().getPlayerOrException();
         SaiyanState s = SaiyanData.get(p);
         if (s.saiyan) {
-            p.sendSystemMessage(Component.literal("§6Ya eres saiyajin. §7Usa §e/raza libro§7 si perdiste la guía."));
+            p.sendSystemMessage(Component.literal("§6Ya eres saiyajin. §7Elige tu apariencia (o usa §e/raza libro§7 si perdiste la guía)."));
+            openAppearance(p);
             return 1;
         }
         s.saiyan = true;
@@ -50,7 +52,22 @@ public final class RazaCommand {
         p.sendSystemMessage(Component.literal("§8[§eK§8] §7menú  §8[§eP§8] §7transformarte  §8[§eU§8] §7aura  §8[§eI§8] §7volar  §8[§eH§8] §7recargar ki"));
         p.sendSystemMessage(Component.literal("§7Lee la §6Guía del Saiyajin§7 que recibiste para desbloquear más fases."));
         GuideBook.give(p);
+        openAppearance(p);
         return 1;
+    }
+
+    private static int appearance(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer p = c.getSource().getPlayerOrException();
+        if (!SaiyanData.get(p).saiyan) {
+            p.sendSystemMessage(Component.literal("§cPrimero usa §e/raza saiyajin"));
+            return 0;
+        }
+        openAppearance(p);
+        return 1;
+    }
+
+    private static void openAppearance(ServerPlayer p) {
+        com.bdsz.network.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new com.bdsz.network.OpenAppearancePacket());
     }
 
     private static int human(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
