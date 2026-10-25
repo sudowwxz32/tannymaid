@@ -62,6 +62,10 @@ public class PowerScreen extends Screen {
         g.fill(left, top + 17, left + W, top + 18, accent);
         g.drawString(font, "§lTransformaciones", left + 8, top + 5, 0xFFFFFFFF, true);
         String status = s.ozaru ? "§6Ozaru" : s.transformed ? "§aTransformado" : s.powering > 0 ? "§eCargando..." : "§7Estado base";
+        if (s.lineage != 0) {
+            com.bdsz.data.Lineage ln = com.bdsz.data.Lineage.byId(s.lineage);
+            g.drawString(font, ln.display, left + 8 + font.width("§lTransformaciones") + 10, top + 5, 0xFF000000 | ln.color, true);
+        }
         g.drawString(font, status, left + W - 8 - font.width(status), top + 5, 0xFFFFFFFF, true);
 
         hint = "";
@@ -145,7 +149,8 @@ public class PowerScreen extends Screen {
         g.drawString(font, name, x + 16, y + 2, open ? (on ? 0xFFFFFFFF : 0xFFD8DCE4) : 0xFF5A6070, on);
         if (!open) {
             lock(g, x + w - 10, y + 2);
-            if (hover) hint = "Bloqueada: " + unlockText(f);
+            if (hover) hint = s.lineage != 0 ? "Tu " + com.bdsz.data.Lineage.byId(s.lineage).display + " no incluye esta fase"
+                    : "Bloqueada: " + unlockText(f);
         } else if (s.transformed && s.selected == f.ordinal()) {
             g.fill(x + w - 8, y + 4, x + w - 4, y + 8, 0xFF5AFF7A);      // activa ahora
         }

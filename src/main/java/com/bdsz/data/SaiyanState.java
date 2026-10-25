@@ -30,10 +30,15 @@ public class SaiyanState {
     public int gender;          // 0 sin definir, 1 masculino, 2 femenino
     public int hair = -1;       // peinado base elegido (-1 = el predeterminado de cada transformación)
     public boolean tail;        // cola de saiyajin (café)
+    public int lineage;         // bloque de linaje elegido en partidas online (0 = ninguno)
 
     public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
-    public boolean unlocked(Form f) { return f.tier() <= tier; }
+    public boolean unlocked(Form f) {
+        Lineage l = Lineage.byId(lineage);
+        if (l != Lineage.NONE) return l.allows(f);     // online: el bloque elegido manda
+        return f.tier() <= tier;
+    }
 
     /** El Modo Ozaru se desbloquea con el Dominio Total. */
     public boolean ozaruUnlocked() { return tier >= 5 && mastery; }
@@ -108,6 +113,7 @@ public class SaiyanState {
         t.putInt("Hair", hair);
         t.putBoolean("HasHair", true);
         t.putBoolean("Tail", tail);
+        t.putInt("Lineage", lineage);
         return t;
     }
 
@@ -139,6 +145,7 @@ public class SaiyanState {
         s.gender = t.getInt("Gender");
         s.hair = t.getBoolean("HasHair") ? t.getInt("Hair") : -1;
         s.tail = t.getBoolean("Tail");
+        s.lineage = t.getInt("Lineage");
         return s;
     }
 
@@ -167,6 +174,7 @@ public class SaiyanState {
         b.writeVarInt(gender);
         b.writeVarInt(hair + 1);
         b.writeBoolean(tail);
+        b.writeVarInt(lineage);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -195,6 +203,7 @@ public class SaiyanState {
         s.gender = b.readVarInt();
         s.hair = b.readVarInt() - 1;
         s.tail = b.readBoolean();
+        s.lineage = b.readVarInt();
         return s;
     }
 }

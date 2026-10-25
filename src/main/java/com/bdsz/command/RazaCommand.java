@@ -23,6 +23,17 @@ public final class RazaCommand {
                 .then(Commands.literal("saiyan").executes(RazaCommand::saiyan))
                 .then(Commands.literal("humano").executes(RazaCommand::human))
                 .then(Commands.literal("apariencia").executes(RazaCommand::appearance))
+                .then(Commands.literal("reiniciarbloque").requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("jugador", net.minecraft.commands.arguments.EntityArgument.player())
+                                .executes(c -> {
+                                    ServerPlayer t = net.minecraft.commands.arguments.EntityArgument.getPlayer(c, "jugador");
+                                    SaiyanState s = SaiyanData.get(t);
+                                    s.lineage = 0;
+                                    SaiyanData.set(t, s);
+                                    c.getSource().sendSuccess(() -> Component.literal("§6Bloque reiniciado para " + t.getName().getString()), true);
+                                    t.sendSystemMessage(Component.literal("§eTu bloque fue reiniciado. Elige otro con §6/raza apariencia"));
+                                    return 1;
+                                })))
                 .then(Commands.literal("info").executes(RazaCommand::info))
                 .then(Commands.literal("libro").executes(c -> { GuideBook.give(c.getSource().getPlayerOrException()); return 1; }))
                 .then(Commands.literal("bloque").requires(src -> src.hasPermission(2))
@@ -67,12 +78,20 @@ public final class RazaCommand {
     }
 
     private static void openAppearance(ServerPlayer p) {
-        com.bdsz.network.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new com.bdsz.network.OpenAppearancePacket());
+        com.bdsz.network.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new com.bdsz.network.OpenAppearancePacket(isOnline(p)));
+    }
+
+    /** Partida online: servidor dedicado o mundo abierto a LAN. */
+    public static boolean isOnline(ServerPlayer p) {
+        net.minecraft.server.MinecraftServer srv = p.getServer();
+        return srv != null && (srv.isDedicatedServer() || srv.isPublished());
     }
 
     private static int human(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer p = c.getSource().getPlayerOrException();
-        SaiyanData.set(p, new SaiyanState());
+        SaiyanState fresh = new SaiyanState();
+        fresh.lineage = SaiyanData.get(p).lineage;          // el bloque elegido online no se puede volver a sortear
+        SaiyanData.set(p, fresh);
         p.sendSystemMessage(Component.literal("§7Vuelves a ser humano."));
         return 1;
     }

@@ -8,8 +8,8 @@ public final class ClientHooks {
     private ClientHooks() {}
 
     /** Abre la pantalla de apariencia (género, peinado y cola). */
-    public static void openAppearance() {
-        Minecraft.getInstance().setScreen(new AppearanceScreen());
+    public static void openAppearance(boolean online) {
+        Minecraft.getInstance().setScreen(new AppearanceScreen(online));
     }
 
     /** Recalcula el tamaño del jugador (al entrar o salir del Modo Ozaru). */
