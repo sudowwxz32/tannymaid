@@ -5,20 +5,36 @@
       "item": "minecraft:map"
     },
     {
-      "item": "minecraft:netherite_ingot"
+      "item": "minecraft:diamond"
     },
     {
-      "item": "minecraft:diamond_block"
+      "item": "minecraft:gold_ingot"
     },
     {
-      "item": "minecraft:diamond_block"
+      "item": "minecraft:gold_ingot"
     },
-    {
-      "item": "blockdragonsuperz:black_ki_ingot"
-    },
-    {
-      "item": "blockdragonsuperz:black_ki_ingot"
-    }
+    [
+      {
+        "item": "blockdragonsuperz:black_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:orange_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:blue_ki_ingot"
+      }
+    ],
+    [
+      {
+        "item": "blockdragonsuperz:black_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:orange_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:blue_ki_ingot"
+      }
+    ]
   ],
   "result": {
     "item": "blockdragonsuperz:training_list_6",

@@ -1,24 +1,41 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "ENE",
-    "KMK",
-    "ENE"
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:map"
+    },
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:emerald"
+    },
+    [
+      {
+        "item": "blockdragonsuperz:black_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:orange_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:blue_ki_ingot"
+      }
+    ],
+    [
+      {
+        "item": "blockdragonsuperz:black_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:orange_ki_ingot"
+      },
+      {
+        "item": "blockdragonsuperz:blue_ki_ingot"
+      }
+    ]
   ],
-  "key": {
-    "E": {
-      "item": "minecraft:emerald_block"
-    },
-    "N": {
-      "item": "minecraft:netherite_ingot"
-    },
-    "K": {
-      "item": "blockdragonsuperz:training_list_6"
-    },
-    "M": {
-      "item": "minecraft:nether_star"
-    }
-  },
   "result": {
     "item": "blockdragonsuperz:training_list_7",
     "count": 1
