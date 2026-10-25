@@ -73,8 +73,8 @@ public class PowerScreen extends Screen {
             for (Form f : COLS[c]) {
                 if (f.tier() != lastTier) {
                     lastTier = f.tier();
-                    String head = f.tier() == 6 ? "DOMINIO TOTAL" : f.tier() == 5 ? "BLOQUE ESPECIAL" : "BLOQUE " + f.tier();
-                    small(g, head, x + 1, y + 1, f.tier() == 6 ? 0xFFE070FF : 0xFF8A93A6);
+                    String head = Form.blockName(f.tier()).toUpperCase(java.util.Locale.ROOT);
+                    small(g, head, x + 1, y + 1, f.tier() >= 6 ? 0xFFE070FF : 0xFF8A93A6);
                     y += 9;
                 }
                 drawForm(g, f, x, y, 138, mx, my, s);
@@ -157,7 +157,8 @@ public class PowerScreen extends Screen {
             case 3 -> "Lista de Entrenamiento II";
             case 4 -> "Lista de Entrenamiento III";
             case 5 -> "Lista de Entrenamiento IV (Bloque Especial)";
-            case 6 -> "Dominio Total";
+            case 6 -> "Lista de Entrenamiento V (Bloque Especial 2)";
+            case 7 -> "Lista de Entrenamiento VI (Bloque Especial 3) + Dominio Total";
             default -> "";
         };
     }

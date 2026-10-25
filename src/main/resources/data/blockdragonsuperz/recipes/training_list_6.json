@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:map"
+    },
+    {
+      "item": "minecraft:netherite_ingot"
+    },
+    {
+      "item": "minecraft:diamond_block"
+    },
+    {
+      "item": "minecraft:diamond_block"
+    },
+    {
+      "item": "blockdragonsuperz:black_ki_ingot"
+    },
+    {
+      "item": "blockdragonsuperz:black_ki_ingot"
+    }
+  ],
+  "result": {
+    "item": "blockdragonsuperz:training_list_6",
+    "count": 1
+  }
+}

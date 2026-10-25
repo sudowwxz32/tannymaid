@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ENE",
+    "KMK",
+    "ENE"
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:emerald_block"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "K": {
+      "item": "blockdragonsuperz:training_list_6"
+    },
+    "M": {
+      "item": "minecraft:nether_star"
+    }
+  },
+  "result": {
+    "item": "blockdragonsuperz:training_list_7",
+    "count": 1
+  }
+}

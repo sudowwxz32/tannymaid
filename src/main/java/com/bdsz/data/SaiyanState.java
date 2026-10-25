@@ -33,7 +33,7 @@ public class SaiyanState {
 
     public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
-    public boolean unlocked(Form f) { return f.tier() == 6 ? tier >= 5 && mastery : f.tier() <= tier; }
+    public boolean unlocked(Form f) { return f.tier() <= tier; }
 
     /** El Modo Ozaru se desbloquea con el Dominio Total. */
     public boolean ozaruUnlocked() { return tier >= 5 && mastery; }
@@ -93,6 +93,7 @@ public class SaiyanState {
         t.putBoolean("KiInit", true);
         t.putBoolean("TotemReady", totemReady);
         t.putInt("Tier", tier);
+        t.putBoolean("TiersV2", true);
         t.putBoolean("Mastery", mastery);
         t.putInt("Pose", pose);
         t.putInt("PoseTimer", poseTimer);
@@ -123,7 +124,8 @@ public class SaiyanState {
         s.timerMax = t.getInt("TimerMax");
         s.cooldown = t.getInt("Cooldown");
         s.totemReady = t.getBoolean("TotemReady");
-        s.tier = Math.max(1, Math.min(5, t.getInt("Tier")));
+        s.tier = Math.max(1, Math.min(7, t.getInt("Tier")));
+        if (!t.getBoolean("TiersV2") && s.tier == 5 && t.getBoolean("Mastery")) s.tier = 6;   // ya tenía esas fases
         s.mastery = t.getBoolean("Mastery");
         s.pose = t.getInt("Pose");
         s.poseTimer = t.getInt("PoseTimer");

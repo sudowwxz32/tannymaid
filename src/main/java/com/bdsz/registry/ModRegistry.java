@@ -70,6 +70,11 @@ public final class ModRegistry {
     public static final RegistryObject<Item> ULTIMATE_TRAINING = ITEMS.register("ultimate_training",
             () -> new com.bdsz.item.UltimateTrainingItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
 
+    public static final RegistryObject<Item> TRAINING_LIST_SPECIAL2 = ITEMS.register("training_list_6",
+            () -> new TrainingListItem(7, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+    public static final RegistryObject<Item> TRAINING_LIST_SPECIAL3 = ITEMS.register("training_list_7",
+            () -> new TrainingListItem(8, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+
     public static final RegistryObject<Item> TOTAL_MASTERY = ITEMS.register("training_list_5",
             () -> new TrainingListItem(6, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
 

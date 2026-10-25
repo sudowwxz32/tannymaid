@@ -85,6 +85,52 @@ public final class EnergyCyclone {
         }
     }
 
+    /**
+     * Columna de luz que sube al cielo al final de las transformaciones fuertes y se apaga poco a poco.
+     */
+    public static void pillar(AbstractClientPlayer p, float partial, PoseStack pose, MultiBufferSource buf) {
+        SaiyanState s = ClientStates.get(p.getId());
+        if (!s.saiyan || s.ozaru) return;
+        Form f = Form.byId(s.selected);
+        if (f.drama() < 0.55F && s.kaioken == 0) return;
+        long since = ClientStates.ticksSinceTransform(p.getId());
+        float k;
+        if (s.powering > 0) {
+            float prog = 1.0F - (float) s.powering / Math.max(1, s.poweringTotal);
+            if (prog < 0.6F) return;
+            k = (prog - 0.6F) / 0.4F;
+        } else if (since < 40) {
+            float fd = 1.0F - (since + partial) / 40.0F;
+            k = fd * fd;
+        } else {
+            return;
+        }
+        int c = f == Form.BASE ? 0xFF4030 : f.auraColor;
+        float r = ((c >> 16) & 255) / 255F, g = ((c >> 8) & 255) / 255F, b = (c & 255) / 255F;
+        float t = p.tickCount + partial;
+        VertexConsumer vc = buf.getBuffer(RenderType.energySwirl(FIRE, (t * 0.02F) % 1.0F, (-t * 0.12F) % 1.0F));
+        Matrix4f m = pose.last().pose();
+        Matrix3f n = pose.last().normal();
+        float H = 64.0F;
+        for (int layer = 0; layer < 2; layer++) {
+            float rad = (layer == 0 ? 0.45F : 0.85F) * (0.8F + 0.2F * Mth.sin(t * 0.8F)) * (0.6F + f.drama() * 0.6F);
+            float br = k * (layer == 0 ? 0.9F : 0.4F);
+            int seg = 16;
+            for (int j = 0; j < seg; j++) {
+                float a0 = j * Mth.TWO_PI / seg, a1 = (j + 1) * Mth.TWO_PI / seg;
+                beam(vc, m, n, Mth.cos(a0) * rad, 0, Mth.sin(a0) * rad, j / (float) seg, 0, r * br, g * br, b * br);
+                beam(vc, m, n, Mth.cos(a1) * rad, 0, Mth.sin(a1) * rad, (j + 1) / (float) seg, 0, r * br, g * br, b * br);
+                beam(vc, m, n, Mth.cos(a1) * rad, H, Mth.sin(a1) * rad, (j + 1) / (float) seg, 12, 0, 0, 0);
+                beam(vc, m, n, Mth.cos(a0) * rad, H, Mth.sin(a0) * rad, j / (float) seg, 12, 0, 0, 0);
+            }
+        }
+    }
+
+    private static void beam(VertexConsumer vc, Matrix4f m, Matrix3f n, float x, float y, float z, float u, float v, float r, float g, float b) {
+        vc.vertex(m, x, y, z).color(r, g, b, 1.0F).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT)
+                .normal(n, 0, 1, 0).endVertex();
+    }
+
     private static float radius(float y, float H, float t) {
         float k = y / H;
         return 0.9F + (float) Math.pow(k, 1.3) * 5.5F + 0.25F * Mth.sin(y * 0.6F - t * 0.3F);

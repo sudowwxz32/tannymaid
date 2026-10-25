@@ -52,8 +52,7 @@ public final class PowerLogic {
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) return;
         if (!s.unlocked(Form.byId(form))) {
-            msg(p, Form.byId(form).tier() == 6 ? "§cEsa fase se desbloquea con el Dominio Total."
-                    : "§cEsa fase está bloqueada. Necesitas el Bloque " + Form.byId(form).tier() + " (Lista de Entrenamiento).");
+            msg(p, "§cEsa fase está bloqueada. Necesitas el " + Form.blockName(Form.byId(form).tier()) + " (Lista de Entrenamiento).");
             return;
         }
         Form old = s.activeForm();
@@ -819,12 +818,21 @@ public final class PowerLogic {
             lv.playSound(null, p.blockPosition(), SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1.2F, 0.6F);
             p.sendSystemMessage(Component.literal("§6§l¡DOMINIO TOTAL! §r§eTus transformaciones ya no tienen límite de tiempo."));
             p.sendSystemMessage(Component.literal("§7(Con Kaioken desde la Fase 3 en adelante el límite es de 40 minutos.)"));
-            p.sendSystemMessage(Component.literal("§d§l¡Nuevas transformaciones! §r§fGohan Bestia§7, §aSuper Saiyajin Legendario §7(y sus 3 fases)§7, §dSuper Saiyajin Rosé"));
+            p.sendSystemMessage(Component.literal(s.tier >= 6 ? "§d§l¡Ya puedes craftear la Lista del Bloque Especial 3! §r§7(fases del Legendario)"
+                    : "§7Con la Lista del §dBloque Especial 2§7 desbloqueas Gohan Bestia, Rosé y Legendario Z."));
             p.sendSystemMessage(Component.literal("§6§l¡Modo Ozaru desbloqueado! §r§7Pulsa §eO§7 para convertirte en un mono gigante (otra vez §eO§7 para volver)."));
             return true;
         }
-        if (s.tier >= targetTier) { msg(p, "§7Ya desbloqueaste el Bloque " + targetTier + "."); return false; }
-        if (s.tier < targetTier - 1) { msg(p, "§cPrimero debes desbloquear el Bloque " + (targetTier - 1) + "."); return false; }
+        if (targetTier == 7 || targetTier == 8) {
+            // 7 = Lista del Bloque Especial 2 · 8 = Lista del Bloque Especial 3
+            int newTier = targetTier - 1;
+            if (s.tier >= newTier) { msg(p, "§7Ya desbloqueaste el " + Form.blockName(newTier) + "."); return false; }
+            if (s.tier < newTier - 1) { msg(p, "§cPrimero debes desbloquear el " + Form.blockName(newTier - 1) + "."); return false; }
+            if (newTier == 7 && !s.mastery) { msg(p, "§cPrimero necesitas el Dominio Total."); return false; }
+            targetTier = newTier;
+        }
+        if (s.tier >= targetTier) { msg(p, "§7Ya desbloqueaste el " + Form.blockName(targetTier) + "."); return false; }
+        if (s.tier < targetTier - 1) { msg(p, "§cPrimero debes desbloquear el " + Form.blockName(targetTier - 1) + "."); return false; }
         s.tier = targetTier;
         SaiyanData.set(p, s);
         ServerLevel lv = p.serverLevel();
@@ -836,7 +844,7 @@ public final class PowerLogic {
         for (Form f : Form.values()) {
             if (f.tier() == targetTier) names.append(names.length() > 0 ? ", " : "").append(f.display);
         }
-        p.sendSystemMessage(Component.literal("§6§l¡" + (targetTier == 5 ? "Bloque Especial" : "Bloque " + targetTier) + " desbloqueado! §r§e" + names));
+        p.sendSystemMessage(Component.literal("§6§l¡" + Form.blockName(targetTier) + " desbloqueado! §r§e" + names));
         p.sendSystemMessage(Component.literal("§7Elígelas en el menú (K) y transfórmate con P."));
         return true;
     }

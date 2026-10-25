@@ -21,7 +21,7 @@ public enum Form {
     ULTRA_EGO("Ultra Ego", 0x9040FF, 15.0F, 900, 0.80F, 120, 0.65F, 6.5F, 4, 1600, 2.5F, 0.19F, 6, 0x9B3CFF, 1.5F),
     // ---- se desbloquean con el Dominio Total
     BEAST("Gohan Bestia", 0xD4D4DC, 17.0F, 1100, 0.84F, 140, 0.72F, 7.0F, 5, 1800, 2.5F, 0.20F, 7, 0x9C9CA8, 1.6F),
-    LEGENDARY("Super Saiyajin Legendario", 0x5CFF5A, 19.0F, 1300, 0.88F, 190, 0.85F, 7.5F, 5, 2200, 2.0F, 0.21F, 8, 0x6CFF4A, 1.8F),
+    LEGENDARY("Super Saiyajin Legendario Z", 0x5CFF5A, 19.0F, 1300, 0.88F, 190, 0.85F, 7.5F, 5, 2200, 2.0F, 0.21F, 8, 0x6CFF4A, 1.8F),
     ROSE("Super Saiyajin Rosé", 0xFF6EC4, 17.0F, 1100, 0.84F, 140, 0.74F, 7.0F, 5, 1800, 2.5F, 0.20F, 9, 0xFF5CB8, 1.55F),
     // ---- fases del Super Saiyajin Legendario
     LEGEND1("Legendario Fase 1", 0x1A1A22, 21.0F, 1500, 0.88F, 210, 0.82F, 7.5F, 5, 2400, 3.0F, 0.21F, 8, 0x3CFF4A, 1.75F),
@@ -36,6 +36,16 @@ public enum Form {
     public int order() {
         for (int i = 0; i < ORDERED.length; i++) if (ORDERED[i] == this) return i;
         return 0;
+    }
+
+    /** Nombre del bloque de entrenamiento. */
+    public static String blockName(int tier) {
+        return switch (tier) {
+            case 5 -> "Bloque Especial";
+            case 6 -> "Bloque Especial 2";
+            case 7 -> "Bloque Especial 3";
+            default -> "Bloque " + tier;
+        };
     }
 
     /** Cuánto se levanta el peinado elegido al transformarse (0 = nada, 1 = recto hacia arriba). */
@@ -122,7 +132,8 @@ public enum Form {
             case SSJ2, SSJ3, GOD -> 3;
             case BLUE, ULTRA, BLUE_EVO -> 4;
             case SSJ4, ULTRA_EGO -> 5;
-            case BEAST, LEGENDARY, ROSE, LEGEND1, LEGEND2, LEGEND3 -> 6;     // 6 = requiere el Dominio Total
+            case BEAST, LEGENDARY, ROSE -> 6;                 // 6 = Bloque Especial 2
+            case LEGEND1, LEGEND2, LEGEND3 -> 7;               // 7 = Bloque Especial 3
         };
     }
 

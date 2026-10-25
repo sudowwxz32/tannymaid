@@ -37,13 +37,23 @@ def hang(name, pivot, rx, rz, length, size):
 
 
 def sheet(name, pivot, rx, rz, length, size):
-    """Mechón liso y ancho (cabello largo o corte recto): casi plano y sin punta."""
-    return S(name, pivot, rx, rz, length, size * 0.95, -0.12, 0.0, flat=0.38, hang=True, taper=0.5)
+    """Cabello largo o recto hecho de un haz de mechones 3D redondeados (nada liso ni plano)."""
+    n = 3 if size >= 4.0 else 2
+    side_z = abs(pivot[0]) > 3.5                 # en los lados el haz se reparte de adelante hacia atrás
+    locks = []
+    for i in range(n):
+        f = (i - (n - 1) / 2.0)
+        off = f * size * 0.42
+        pos = (pivot[0], pivot[1] + abs(f) * 0.3, pivot[2] + off) if side_z else (pivot[0] + off, pivot[1] + abs(f) * 0.3, pivot[2])
+        drz = 0.0 if side_z else f * 0.07
+        locks.append(S(name + "abc"[i], pos, rx + abs(f) * 0.04, rz + drz, length * (1.0 - abs(f) * 0.08 + (0.05 if i == 1 else 0)),
+                       size * 0.52, -0.12, 0.0, flat=0.85, hang=True, taper=0.72))
+    return locks
 
 
 def strand(name, pivot, rot, length, w, d=1.0):
     """Mechón que cae sobre la frente (flequillo / patilla): plano y fino."""
-    return S(name, pivot, math.pi + rot[0], rot[2], length * 1.05, w * 0.75, 0.25, rot[2] * 0.8, flat=0.45)
+    return S(name, pivot, math.pi + rot[0], rot[2], length * 1.05, w * 0.8, 0.25, rot[2] * 0.8, flat=0.8)
 
 
 def spikes():
@@ -303,6 +313,13 @@ def spikes():
     P.append(out("v_r4", (-3.3, -7.0, 2.6), -0.45, -0.5, 10.0, 3.2))
     P.append(strand("v_peak", (0, -8.3, -4.45), (-0.06, 0, 0), 3.6, 2.4))
 
+    # los haces de mechones (sheet) se expanden en mechones sueltos
+    P = [x for item in P for x in (item if isinstance(item, list) else [item])]
+    # los peinados elegidos y Blue Evolución son más gruesos
+    for sp in P:
+        g = sp.name[:sp.name.index("_") + 1]
+        if (g[0] in "mw" and g[1].isdigit()) or g == "v_":
+            sp.width *= 1.12
     # volumen: cada punta grande lleva mechones de relleno a su lado
     extra = []
     for s in P:

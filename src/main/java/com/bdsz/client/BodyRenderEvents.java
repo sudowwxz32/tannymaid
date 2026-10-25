@@ -46,6 +46,7 @@ public final class BodyRenderEvents {
     public static void post(RenderPlayerEvent.Post e) {
         if (e.getEntity() instanceof AbstractClientPlayer p) {
             EnergyCyclone.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
+            EnergyCyclone.pillar(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
             KiFlameAura.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
         }
     }

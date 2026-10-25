@@ -155,20 +155,37 @@ public final class SaiyanPoses {
         m.leftLeg.x = 1.9F;
         m.rightPants.x = -1.9F;
         m.leftPants.x = 1.9F;
+        m.rightArm.x = -5.0F;
+        m.leftArm.x = 5.0F;
+        m.rightSleeve.x = -5.0F;
+        m.leftSleeve.x = 5.0F;
     }
 
-    /** Cuerpo femenino: cintura un poco más fina, caderas algo más anchas y brazos más delgados. */
+    /**
+     * Cuerpo femenino: hombros más estrechos, cintura fina y un poco menos de espalda, caderas algo marcadas,
+     * brazos y piernas un poco más finos.
+     */
     private static void feminine(PlayerModel<?> m) {
-        m.body.xScale *= 0.92F;
-        m.jacket.xScale *= 0.92F;
-        m.rightArm.xScale *= 0.88F;
-        m.leftArm.xScale *= 0.88F;
-        m.rightSleeve.xScale *= 0.88F;
-        m.leftSleeve.xScale *= 0.88F;
-        m.rightLeg.xScale *= 1.05F;
-        m.leftLeg.xScale *= 1.05F;
-        m.rightPants.xScale *= 1.05F;
-        m.leftPants.xScale *= 1.05F;
+        m.body.xScale *= 0.9F;
+        m.body.zScale *= 0.94F;
+        m.jacket.xScale *= 0.9F;
+        m.jacket.zScale *= 0.94F;
+        m.rightArm.xScale *= 0.86F;
+        m.leftArm.xScale *= 0.86F;
+        m.rightArm.zScale *= 0.92F;
+        m.leftArm.zScale *= 0.92F;
+        m.rightSleeve.xScale *= 0.86F;
+        m.leftSleeve.xScale *= 0.86F;
+        m.rightArm.x = -4.65F;           // hombros más estrechos (valor fijo: el modelo se comparte)
+        m.leftArm.x = 4.65F;
+        m.rightSleeve.x = m.rightArm.x;
+        m.leftSleeve.x = m.leftArm.x;
+        m.rightLeg.xScale *= 1.04F;
+        m.leftLeg.xScale *= 1.04F;
+        m.rightLeg.zScale *= 0.96F;
+        m.leftLeg.zScale *= 0.96F;
+        m.rightPants.xScale *= 1.04F;
+        m.leftPants.xScale *= 1.04F;
         m.rightLeg.x = -2.05F;          // valor fijo: el modelo se comparte y no reinicia esta posición
         m.leftLeg.x = 2.05F;
         m.rightPants.x = m.rightLeg.x;

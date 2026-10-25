@@ -37,20 +37,21 @@ public class FemaleBodyLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         armor = armorRoot.getChild("body").getChild("bust");
     }
 
-    private static final PartPose BUST = PartPose.offsetAndRotation(0, 2.4F, -2.0F, -0.28F, 0, 0);
+    private static final PartPose BUST = PartPose.offsetAndRotation(0, 2.7F, -2.0F, -0.17F, 0, 0);
 
     public static LayerDefinition createSkin() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition body = mesh.getRoot().addOrReplaceChild("body", CubeListBuilder.create(), PartPose.ZERO);
-        body.addOrReplaceChild("bust", CubeListBuilder.create().texOffs(18, 20).addBox(-3.5F, 0, -2.0F, 7, 3.5F, 2), BUST);
-        body.addOrReplaceChild("bust_over", CubeListBuilder.create().texOffs(18, 36).addBox(-3.5F, 0, -2.0F, 7, 3.5F, 2, new CubeDeformation(0.25F)), BUST);
+        // busto sutil: poco volumen y con el borde superior pegado al pecho
+        body.addOrReplaceChild("bust", CubeListBuilder.create().texOffs(19, 21).addBox(-3.0F, 0, -1.3F, 6, 2.6F, 1.3F), BUST);
+        body.addOrReplaceChild("bust_over", CubeListBuilder.create().texOffs(19, 37).addBox(-3.0F, 0, -1.3F, 6, 2.6F, 1.3F, new CubeDeformation(0.25F)), BUST);
         return LayerDefinition.create(mesh, 64, 64);
     }
 
     public static LayerDefinition createArmor() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition body = mesh.getRoot().addOrReplaceChild("body", CubeListBuilder.create(), PartPose.ZERO);
-        body.addOrReplaceChild("bust", CubeListBuilder.create().texOffs(18, 20).addBox(-3.5F, 0, -2.0F, 7, 3.5F, 2, new CubeDeformation(0.9F)), BUST);
+        body.addOrReplaceChild("bust", CubeListBuilder.create().texOffs(19, 21).addBox(-3.0F, 0, -1.3F, 6, 2.6F, 1.3F, new CubeDeformation(0.85F)), BUST);
         return LayerDefinition.create(mesh, 64, 32);
     }
 

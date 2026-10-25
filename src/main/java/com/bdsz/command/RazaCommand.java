@@ -26,7 +26,7 @@ public final class RazaCommand {
                 .then(Commands.literal("info").executes(RazaCommand::info))
                 .then(Commands.literal("libro").executes(c -> { GuideBook.give(c.getSource().getPlayerOrException()); return 1; }))
                 .then(Commands.literal("bloque").requires(src -> src.hasPermission(2))
-                        .then(Commands.argument("nivel", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 5))
+                        .then(Commands.argument("nivel", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 7))
                                 .executes(c -> {
                                     ServerPlayer p = c.getSource().getPlayerOrException();
                                     SaiyanState s = SaiyanData.get(p);

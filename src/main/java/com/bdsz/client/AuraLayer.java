@@ -294,6 +294,8 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
             fireRing(vc, last, 1.48F, radius, radius * 0.16F, r * fade, g * fade, b * fade, t, i * 2.1F);
             fireRing(vc, last, 1.47F, radius * 0.97F, radius * 0.05F, Math.min(1, r * fade * 1.6F + 0.15F * fade),
                     Math.min(1, g * fade * 1.6F + 0.15F * fade), Math.min(1, b * fade * 1.6F + 0.15F * fade), t, i * 2.1F);   // borde brillante
+            // frente de la onda: una pared baja de energía que avanza con el anillo
+            shockWall(vc, last, radius, (0.12F + 0.4F * (1.0F - ph)) * size, r * fade * 0.8F, g * fade * 0.8F, b * fade * 0.8F, t, i * 2.1F);
         }
         for (int i = 0; i < 2; i++) {
             float ph = ((t / (period * 0.9F)) + i * 0.5F) % 1.0F;
@@ -321,6 +323,23 @@ public class AuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
                 lv.vertex(m, cx + Mth.cos(th) * 0.03F, 1.48F - hgt, cz + Mth.sin(th) * 0.03F).color(0, 0, 0, 1.0F).endVertex();
                 lv.vertex(m, cx + Mth.cos(th) * 0.03F, 1.48F - hgt, cz + Mth.sin(th) * 0.03F).color(0, 0, 0, 1.0F).endVertex();
             }
+        }
+    }
+
+    /** Pared vertical de una onda: brillante abajo, se desvanece hacia arriba, con el borde ondulado. */
+    private static void shockWall(VertexConsumer vc, PoseStack.Pose pose, float radius, float height, float r, float g, float b, float t, float seed) {
+        org.joml.Matrix4f m = pose.pose();
+        org.joml.Matrix3f n = pose.normal();
+        int seg = 40;
+        for (int i = 0; i < seg; i++) {
+            float a0 = i * Mth.TWO_PI / seg, a1 = (i + 1) * Mth.TWO_PI / seg;
+            float r0 = radius * edge(a0, t, seed), r1 = radius * edge(a1, t, seed);
+            float h0 = height * (0.8F + 0.4F * Mth.sin(a0 * 6 + t * 0.4F + seed)), h1 = height * (0.8F + 0.4F * Mth.sin(a1 * 6 + t * 0.4F + seed));
+            float u0 = (float) i / seg * 4, u1 = (float) (i + 1) / seg * 4;
+            v(vc, m, n, Mth.cos(a0) * r0, 1.49F, Mth.sin(a0) * r0, r, g, b, u0, 0);
+            v(vc, m, n, Mth.cos(a1) * r1, 1.49F, Mth.sin(a1) * r1, r, g, b, u1, 0);
+            v(vc, m, n, Mth.cos(a1) * r1 * 1.03F, 1.49F - h1, Mth.sin(a1) * r1 * 1.03F, 0, 0, 0, u1, 1);
+            v(vc, m, n, Mth.cos(a0) * r0 * 1.03F, 1.49F - h0, Mth.sin(a0) * r0 * 1.03F, 0, 0, 0, u0, 1);
         }
     }
 

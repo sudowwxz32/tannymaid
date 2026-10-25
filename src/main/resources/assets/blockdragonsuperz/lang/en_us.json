@@ -35,5 +35,7 @@
   "item.blockdragonsuperz.battle_leggings": "Blue Uniform Pants",
   "item.blockdragonsuperz.battle_boots": "White Boots",
   "block.blockdragonsuperz.shield_generator": "Protective Generator",
-  "itemGroup.blockdragonsuperz": "Block Dragon Super Z"
+  "itemGroup.blockdragonsuperz": "Block Dragon Super Z",
+  "item.blockdragonsuperz.training_list_6": "Training List V (Special Block 2)",
+  "item.blockdragonsuperz.training_list_7": "Training List VI (Special Block 3)"
 }
