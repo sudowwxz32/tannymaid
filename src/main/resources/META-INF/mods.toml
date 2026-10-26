@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="chakrazorro"
+version="1.0.0"
+displayName="Chakra del Zorro"
+authors="ChakraZorro"
+description='''
+Despierta el chakra del zorro de nueve colas (/zorro despertar) y transfórmate en sus mantos:
+de una a cinco colas. N = elegir manto, Y = transformarse, J = cargar chakra.
+'''
+
+[[dependencies.chakrazorro]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.chakrazorro]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="BOTH"
