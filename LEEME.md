@@ -27,13 +27,13 @@ chmod +x gradlew
 La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
 
 ```
-build/libs/tannymaid-forge-1.20.1-1.2.0.jar
+build/libs/tannymaid-forge-1.20.1-1.3.0.jar
 ```
 
 ## 2. Instalación
 
 Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
-- `tannymaid-forge-1.20.1-1.2.0.jar`
+- `tannymaid-forge-1.20.1-1.3.0.jar`
 - `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
 
 Para un servidor, el mod va tanto en el servidor como en los clientes.
@@ -124,6 +124,12 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 
 ## 7. Notas y límites conocidos
 
+- **Cabello 1.3.0.** El cabello ya no es de cajas: es una malla de 68 mechones curvos y suaves
+  que se pegan a la forma de la cabeza y caen con vuelo, con las puntas curvadas hacia adentro
+  (bob de anime), flequillo en punta, mechones largos hasta el pecho, ahoge y un anillo de brillo
+  en zigzag. Se mece con la brisa, al caminar y al girar la cabeza. Geometría en
+  `tools/hair_mesh.py` (genera `client/TannyHairLocks.java`); vista previa con
+  `python3 tools/preview_tanny.py CARPETA`.
 - **Apariencia 1.2.0.** Texturas en alta resolución (4x): ojos grandes estilo anime con iris en
   degradado y brillos, cejas, rubor y 6 expresiones. Cabello 3D con capas, flequillo puntiagudo,
   mechones largos, ahoge y brillo anime; vestido 3D con falda redonda y enaguas, delantal, lazos,
@@ -163,7 +169,7 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
    Si no arranca solo, entra en él y pulsa **Run workflow**.
 6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
-   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.2.0.jar`.
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.3.0.jar`.
 7. Copia ese `.jar` a tu carpeta `mods`.
 
 Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.

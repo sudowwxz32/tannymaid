@@ -94,6 +94,19 @@ def face_rects(u, v, w, h, d):
             "front": (u + d, v + d, w, h), "left": (u + d + w, v + d, d, h), "back": (u + 2 * d + w, v + d, w, h)}
 
 
+AO = True
+
+
+def ao_factor(f, x, y, w, h):
+    """Sombra suave en los bordes de cada cara (da profundidad a las piezas 3D)."""
+    if not AO or f == "top" or w < 6 or h < 6:
+        return 1.0
+    edge = min(x, w - 1 - x)
+    k = 1.0 - 0.10 * max(0.0, 1.0 - edge / 3.0)
+    k *= 1.0 - 0.14 * max(0.0, 1.0 - (h - 1 - y) / 4.0)
+    return k
+
+
 def paint_region(img, u, v, w, h, d, fn):
     """Pinta las 6 caras de una caja a resolución S. fn(cara, x, y, ancho_px, alto_px)."""
     for f, (fx, fy, fw, fh) in face_rects(u, v, w, h, d).items():
@@ -105,7 +118,10 @@ def paint_region(img, u, v, w, h, d, fn):
                 c = fn(f, px - x0, py - y0, cw, ch)
                 if c is None or not (0 <= px < img.width and 0 <= py < img.height):
                     continue
-                img.putpixel((px, py), c if len(c) == 4 else jit(c, 3) + (255,))
+                if len(c) == 3:
+                    k = ao_factor(f, px - x0, py - y0, cw, ch)
+                    c = jit(tuple(int(ch_ * k) for ch_ in c), 2) + (255,)
+                img.putpixel((px, py), c)
 
 
 # ----------------------------------------------------------------- pintores: cabello
@@ -142,9 +158,9 @@ def lace(f, x, y, w, h):
         return WHITE_SH
     if y >= h - 2:
         return WHITE if (x // 2) % 2 == 0 else (T if y == h - 1 else WHITE_DK)
-    if (x + y) % 6 == 0:
-        return WHITE_DK
-    return WHITE if (x // 3) % 2 else WHITE_SH
+    if y % 4 == 1 and x % 4 == 2:
+        return WHITE_DK                                    # agujeritos del encaje
+    return mix(WHITE, WHITE_SH, abs((x % 6) - 3) / 6.0)
 
 
 def solid(c, a=3):
@@ -154,13 +170,17 @@ def solid(c, a=3):
 def ribbon(f, x, y, w, h):
     if f in ("bottom",):
         return RED_DK
-    if y == 0 or (f == "top"):
+    if f == "top":
         return RED_HI
-    return RED if (x + y) % 7 else RED_DK
+    t = y / max(1, h - 1)
+    c = mix(RED_HI, RED, t * 2) if t < 0.5 else mix(RED, RED_DK, (t - 0.5) * 1.6)
+    if abs(x - w / 2) < 1.2 and f in ("front", "back"):
+        c = mix(c, RED_DK, 0.35)                           # pliegue central del lazo
+    return c
 
 
 def pink_bow(f, x, y, w, h):
-    return PINK if (x + y) % 5 else RED_HI
+    return mix(PINK, RED_HI, y / max(1, h - 1) * 0.6)
 
 
 # ----------------------------------------------------------------- pintores: vestido
@@ -230,7 +250,8 @@ def bust_fn(f, x, y, w, h):
 def collar(f, x, y, w, h):
     if f == "bottom":
         return WHITE_DK
-    return WHITE if (x + y) % 6 else WHITE_SH
+    t = y / max(1, h - 1)
+    return mix(WHITE, WHITE_SH, 0.15 + 0.5 * t)
 
 
 def puff(f, x, y, w, h):
@@ -269,43 +290,32 @@ BANG_TILT = -0.14
 
 
 def hair_parts():
+    """Solo la cofia de maid es de cajas; el cabello es una malla de mechones (tools/hair_mesh.py)."""
     P = []
-    hp = lambda band=None, tip=True: hair_paint(band, tip, seed=len(P))
-    P.append(Part("crown", "head", (0, 0, 0), (0, 0, 0), [Box(-4.55, -8.75, -4.55, 9.1, 2.7, 9.1, hp((0.45, 0.85), False))]))
-    P.append(Part("crown_back", "head", (0, 0, 0), (0, 0, 0), [Box(-4.65, -6.3, 0.0, 9.3, 1.6, 4.75, hp(None, False))]))
-    P.append(Part("tuft_0", "head", (-1.4, -8.5, -0.8), (-0.35, 0.3, -0.5), [Box(-0.5, -1.5, -0.5, 1.0, 1.6, 1.4, hp())]))
-    P.append(Part("tuft_1", "head", (1.7, -8.5, 1.6), (0.3, -0.2, 0.55), [Box(-0.5, -1.2, -0.5, 1.0, 1.3, 1.2, hp())]))
-    # ahoge (el mechón rebelde de las heroínas de anime)
-    P.append(Part("ahoge", "head", (0.4, -8.6, -1.4), (-0.35, 0, 0.25), [Box(-0.3, -2.2, -0.35, 0.6, 2.3, 0.7, hp())]))
-    P.append(Part("ahoge_tip", "ahoge", (0, -2.1, 0), (-1.1, 0, 0), [Box(-0.25, -1.7, -0.3, 0.5, 1.8, 0.6, hp())]))
-    # parte de atrás: dos capas, con puntas
-    P.append(Part("back", "head", (0, -7.0, 4.0), (0.07, 0, 0), [Box(-4.8, 0, -1.25, 9.6, 6.8, 2.0, hp((0.0, 0.14)))]))
-    for i, x in enumerate((-3.6, -1.2, 1.2, 3.6)):
-        P.append(Part("back_tip_%d" % i, "back", (x, 6.6, 0.0), (0.16, 0, (x / 3.6) * -0.12),
-                      [Box(-1.25, 0, -1.0, 2.5, 1.6 + (0.5 if i in (1, 2) else 0), 1.6, hp())]))
-    # laterales del bob, con punta afinada hacia adelante
-    P.append(Part("side_r", "head", (-4.05, -7.0, 0.25), (0, 0, 0.07), [Box(-1.05, 0, -4.0, 1.3, 7.2, 8.0, hp((0.0, 0.14)))]))
-    P.append(Part("side_tip_r", "side_r", (-0.4, 7.0, -1.0), (0.2, 0, 0.05), [Box(-0.5, 0, -2.6, 0.9, 1.6, 5.0, hp())]))
-    # mechones largos que enmarcan la cara (con punta)
-    P.append(Part("lock_r", "head", (-3.6, -6.6, -4.05), (-0.05, 0, 0.05), [Box(-0.65, 0, -0.6, 1.3, 7.0, 1.2, hp((0.0, 0.15)))]))
-    P.append(Part("lock_tip_r", "lock_r", (0, 6.9, 0), (-0.08, 0, -0.15), [Box(-0.42, 0, -0.42, 0.85, 1.9, 0.85, hp())]))
-    # flequillo: 6 mechones puntiagudos
-    bangs = [(-3.5, 1.7, 2.5, 0.10), (-2.2, 1.7, 1.9, 0.05), (-0.8, 1.8, 2.3, 0.02),
-             (0.65, 1.7, 1.7, -0.02), (2.05, 1.7, 2.2, -0.06), (3.45, 1.6, 2.5, -0.11)]
-    for i, (x, w, l, zr) in enumerate(bangs):
-        P.append(Part("bang_%d" % i, "head", (x, -8.05, -4.3), (BANG_TILT, 0, zr), [Box(-w / 2, 0, -0.6, w, l, 0.8, hp(None))]))
-        P.append(Part("bang_tip_%d" % i, "bang_%d" % i, (0, l - 0.05, 0), (-0.05, 0, 0),
-                      [Box(-w * 0.27, 0, -0.5, w * 0.54, 0.8, 0.6, hp())]))
-    # cofia de maid: diadema, volante de encaje y lacitos rosados
-    P.append(Part("headband", "head", (0, -8.3, -1.2), (-0.25, 0, 0), [Box(-4.95, -0.6, -0.7, 9.9, 1.0, 1.4, collar)]))
+    P.append(Part("headband", "head", (0, -8.65, -1.6), (-0.3, 0, 0), [Box(-5.1, -0.6, -0.75, 10.2, 1.1, 1.5, collar)]))
     for i in range(7):
         x = -3.9 + i * 1.3
         P.append(Part("ruffle_%d" % i, "headband", (x, -0.55, 0.0), (0.0, 0, (i - 3) * 0.08),
-                      [Box(-0.72, -1.5, -0.3, 1.44, 1.5, 0.55, lace)]))
-    P.append(Part("hb_bow_r", "headband", (-4.6, -0.2, 0.2), (0, 0.25, 0.35), [Box(-1.2, -0.55, -0.3, 1.2, 1.1, 0.6, pink_bow)]))
-    mirrorable = [p for p in P if p.name.endswith("_r")]
-    P += mirror(mirrorable)
+                      [Box(-0.72, -1.6, -0.3, 1.44, 1.6, 0.55, lace)]))
+    P.append(Part("hb_bow_r", "headband", (-4.9, -0.05, 0.3), (0, 0.25, 0.35), [Box(-1.0, -0.5, -0.3, 1.0, 1.0, 0.6, pink_bow)]))
+    P += mirror([p for p in P if p.name.endswith("_r")])
     return P, [("head", (0, 0, 0))]
+
+
+def strand_texture():
+    """Textura de los mechones (gris claro con hebras finas); el color lo pone cada vértice."""
+    r = random.Random(5)
+    img = Image.new("RGBA", (32, 64), T)
+    cols = [r.uniform(0.78, 1.0) for _ in range(32)]
+    for x in range(32):
+        for y in range(64):
+            v = cols[x]
+            if x % 5 == 0:
+                v *= 0.82
+            v *= 0.94 + 0.06 * math.sin(y * 0.4 + x)
+            c = int(255 * max(0.0, min(1.0, v)))
+            img.putpixel((x, y), (c, c, c, 255))
+    return img
 
 
 # ================================================================= VESTIDO 3D
@@ -563,9 +573,12 @@ def face_image(expr):
 
 
 def skin(expr):
+    global AO
+    AO = False
     rnd.seed(7)
     img = Image.new("RGBA", (64 * S, 64 * S), T)
     paint_region(img, 0, 0, 8, 8, 8, head_paint)
+    AO = True
     face = face_image(expr)
     img.alpha_composite(face, (8 * S, 8 * S))
     paint_region(img, 16, 16, 8, 12, 4, body_paint)
@@ -573,6 +586,7 @@ def skin(expr):
     paint_region(img, 32, 48, 3, 12, 4, arm_paint)          # brazo izquierdo
     paint_region(img, 0, 16, 4, 12, 4, leg_paint)
     paint_region(img, 16, 48, 4, 12, 4, leg_paint)
+    AO = True
     return img
 
 
@@ -631,6 +645,7 @@ def main():
     oparts, oanchors = outfit_parts()
     ow, oh = pack(oparts, 64)
     build_texture(hparts, hw, hh).save(os.path.join(TEX, "hair.png"))
+    strand_texture().save(os.path.join(TEX, "hair_strand.png"))
     build_texture(oparts, ow, oh).save(os.path.join(TEX, "outfit.png"))
     for expr, name in [("normal", "tanny"), ("blink", "tanny_blink"), ("happy", "tanny_happy"),
                        ("surprised", "tanny_surprised"), ("focused", "tanny_focused"), ("tired", "tanny_tired")]:
