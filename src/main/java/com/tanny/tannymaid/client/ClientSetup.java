@@ -32,7 +32,7 @@ public final class ClientSetup {
 
     @SubscribeEvent
     public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.registerLayerDefinition(TannyHairModel.LAYER, TannyHairModel::createLayer);
-        event.registerLayerDefinition(TannyOutfitModel.LAYER, TannyOutfitModel::createLayer);
+        event.registerLayerDefinition(TannyHairLayer.LAYER, TannyGeneratedModels::createHair);
+        event.registerLayerDefinition(TannyOutfitLayer.LAYER, TannyGeneratedModels::createOutfit);
     }
 }

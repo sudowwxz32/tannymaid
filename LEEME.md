@@ -27,13 +27,13 @@ chmod +x gradlew
 La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
 
 ```
-build/libs/tannymaid-forge-1.20.1-1.0.0.jar
+build/libs/tannymaid-forge-1.20.1-1.2.0.jar
 ```
 
 ## 2. Instalación
 
 Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
-- `tannymaid-forge-1.20.1-1.0.0.jar`
+- `tannymaid-forge-1.20.1-1.2.0.jar`
 - `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
 
 Para un servidor, el mod va tanto en el servidor como en los clientes.
@@ -75,6 +75,22 @@ Solo puedes tener una Tanny; si usas otro contrato estando ella cargada, simplem
 | `/tanny pan` | Te da 24 panes (cada 5 minutos) |
 | `/tanny seguro` | Te lleva al lugar seguro más cercano: la superficie si estás bajo tierra, tu cama, su casa o el punto de aparición |
 | `/tanny parar` | Deja de recolectar |
+| `/tanny gardevoir` | Saca o guarda a Gardevoir (siempre a tu lado) |
+| `/tanny bayas` | Te da bayas curativas de Cobblemon: Aranja, Zidra, Ziuela, Zanama… (cada 5 min) |
+| `/tanny pc` | Abre tus cajas de Pokémon (el PC de Cobblemon) sin necesitar el bloque |
+| `/tanny pokebolas` | Abre su bolsa de Poké Balls |
+| `/tanny avisar <pokémon>` | Tanny vigila ese Pokémon: cuando aparece cerca (64 m) te avisa en el chat y sale un medidor de metros con flecha |
+| `/tanny noavisar <pokémon\|todos>` · `/tanny avisos` | Dejar de vigilar / ver la lista |
+
+### Menú (clic derecho)
+
+- Pestaña **Equipo**: armadura (casco, pechera, pantalones, botas: le da protección real y se ve puesta),
+  herramientas y mochila de 27.
+- Pestaña **Poké Balls**: bolsa de 27 que solo acepta Poké Balls (las que craftea o recoge van ahí solas)
+  y botón para abrir tus cajas.
+- Pestaña **PC Pokémon**: abre el PC de Cobblemon.
+- Panel **Órdenes** a la derecha: seguir, quedarse, defender, granja, casa, venir, ordenar cofres,
+  recoger, Lucario, Gardevoir, pan, bayas y lugar seguro.
 
 ## 6. Mecánicas
 
@@ -93,6 +109,12 @@ a cuerpo y lanza *Esfera Aural* a distancia. Si se debilita, descansa 60 segundo
 volver a salir. No se puede capturar (la Poké Ball rebota y te la devuelve), no se puede
 cambiar ni liberar, y nunca se guarda en tu equipo.
 
+**Gardevoir (nivel 55, hembra).** Siempre está a tu lado, aunque Tanny se quede en casa.
+Es más protectora que Lucario: vigila todo lo hostil que se te acerque, se pone entre tú y el
+enemigo, te quita un 30 % del daño que recibes y te cura con *Deseo* cuando tienes poca vida.
+Ataca con *Psíquico* y *Fuerza Lunar* (un poco más fuerte que Lucario). Es muy cariñosa: de vez
+en cuando te toma la mano, te abraza o te deja corazones. Si se debilita vuelve en 60 segundos.
+
 **Permanencia.** Su posición, modo, casa, vida e inventario se guardan con el mundo. Si cambias
 de dimensión o reapareces tras morir estando en modo seguir/defensa, viaja contigo.
 
@@ -102,7 +124,12 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 
 ## 7. Notas y límites conocidos
 
-- **Modelo.** Cuerpo humanoide de brazos delgados con textura propia (falda con vuelo, mangas
+- **Apariencia 1.2.0.** Texturas en alta resolución (4x): ojos grandes estilo anime con iris en
+  degradado y brillos, cejas, rubor y 6 expresiones. Cabello 3D con capas, flequillo puntiagudo,
+  mechones largos, ahoge y brillo anime; vestido 3D con falda redonda y enaguas, delantal, lazos,
+  puños, medias con volante y zapatos. Todo se genera con `python3 tools/gen_tanny.py`
+  (`python3 tools/gen_tanny.py preview CARPETA` dibuja vistas previas).
+- **Modelo (versión anterior).** Cuerpo humanoide de brazos delgados con textura propia (falda con vuelo, mangas
   abullonadas, delantal, lazo rojo, calcetas) y **cabello 3D**: bob corto con volumen,
   flequillo en 4 mechones, mechones que enmarcan la cara, pelitos desordenados arriba y la
   cofia de maid en 3D. El cabello se mece al caminar y respirar. No es un modelo Bedrock
@@ -136,7 +163,7 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
    Si no arranca solo, entra en él y pulsa **Run workflow**.
 6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
-   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.0.0.jar`.
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.2.0.jar`.
 7. Copia ese `.jar` a tu carpeta `mods`.
 
 Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.
