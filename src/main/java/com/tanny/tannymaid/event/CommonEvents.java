@@ -23,6 +23,13 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.Locale;
+import com.tanny.tannymaid.cobblemon.GardevoirCompanion;
+import com.tanny.tannymaid.util.PokemonWatch;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 
 @Mod.EventBusSubscriber(modid = TannyMaid.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CommonEvents {
@@ -69,7 +76,49 @@ public final class CommonEvents {
         }
         projectile.discard();
         if (projectile.getOwner() instanceof Player player) {
-            player.displayClientMessage(Component.literal("§dEse Lucario pertenece a Tanny. ¡No se puede capturar!"), true);
+            player.displayClientMessage(Component.literal("§dEse Pokémon pertenece a Tanny. ¡No se puede capturar!"), true);
+        }
+    }
+
+    /** Gardevoir acompaña al Master y Tanny vigila los Pokémon que le pediste. */
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        GardevoirCompanion.tickPlayer(player);
+        if ((player.tickCount + 3) % 10 == 0) PokemonWatch.tick(player);
+    }
+
+    @SubscribeEvent
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            GardevoirCompanion.onLogout(player);
+            PokemonWatch.onLogout(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) {
+        GardevoirCompanion.recallAll();
+    }
+
+    /** Gardevoir protege al Master (menos daño) y ayuda cuando el Master ataca. */
+    @SubscribeEvent
+    public static void onHurt(LivingHurtEvent event) {
+        if (event.getEntity().level().isClientSide) return;
+        Entity src = event.getSource().getEntity();
+        if (event.getEntity() instanceof ServerPlayer player) {
+            LivingEntity attacker = src instanceof LivingEntity l ? l : null;
+            event.setAmount(GardevoirCompanion.onOwnerHurt(player, attacker, event.getAmount()));
+        } else if (src instanceof ServerPlayer player) {
+            GardevoirCompanion.onOwnerAttack(player, event.getEntity());
+        }
+    }
+
+    /** El Master no puede lastimar por accidente a los Pokémon de Tanny. */
+    @SubscribeEvent
+    public static void onAttack(LivingAttackEvent event) {
+        if (LucarioCompanion.isTannyPokemon(event.getEntity()) && event.getSource().getEntity() instanceof Player) {
+            event.setCanceled(true);
         }
     }
 

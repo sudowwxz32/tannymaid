@@ -172,6 +172,7 @@ public class TannyGatherGoal extends Goal {
         BlockPos best = null;
         double bestDist = Double.MAX_VALUE;
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-RADIUS, -6, -RADIUS), center.offset(RADIUS, 6, RADIUS))) {
+            if (!level.isLoaded(pos)) continue;          // optimización: nunca carga chunks nuevos
             if (!res.matches(level.getBlockState(pos))) continue;
             if (tanny.isGatherBlockSkipped(pos)) continue;
             if (home != null && pos.distSqr(home) < 8 * 8) continue; // no rompe la casa

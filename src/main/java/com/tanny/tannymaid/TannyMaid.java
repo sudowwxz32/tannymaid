@@ -25,6 +25,8 @@ public class TannyMaid {
         ModMenus.MENUS.register(modBus);
         modBus.addListener(this::onAttributes);
         modBus.addListener(this::onCreativeTab);
+        modBus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent e) ->
+                e.enqueueWork(com.tanny.tannymaid.network.Net::register));
         LOGGER.info("TannyMaid Adventures cargado. ¡Hola, Master!");
     }
 

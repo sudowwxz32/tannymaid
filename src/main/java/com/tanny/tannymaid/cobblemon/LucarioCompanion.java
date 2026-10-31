@@ -51,6 +51,15 @@ public class LucarioCompanion {
         return ACTIVE.contains(id);
     }
 
+    /** Registra/olvida un Pokémon de Tanny (Lucario o Gardevoir) que está fuera de su Poké Ball. */
+    public static void track(UUID id) {
+        ACTIVE.add(id);
+    }
+
+    public static void untrack(UUID id) {
+        ACTIVE.remove(id);
+    }
+
     public boolean isOut() {
         return lucario != null && lucario.isAlive() && !lucario.isRemoved();
     }

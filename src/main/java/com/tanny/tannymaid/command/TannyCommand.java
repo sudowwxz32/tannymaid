@@ -17,6 +17,10 @@ import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.function.BiConsumer;
+import com.tanny.tannymaid.cobblemon.CobblemonBridge;
+import com.tanny.tannymaid.cobblemon.GardevoirCompanion;
+import com.tanny.tannymaid.menu.TannyMenu;
+import com.tanny.tannymaid.util.PokemonWatch;
 
 /** /tanny follow | stay | home | sethome | tp | organize | farm | defend | inventory | lucario | collect | status | dismiss */
 public final class TannyCommand {
@@ -49,6 +53,31 @@ public final class TannyCommand {
                 .then(Commands.literal("bread").executes(ctx -> run(ctx, TannyEntity::commandBread)))
                 .then(Commands.literal("seguro").executes(ctx -> run(ctx, TannyEntity::commandSafe)))
                 .then(Commands.literal("safe").executes(ctx -> run(ctx, TannyEntity::commandSafe)))
+                .then(Commands.literal("gardevoir").executes(ctx -> run(ctx, (t, p) -> GardevoirCompanion.toggle(p))))
+                .then(Commands.literal("bayas").executes(ctx -> run(ctx, TannyEntity::commandBerries)))
+                .then(Commands.literal("berries").executes(ctx -> run(ctx, TannyEntity::commandBerries)))
+                .then(Commands.literal("pc").executes(ctx -> run(ctx, TannyCommand::openPc)))
+                .then(Commands.literal("pokebolas").executes(ctx -> run(ctx, (t, p) -> t.openInventory(p, TannyMenu.PAGE_BALLS))))
+                .then(Commands.literal("avisar")
+                        .then(Commands.argument("pokemon", StringArgumentType.word())
+                                .suggests((c, b) -> SharedSuggestionProvider.suggest(CobblemonBridge.allSpecies(), b))
+                                .executes(ctx -> run(ctx, (t, p) -> watchAdd(t, p, StringArgumentType.getString(ctx, "pokemon"))))))
+                .then(Commands.literal("noavisar")
+                        .then(Commands.literal("todos").executes(ctx -> run(ctx, (t, p) -> {
+                            PokemonWatch.clear(p);
+                            TannySpeech.say(t, p, "Entendido, Amo. Ya no vigilo a ningún Pokémon ♡");
+                        })))
+                        .then(Commands.argument("pokemon", StringArgumentType.word())
+                                .suggests((c, b) -> SharedSuggestionProvider.suggest(
+                                        c.getSource().getPlayer() != null ? PokemonWatch.list(c.getSource().getPlayer()) : java.util.List.of(), b))
+                                .executes(ctx -> run(ctx, (t, p) -> {
+                                    String n = StringArgumentType.getString(ctx, "pokemon");
+                                    TannySpeech.say(t, p, PokemonWatch.remove(p, n)
+                                            ? "Listo, Amo. Ya no estaré atenta a " + n + "."
+                                            : "Amo, no estaba vigilando a " + n + ".");
+                                }))))
+                .then(Commands.literal("avisos").executes(ctx -> run(ctx, (t, p) ->
+                        TannySpeech.say(t, p, "Estoy atenta a: " + PokemonWatch.describe(p) + " ♡"))))
                 .then(Commands.literal("parar").executes(ctx -> run(ctx, TannyEntity::commandStopWork)))
                 .then(Commands.literal("stop").executes(ctx -> run(ctx, TannyEntity::commandStopWork))));
     }
@@ -85,6 +114,30 @@ public final class TannyCommand {
     private static int doCraft(CommandContext<CommandSourceStack> ctx, int amount) throws CommandSyntaxException {
         String name = StringArgumentType.getString(ctx, "objeto");
         return run(ctx, (t, p) -> TannyCrafting.craft(t, p, name, amount));
+    }
+
+    private static void openPc(TannyEntity t, ServerPlayer p) {
+        if (!CobblemonBridge.isLoaded()) {
+            TannySpeech.say(t, p, "Amo, sin Cobblemon no tengo cajas de Pokémon que mostrarte.");
+            return;
+        }
+        if (!CobblemonBridge.openPC(p)) {
+            TannySpeech.say(t, p, "Perdón, Amo... no pude abrir tus cajas esta vez.");
+        }
+    }
+
+    private static void watchAdd(TannyEntity t, ServerPlayer p, String name) {
+        java.util.Collection<String> all = CobblemonBridge.allSpecies();
+        String n = PokemonWatch.normalize(name);
+        if (!all.isEmpty() && !all.contains(n)) {
+            TannySpeech.say(t, p, "Mmm... no conozco a ningún Pokémon llamado \"" + name + "\", Amo. ¿Lo escribiste bien?");
+            return;
+        }
+        if (PokemonWatch.add(p, n)) {
+            TannySpeech.say(t, p, "¡Entendido, Amo! Estaré atenta a " + n + ". Si lo veo, te aviso y te marco los metros ♡");
+        } else {
+            TannySpeech.say(t, p, "Ya estoy vigilando a " + n + ", Amo. ¡No se me escapará!");
+        }
     }
 
     private static int run(CommandContext<CommandSourceStack> ctx, BiConsumer<TannyEntity, ServerPlayer> action)
@@ -127,6 +180,12 @@ public final class TannyCommand {
         TannySpeech.system(p, "§f/tanny pan§7 – te da 24 panes (cada 5 min)");
         TannySpeech.system(p, "§f/tanny seguro§7 – te lleva al lugar seguro más cercano");
         TannySpeech.system(p, "§f/tanny parar§7 – deja de recolectar");
+        TannySpeech.system(p, "§f/tanny gardevoir§7 – saca o guarda a Gardevoir (siempre a tu lado)");
+        TannySpeech.system(p, "§f/tanny bayas§7 – te da bayas curativas de Cobblemon (cada 5 min)");
+        TannySpeech.system(p, "§f/tanny pc§7 – abre tus cajas de Pokémon (PC de Cobblemon)");
+        TannySpeech.system(p, "§f/tanny pokebolas§7 – abre su bolsa de Poké Balls");
+        TannySpeech.system(p, "§f/tanny avisar <pokémon>§7 – te avisa cuando lo vea y marca los metros");
+        TannySpeech.system(p, "§f/tanny noavisar <pokémon|todos>§7 · §f/tanny avisos§7 – quitar / ver la lista");
         TannySpeech.system(p, "Clic derecho: inventario · Shift+clic derecho: cambiar modo · Clic con comida/poción: curarla");
         return 1;
     }

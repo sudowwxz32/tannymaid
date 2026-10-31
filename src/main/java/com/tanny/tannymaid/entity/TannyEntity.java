@@ -94,6 +94,14 @@ public class TannyEntity extends PathfinderMob {
     private final SimpleContainer inventory = new SimpleContainer(27);
     /** Barra de herramientas: 0 pico, 1 pala, 2 hacha, 3 espada, 4 escudo. */
     private final SimpleContainer tools = new SimpleContainer(TannyMenu.TOOL_COUNT);
+    /** Armadura: 0 casco, 1 pechera, 2 pantalones, 3 botas. */
+    private final SimpleContainer armor = new SimpleContainer(4);
+    /** Bolsa de Poké Balls (solo acepta Poké Balls). */
+    private final SimpleContainer balls = new SimpleContainer(27);
+    public static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+    private long berryReadyAt;
+    @Nullable private ServerPlayer cachedOwner;
+    private int cachedOwnerTick = -1;
 
     // ---- recolección
     @Nullable private TannyResource gatherResource;
@@ -133,8 +141,8 @@ public class TannyEntity extends PathfinderMob {
             nav.setCanOpenDoors(true);
         }
         this.tools.addListener(c -> updateEquipment());
-        this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
-        this.setDropChance(EquipmentSlot.OFFHAND, 0.0F);
+        this.armor.addListener(c -> updateArmor());
+        for (EquipmentSlot slot : EquipmentSlot.values()) this.setDropChance(slot, 0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -195,7 +203,12 @@ public class TannyEntity extends PathfinderMob {
     @Nullable
     public ServerPlayer getOwnerPlayer() {
         if (ownerUUID == null || !(level() instanceof ServerLevel sl)) return null;
-        return sl.getServer().getPlayerList().getPlayer(ownerUUID);
+        // Optimización: los objetivos (goals) la piden muchas veces por tick; se busca una sola vez por tick.
+        if (cachedOwnerTick != tickCount || (cachedOwner != null && cachedOwner.isRemoved())) {
+            cachedOwner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
+            cachedOwnerTick = tickCount;
+        }
+        return cachedOwner;
     }
 
     // ------------------------------------------------------------------ estado
@@ -637,13 +650,29 @@ public class TannyEntity extends PathfinderMob {
     }
 
     public void openInventory(ServerPlayer player) {
+        openInventory(player, TannyMenu.PAGE_GEAR);
+    }
+
+    /** Abre el menú de Tanny en una pestaña: equipo (herramientas, armadura, mochila) o Poké Balls. */
+    public void openInventory(ServerPlayer player, int page) {
         NetworkHooks.openScreen(player, new SimpleMenuProvider(
-                (id, playerInv, p) -> new TannyMenu(id, playerInv, inventory, tools, this),
-                Component.literal("Tanny ♡")), buf -> buf.writeVarInt(getId()));
+                (id, playerInv, p) -> new TannyMenu(id, playerInv, page, inventory, tools, armor, balls, this),
+                Component.literal("Tanny ♡")), buf -> {
+            buf.writeVarInt(getId());
+            buf.writeVarInt(page);
+        });
     }
 
     public SimpleContainer getTools() {
         return tools;
+    }
+
+    public SimpleContainer getArmor() {
+        return armor;
+    }
+
+    public SimpleContainer getBalls() {
+        return balls;
     }
 
     /** Pone la espada en la mano y el escudo en la otra (salvo mientras trabaja). */
@@ -651,6 +680,52 @@ public class TannyEntity extends PathfinderMob {
         if (level().isClientSide || isGathering()) return;
         setItemSlot(EquipmentSlot.MAINHAND, tools.getItem(3));
         setItemSlot(EquipmentSlot.OFFHAND, tools.getItem(4));
+    }
+
+    /** Se pone la armadura de sus ranuras (le da protección real y se ve puesta). */
+    public void updateArmor() {
+        if (level().isClientSide) return;
+        for (int i = 0; i < 4; i++) setItemSlot(ARMOR_SLOTS[i], armor.getItem(i));
+    }
+
+    // ------------------------------------------------------------------ bayas
+
+    private static final Object[][] BERRIES = {
+            {"oran_berry", 8}, {"sitrus_berry", 4}, {"lum_berry", 2}, {"leppa_berry", 2},
+            {"pecha_berry", 2}, {"cheri_berry", 2}, {"chesto_berry", 2}, {"rawst_berry", 2},
+            {"aspear_berry", 2}, {"persim_berry", 2}
+    };
+
+    /** /tanny bayas: Tanny le da al Master bayas curativas de Cobblemon (cada 5 minutos). */
+    public void commandBerries(ServerPlayer player) {
+        if (!com.tanny.tannymaid.cobblemon.CobblemonBridge.isLoaded()) {
+            TannySpeech.say(this, player, "Amo, sin Cobblemon no crecen bayas en mi huerto... lo siento ♡");
+            return;
+        }
+        long now = level().getGameTime();
+        if (now < berryReadyAt) {
+            TannySpeech.say(this, player, "Las bayas todavía están madurando, Amo. Faltan " + (berryReadyAt - now) / 20 + " segundos ♡");
+            return;
+        }
+        int given = 0;
+        for (Object[] b : BERRIES) {
+            ItemStack stack = com.tanny.tannymaid.cobblemon.CobblemonBridge.item((String) b[0], (Integer) b[1]);
+            if (stack == null) continue;
+            given += stack.getCount();
+            if (!player.getInventory().add(stack)) player.drop(stack, false);
+        }
+        if (given == 0) {
+            TannySpeech.say(this, player, "Mmm... no encuentro bayas en esta versión de Cobblemon, Amo.");
+            return;
+        }
+        berryReadyAt = now + 6000;
+        swing(InteractionHand.MAIN_HAND);
+        level().playSound(null, blockPosition(), SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.NEUTRAL, 1.0F, 1.1F);
+        if (level() instanceof ServerLevel sl) {
+            sl.sendParticles(ParticleTypes.HEART, getX(), getY() + 1.8, getZ(), 4, 0.3, 0.2, 0.3, 0.02);
+        }
+        TannySpeech.say(this, player, "¡Aquí tienes, Amo! " + given + " bayas recién cortadas: Aranja y Zidra para curar, "
+                + "Ziuela y Zanama para los estados... ¡cuida mucho a tu equipo! ♡");
     }
 
     @Nullable
@@ -860,6 +935,8 @@ public class TannyEntity extends PathfinderMob {
         TannySpeech.system(player, String.format("Vida: %.0f/%.0f%s | Modo: %s | Recoger objetos: %s | Lucario: %s",
                 getHealth(), getMaxHealth(), isWeakened() ? " (debilitada, " + weakenedTimer / 20 + " s)" : "",
                 getMode().displayName(), collecting ? "sí" : "no", lucario.status()));
+        TannySpeech.system(player, "Gardevoir: " + com.tanny.tannymaid.cobblemon.GardevoirCompanion.status(player)
+                + " | Avisos: " + com.tanny.tannymaid.util.PokemonWatch.describe(player));
         TannySpeech.system(player, "Posición: " + blockPosition().getX() + " " + blockPosition().getY() + " "
                 + blockPosition().getZ() + " (" + level().dimension().location() + ")"
                 + (homePos != null ? " | Casa: " + homePos.getX() + " " + homePos.getY() + " " + homePos.getZ() : ""));
@@ -873,14 +950,15 @@ public class TannyEntity extends PathfinderMob {
                 player.drop(stack, false);
             }
         }
-        for (int i = 0; i < tools.getContainerSize(); i++) {
-            ItemStack stack = tools.removeItemNoUpdate(i);
-            if (!stack.isEmpty() && !player.getInventory().add(stack)) {
-                player.drop(stack, false);
+        for (SimpleContainer c : new SimpleContainer[] {tools, armor, balls}) {
+            for (int i = 0; i < c.getContainerSize(); i++) {
+                ItemStack stack = c.removeItemNoUpdate(i);
+                if (!stack.isEmpty() && !player.getInventory().add(stack)) {
+                    player.drop(stack, false);
+                }
             }
         }
-        setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
-        setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+        for (EquipmentSlot slot : EquipmentSlot.values()) setItemSlot(slot, ItemStack.EMPTY);
         ItemStack contract = new ItemStack(ModItems.TANNY_CONTRACT.get());
         if (!player.getInventory().add(contract)) player.drop(contract, false);
         TannyLookup.setStoredId(player, null);
@@ -939,11 +1017,16 @@ public class TannyEntity extends PathfinderMob {
     // ------------------------------------------------------------------ inventario helpers
 
     public boolean canStore(ItemStack stack) {
+        if (com.tanny.tannymaid.cobblemon.CobblemonBridge.isPokeBall(stack) && balls.canAddItem(stack)) return true;
         return inventory.canAddItem(stack);
     }
 
     public void storeOrDrop(ItemStack stack) {
         if (stack.isEmpty()) return;
+        if (com.tanny.tannymaid.cobblemon.CobblemonBridge.isPokeBall(stack)) {
+            stack = balls.addItem(stack);   // las Poké Balls van a su bolsa especial
+            if (stack.isEmpty()) return;
+        }
         ItemStack rest = inventory.addItem(stack);
         if (!rest.isEmpty()) {
             spawnAtLocation(rest);
@@ -976,7 +1059,9 @@ public class TannyEntity extends PathfinderMob {
         if (homeDim != null) tag.putString("HomeDim", homeDim);
         if (anchorPos != null) tag.putLong("AnchorPos", anchorPos.asLong());
         tag.put("Inventory", inventory.createTag());
-        tag.put("Tools", saveTools());
+        tag.put("Tools", saveSlots(tools));
+        tag.put("Armor", saveSlots(armor));
+        tag.put("Balls", saveSlots(balls));
         if (nickname != null) tag.putString("Nickname", nickname);
         ListTag likeTags = new ListTag();
         for (String like : likes) likeTags.add(StringTag.valueOf(like));
@@ -996,6 +1081,9 @@ public class TannyEntity extends PathfinderMob {
         anchorPos = tag.contains("AnchorPos") ? BlockPos.of(tag.getLong("AnchorPos")) : null;
         inventory.fromTag(tag.getList("Inventory", Tag.TAG_COMPOUND));
         loadTools(tag.getList("Tools", Tag.TAG_COMPOUND));
+        loadSlots(armor, tag.getList("Armor", Tag.TAG_COMPOUND));
+        loadSlots(balls, tag.getList("Balls", Tag.TAG_COMPOUND));
+        updateArmor();
         nickname = tag.contains("Nickname") ? tag.getString("Nickname") : null;
         likes.clear();
         ListTag likeTags = tag.getList("Likes", Tag.TAG_STRING);
@@ -1026,7 +1114,16 @@ public class TannyEntity extends PathfinderMob {
         updateEquipment();
     }
 
-    private ListTag saveTools() {
+    private static void loadSlots(SimpleContainer c, ListTag list) {
+        for (int i = 0; i < c.getContainerSize(); i++) c.setItem(i, ItemStack.EMPTY);
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag item = list.getCompound(i);
+            int slot = item.getInt("TannySlot");
+            if (slot >= 0 && slot < c.getContainerSize()) c.setItem(slot, ItemStack.of(item));
+        }
+    }
+
+    private static ListTag saveSlots(SimpleContainer tools) {
         ListTag list = new ListTag();
         for (int i = 0; i < tools.getContainerSize(); i++) {
             ItemStack stack = tools.getItem(i);

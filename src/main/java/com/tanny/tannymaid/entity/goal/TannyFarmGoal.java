@@ -79,6 +79,7 @@ public class TannyFarmGoal extends Goal {
         double bestDist = Double.MAX_VALUE;
         boolean hasSeeds = findSeedSlot() >= 0;
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-RADIUS, -2, -RADIUS), center.offset(RADIUS, 2, RADIUS))) {
+            if (!tanny.level().isLoaded(pos)) continue;  // optimización: nunca carga chunks nuevos
             BlockState state = tanny.level().getBlockState(pos);
             boolean isHarvest = state.getBlock() instanceof CropBlock crop && crop.isMaxAge(state);
             boolean isPlant = !isHarvest && hasSeeds && state.getBlock() instanceof FarmBlock
