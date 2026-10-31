@@ -20,6 +20,8 @@ public final class Net {
     public static void register() {
         CHANNEL.registerMessage(0, WatchPacket.class, WatchPacket::encode, WatchPacket::decode, WatchPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(1, OpenMenuPacket.class, (p, b) -> {}, b -> new OpenMenuPacket(), OpenMenuPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void send(ServerPlayer player, Object msg) {

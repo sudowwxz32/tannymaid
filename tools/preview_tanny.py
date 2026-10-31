@@ -24,7 +24,7 @@ def main(outdir, expr="tanny"):
             ("right_leg", (-1.9, 12, 0), (0, 16), (-2, 0, -2, 4, 12, 4)), ("left_leg", (1.9, 12, 0), (16, 48), (-2, 0, -2, 4, 12, 4))]
     for name, piv, (u, v), bx in base:
         quads += G.quads_for(sk, *bx, u, v, [(piv, (0, 0, 0))], 1)
-    keep = ("headband", "ruffle", "hb_bow")
+    keep = ("headband", "ruffle", "hb_bow", "lid", "lash", "nose")
     tf = G.chains(hp, [("head", (0, 0, 0))])
     for p in hp:
         if not p.name.startswith(keep):

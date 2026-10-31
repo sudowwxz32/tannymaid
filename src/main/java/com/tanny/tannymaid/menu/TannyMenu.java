@@ -34,10 +34,12 @@ public class TannyMenu extends AbstractContainerMenu {
     public static final int PAGE_GEAR = 0;
     public static final int PAGE_BALLS = 1;
 
-    public static final int TOOL_COUNT = 5;
+    public static final int TOOL_COUNT = 6;
+    public static final int BOW_SLOT = 5;
+    public static final int INV_X = 17;
     public static final int ARMOR_X = 8;
     public static final int ARMOR_Y = 18;
-    public static final int TOOL_X = 79;
+    public static final int TOOL_X = 80;
     public static final int TOOL_Y = 64;
     public static final int BAG_Y = 104;
     public static final int PLAYER_Y = 172;
@@ -53,7 +55,7 @@ public class TannyMenu extends AbstractContainerMenu {
 
     public static final ToolAction[] TOOL_ACTIONS = {
             ToolActions.PICKAXE_DIG, ToolActions.SHOVEL_DIG, ToolActions.AXE_DIG,
-            ToolActions.SWORD_DIG, ToolActions.SHIELD_BLOCK
+            ToolActions.SWORD_DIG, ToolActions.SHIELD_BLOCK, null
     };
 
     @Nullable private final TannyEntity tanny;
@@ -72,6 +74,12 @@ public class TannyMenu extends AbstractContainerMenu {
                 new SimpleContainer(4), new SimpleContainer(27), findTanny(playerInv, entityId));
     }
 
+    /** ¿Ranura de herramienta/arma que corresponde? (0 pico, 1 pala, 2 hacha, 3 espada, 4 escudo, 5 arco) */
+    private static boolean fits(int index, ItemStack stack) {
+        if (index == BOW_SLOT) return stack.getItem() instanceof net.minecraft.world.item.BowItem;
+        return stack.canPerformAction(TOOL_ACTIONS[index]);
+    }
+
     /** Servidor */
     public TannyMenu(int id, Inventory playerInv, int page, Container bag, Container tools, Container armor,
                      Container balls, @Nullable TannyEntity tanny) {
@@ -84,7 +92,7 @@ public class TannyMenu extends AbstractContainerMenu {
             balls.startOpen(playerInv.player);
             for (int row = 0; row < 3; row++) {
                 for (int col = 0; col < 9; col++) {
-                    addSlot(new BallSlot(balls, col + row * 9, 8 + col * 18, BAG_Y + row * 18));
+                    addSlot(new BallSlot(balls, col + row * 9, INV_X + col * 18, BAG_Y + row * 18));
                 }
             }
         } else {
@@ -100,18 +108,18 @@ public class TannyMenu extends AbstractContainerMenu {
             bagStart = slots.size();
             for (int row = 0; row < 3; row++) {
                 for (int col = 0; col < 9; col++) {
-                    addSlot(new Slot(bag, col + row * 9, 8 + col * 18, BAG_Y + row * 18));
+                    addSlot(new Slot(bag, col + row * 9, INV_X + col * 18, BAG_Y + row * 18));
                 }
             }
         }
         playerStart = slots.size();
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, PLAYER_Y + row * 18));
+                addSlot(new Slot(playerInv, col + row * 9 + 9, INV_X + col * 18, PLAYER_Y + row * 18));
             }
         }
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(playerInv, col, 8 + col * 18, HOTBAR_Y));
+            addSlot(new Slot(playerInv, col, INV_X + col * 18, HOTBAR_Y));
         }
         end = slots.size();
     }
@@ -135,7 +143,7 @@ public class TannyMenu extends AbstractContainerMenu {
     public int armorStart() { return armorStart; }
 
     public static boolean fitsToolSlot(int index, ItemStack stack) {
-        return !stack.isEmpty() && stack.canPerformAction(TOOL_ACTIONS[index]);
+        return !stack.isEmpty() && fits(index, stack);
     }
 
     public static boolean fitsArmorSlot(int index, ItemStack stack) {

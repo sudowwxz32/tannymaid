@@ -28,7 +28,7 @@ public class TannyHairLayer extends RenderLayer<TannyEntity, TannyModel> {
     private static final ResourceLocation STRAND_TEX = new ResourceLocation(TannyMaid.MODID, "textures/entity/tanny/hair_strand.png");
 
     private final ModelPart root;
-    private final ModelPart head;
+    private final ModelPart head, headband, lidR, lidL, lashR, lashL;
     private final TannyHairMesh mesh = new TannyHairMesh();
 
     public TannyHairLayer(RenderLayerParent<TannyEntity, TannyModel> parent, EntityModelSet models) {
@@ -36,6 +36,11 @@ public class TannyHairLayer extends RenderLayer<TannyEntity, TannyModel> {
         this.root = models.bakeLayer(LAYER);
         Map<String, ModelPart> m = TannyGeneratedModels.bakeHair(root);
         head = m.get("head");
+        headband = m.get("headband");
+        lidR = m.get("lid_r");
+        lidL = m.get("lid_l");
+        lashR = m.get("lash_r");
+        lashL = m.get("lash_l");
     }
 
     @Override
@@ -62,9 +67,15 @@ public class TannyHairLayer extends RenderLayer<TannyEntity, TannyModel> {
                 packedLight, overlay, swayX, swayZ, bangSway, ahoge, helmet);
         poseStack.popPose();
 
-        if (!helmet) {
-            head.copyFrom(parentHead);
-            root.render(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(BAND_TEX)), packedLight, overlay);
-        }
+        // cofia (sin casco) y detalles 3D de la cara según la expresión
+        TannyRenderer.Face face = TannyRenderer.face(entity);
+        boolean open = face == TannyRenderer.Face.NORMAL || face == TannyRenderer.Face.SURPRISED;
+        boolean wings = open || face == TannyRenderer.Face.FOCUSED || face == TannyRenderer.Face.BLINK;
+        headband.visible = !helmet;
+        lidR.visible = lidL.visible = open;
+        lashR.visible = lashL.visible = wings;
+        head.copyFrom(parentHead);
+        root.render(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(BAND_TEX)), packedLight, overlay);
+        headband.visible = lidR.visible = lidL.visible = lashR.visible = lashL.visible = true;
     }
 }

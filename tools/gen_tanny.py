@@ -297,9 +297,27 @@ def hair_parts():
         x = -3.9 + i * 1.3
         P.append(Part("ruffle_%d" % i, "headband", (x, -0.55, 0.0), (0.0, 0, (i - 3) * 0.08),
                       [Box(-0.72, -1.6, -0.3, 1.44, 1.6, 0.55, lace)]))
+    # detalles 3D de la cara: pestañas con relieve, alitas en la comisura y nariz
+    P.append(Part("lid_r", "head", (-2.0, -4.14, -4.0), (0, 0, 0.0), [Box(-0.95, -0.12, -0.18, 1.9, 0.24, 0.2, lash3d)]))
+    P.append(Part("lash_r", "head", (-3.05, -4.0, -4.02), (0.0, 0.25, 0.55), [Box(-0.9, -0.12, -0.18, 0.9, 0.24, 0.22, lash3d)]))
+    P.append(Part("nose", "head", (0, -1.95, -4.0), (0.25, 0, 0), [Box(-0.22, -0.3, -0.2, 0.44, 0.45, 0.22, nose3d)]))
     P.append(Part("hb_bow_r", "headband", (-4.9, -0.05, 0.3), (0, 0.25, 0.35), [Box(-1.0, -0.5, -0.3, 1.0, 1.0, 0.6, pink_bow)]))
     P += mirror([p for p in P if p.name.endswith("_r")])
     return P, [("head", (0, 0, 0))]
+
+
+def lash3d(f, x, y, w, h):
+    return LASH if f != "top" else (46, 32, 34)
+
+
+def nose3d(f, x, y, w, h):
+    if f == "top":
+        return SKIN_HI
+    if f in ("left", "right"):
+        return SKIN_SH
+    if f == "bottom":
+        return SKIN_DK
+    return mix(SKIN_HI, SKIN, y / max(1, h - 1) * 0.6)
 
 
 def strand_texture():
@@ -456,120 +474,151 @@ def leg_paint(f, x, y, w, h):
 
 
 def eye_layer(expr, side):
-    """Dibuja un ojo anime a 8x sobre 72x80 (luego se reduce). side: -1 izquierda de la imagen, 1 derecha."""
-    W, H = 80, 96
+    """Ojo anime dibujado a 16x (160x192) para la cara de 64x64. side: -1 izquierda de la imagen, 1 derecha."""
+    E = 2
+    W, H = 80 * E, 96 * E
     im = Image.new("RGBA", (W, H), T)
     d = ImageDraw.Draw(im)
-    outer = 0 if side < 0 else W     # comisura externa
+    s = lambda *v: tuple(int(a * E) for a in v)
     if expr in ("normal", "surprised", "focused"):
         top = 14 if expr != "focused" else 28
         bot = 88 if expr == "surprised" else 84
         if expr == "surprised":
             top = 8
-        # blanco del ojo
-        d.ellipse((6, top + 4, W - 6, bot), fill=(250, 246, 246, 255))
-        # iris con degradado
-        ix0, ix1 = 9, W - 9
-        if expr == "surprised":
-            ix0, ix1 = 18, W - 18
-        for yy in range(top, bot + 1):
-            tt = (yy - top) / max(1, bot - top)
-            col = mix(IRIS_DK, IRIS, tt * 1.4) if tt < 0.6 else mix(IRIS, IRIS_HI, (tt - 0.6) * 2.4)
-            d.line((ix0, yy, ix1, yy), fill=col + (255,))
-        mask = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(mask).ellipse((ix0, top, ix1, bot + 2), fill=255)
-        eye_mask = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(eye_mask).ellipse((4, top + 2, W - 4, bot + 2), fill=255)
+        ix0, ix1 = (9, 71) if expr != "surprised" else (18, 62)
+        # iris: degradado de oscuro (arriba) a ámbar (abajo), con vetas radiales
         iris = Image.new("RGBA", (W, H), T)
-        iris.paste(im, (0, 0), mask)
+        di = ImageDraw.Draw(iris)
+        for yy in range(top * E, bot * E + 1):
+            tt = (yy / E - top) / max(1, bot - top)
+            col = mix(IRIS_DK, IRIS, tt * 1.5) if tt < 0.55 else mix(IRIS, IRIS_HI, (tt - 0.55) * 2.3)
+            di.line((ix0 * E, yy, ix1 * E, yy), fill=col + (255,))
+        cx, cy = (ix0 + ix1) / 2 * E, (top + bot) / 2 * E
+        for k in range(18):
+            a = k / 18 * 2 * math.pi
+            di.line((cx + math.cos(a) * 10 * E, cy + math.sin(a) * 12 * E, cx + math.cos(a) * 28 * E, cy + math.sin(a) * 34 * E),
+                    fill=(IRIS_DK if k % 2 else IRIS_HI) + (70,), width=2 * E)
+        mask = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(mask).ellipse(s(ix0, top, ix1, bot + 2), fill=255)
+        eye_mask = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(eye_mask).ellipse(s(4, top + 2, W / E - 4, bot + 2), fill=255)
         base = Image.new("RGBA", (W, H), T)
         sclera = Image.new("RGBA", (W, H), (250, 246, 246, 255))
         base.paste(sclera, (0, 0), eye_mask)
-        base.alpha_composite(iris)
+        # sombra del párpado sobre el blanco
+        shadow = Image.new("RGBA", (W, H), T)
+        ImageDraw.Draw(shadow).rectangle(s(0, 0, W / E, top + 12), fill=(150, 120, 130, 120))
+        smask = Image.new("L", (W, H), 0)
+        smask.paste(eye_mask, (0, 0))
+        base.paste(shadow, (0, 0), Image.composite(shadow.split()[3], Image.new("L", (W, H), 0), smask))
+        iris_only = Image.new("RGBA", (W, H), T)
+        iris_only.paste(iris, (0, 0), mask)
+        base.alpha_composite(iris_only)
         im = base
         d = ImageDraw.Draw(im)
+        # borde oscuro del iris
+        d.ellipse(s(ix0, top, ix1, bot + 2), outline=IRIS_DK + (255,), width=3 * E)
         # pupila
-        px0, px1 = (W // 2 - 12, W // 2 + 12) if expr != "surprised" else (W // 2 - 7, W // 2 + 7)
-        d.ellipse((px0, (top + bot) // 2 - 16, px1, (top + bot) // 2 + 14), fill=(28, 12, 8, 255))
-        # brillos
-        hx = W // 2 + (-14 if side < 0 else 6)
-        d.ellipse((hx, top + 8, hx + 20, top + 30), fill=(255, 255, 255, 255))
-        d.ellipse((W // 2 + (6 if side < 0 else -14), bot - 22, W // 2 + (14 if side < 0 else -6), bot - 13), fill=(255, 250, 240, 230))
-        # pestañas superiores gruesas con "ala" hacia afuera
-        lash_y = top
-        d.line((2, lash_y + 8, W // 2, lash_y - 2, W - 2, lash_y + 8), fill=LASH + (255,), width=12, joint="curve")
-        if side < 0:
-            d.polygon((0, lash_y + 2, -2, lash_y + 16, 12, lash_y + 6), fill=LASH + (255,))
-        else:
-            d.polygon((W, lash_y + 2, W + 2, lash_y + 16, W - 12, lash_y + 6), fill=LASH + (255,))
+        pw = 12 if expr != "surprised" else 7
+        d.ellipse(s(40 - pw, (top + bot) / 2 - 16, 40 + pw, (top + bot) / 2 + 14), fill=(26, 10, 8, 255))
+        # brillos: uno grande, uno pequeño y un reflejo suave abajo
+        hx = 40 + (-15 if side < 0 else 4)
+        d.ellipse(s(hx, top + 7, hx + 22, top + 31), fill=(255, 255, 255, 255))
+        d.ellipse(s(40 + (6 if side < 0 else -14), bot - 22, 40 + (14 if side < 0 else -6), bot - 13), fill=(255, 250, 240, 235))
+        glow = Image.new("RGBA", (W, H), T)
+        ImageDraw.Draw(glow).ellipse(s(ix0 + 10, bot - 18, ix1 - 10, bot - 2), fill=(255, 210, 150, 90))
+        im.alpha_composite(glow.filter(ImageFilter.GaussianBlur(3 * E)))
+        d = ImageDraw.Draw(im)
+        # pliegue del párpado
+        d.arc(s(10, top - 9, W / E - 6, top + 12), 215, 325, fill=(170, 112, 88, 120), width=E)
+        # pestañas superiores: línea gruesa + ala y tres pestañitas hacia afuera
+        d.line(s(2, top + 8, 40, top - 2, 78, top + 8), fill=LASH + (255,), width=12 * E, joint="curve")
+        ox = 0 if side < 0 else W / E
+        sg = -1 if side < 0 else 1
+        d.polygon(s(ox, top + 2, ox + sg * 3, top + 18, ox - sg * 12, top + 6), fill=LASH + (255,))
+        for k in range(2):
+            bx = ox - sg * (4 + k * 7)
+            d.line(s(bx, top + 4, bx + sg * (5 - k), top - 3 - k), fill=LASH + (255,), width=3 * E)
         # pestañas inferiores finas (lado externo)
-        if side < 0:
-            d.line((4, bot - 6, 26, bot + 2), fill=(90, 50, 44, 255), width=4)
-        else:
-            d.line((W - 4, bot - 6, W - 26, bot + 2), fill=(90, 50, 44, 255), width=4)
+        d.line(s(ox - sg * 4, bot - 6, ox - sg * 26, bot + 2), fill=(90, 50, 44, 255), width=4 * E)
+        d.line(s(ox - sg * 10, bot - 2, ox - sg * 12, bot + 5), fill=(90, 50, 44, 200), width=2 * E)
         if expr == "focused":
-            # párpado bajo: mirada decidida
-            d.rectangle((0, 0, W, top + 4), fill=T)
+            d.rectangle(s(0, 0, W / E, top + 3), fill=T)
+            d.line(s(2, top + 6, 78, top + 6), fill=LASH + (255,), width=11 * E)
     elif expr == "happy":
-        d.arc((8, 34, W - 8, 100), 200, 340, fill=LASH + (255,), width=11)         # ^ ^
+        d.arc(s(8, 34, 72, 100), 200, 340, fill=LASH + (255,), width=11 * E)          # ^ ^
+        ox = 0 if side < 0 else W / E
+        sg = -1 if side < 0 else 1
+        d.line(s(ox - sg * 8, 50, ox - sg * 1, 44), fill=LASH + (255,), width=4 * E)
     elif expr == "blink":
-        d.arc((6, -10, W - 6, 66), 25, 155, fill=LASH + (255,), width=8)
+        d.arc(s(6, -10, 74, 66), 25, 155, fill=LASH + (255,), width=8 * E)
+        ox = 0 if side < 0 else W / E
+        sg = -1 if side < 0 else 1
+        d.line(s(ox - sg * 6, 46, ox + sg * 1, 52), fill=LASH + (255,), width=4 * E)
     elif expr == "tired":
-        d.line((6, 54, W - 6, 50), fill=LASH + (255,), width=8)
-        d.arc((12, 40, W - 12, 80), 20, 160, fill=(90, 50, 44, 255), width=5)
+        d.line(s(6, 54, 74, 50), fill=LASH + (255,), width=8 * E)
+        d.arc(s(12, 40, 68, 80), 20, 160, fill=(90, 50, 44, 255), width=5 * E)
     return im
 
 
 def face_image(expr):
-    """Cara de 32x32 (8x8 del modelo a 4x), dibujada a 8x y reducida para un acabado suave."""
-    K = 8
-    big = Image.new("RGBA", (32 * K, 32 * K), T)
+    """Cara de 64x64 (8x8 del modelo a 8x), dibujada a 16x por unidad y reducida para un acabado suave."""
+    K = 16
+    N = 32                      # la cara se describe en una cuadrícula de 32x32
+    big = Image.new("RGBA", (N * K, N * K), T)
     d = ImageDraw.Draw(big)
-    # rubor con rayitas anime
+    # piel: sombra suave bajo el flequillo, mejillas cálidas y sombra bajo la barbilla
+    shade = Image.new("RGBA", big.size, T)
+    sd = ImageDraw.Draw(shade)
+    sd.rectangle((0, 0, N * K, 11 * K), fill=SKIN_DK + (38,))
+    sd.ellipse((-6 * K, 28 * K, 38 * K, 42 * K), fill=SKIN_DK + (40,))
+    big.alpha_composite(shade.filter(ImageFilter.GaussianBlur(3 * K)))
     for cx in (8.5, 23.5):
         blush = Image.new("RGBA", big.size, T)
-        ImageDraw.Draw(blush).ellipse(((cx - 4.5) * K, 23 * K, (cx + 4.5) * K, 26.5 * K), fill=BLUSH + (150,))
-        blush = blush.filter(ImageFilter.GaussianBlur(6))
-        big.alpha_composite(blush)
+        ImageDraw.Draw(blush).ellipse(((cx - 4.8) * K, 22.8 * K, (cx + 4.8) * K, 26.8 * K), fill=BLUSH + (150,))
+        big.alpha_composite(blush.filter(ImageFilter.GaussianBlur(K)))
         for i in range(3):
             x0 = (cx - 2.6 + i * 1.8) * K
-            d.line((x0 + 6, 23.6 * K, x0 - 2, 25.6 * K), fill=BLUSH_DK + (200,), width=5)
-    # cejas finas
+            d.line((x0 + K * 0.7, 23.7 * K, x0 - K * 0.2, 25.5 * K), fill=BLUSH_DK + (190,), width=int(K * 0.5))
+    # cejas finas, afinadas hacia afuera
+    def brow(x0, x1, y0, y1, bend):
+        pts = [(x0 + (x1 - x0) * t / 10, y0 + (y1 - y0) * t / 10 - bend * math.sin(math.pi * t / 10)) for t in range(11)]
+        for i in range(10):
+            w = int(K * (0.85 - 0.05 * i if x1 > x0 else 0.35 + 0.05 * i))
+            d.line((pts[i][0] * K, pts[i][1] * K, pts[i + 1][0] * K, pts[i + 1][1] * K), fill=BROW + (255,), width=max(2, w))
     if expr == "focused":
-        d.line((4 * K, 12.4 * K, 12 * K, 13.6 * K), fill=BROW + (255,), width=8)
-        d.line((20 * K, 13.6 * K, 28 * K, 12.4 * K), fill=BROW + (255,), width=8)
-    elif expr in ("surprised",):
-        d.arc((4 * K, 10 * K, 12 * K, 14 * K), 200, 340, fill=BROW + (255,), width=7)
-        d.arc((20 * K, 10 * K, 28 * K, 14 * K), 200, 340, fill=BROW + (255,), width=7)
+        brow(12, 4, 13.4, 12.2, 0.0); brow(20, 28, 13.4, 12.2, 0.0)
+    elif expr == "surprised":
+        brow(12, 4, 11.6, 12.2, 1.2); brow(20, 28, 11.6, 12.2, 1.2)
     elif expr == "tired":
-        d.line((4 * K, 13 * K, 12 * K, 12.2 * K), fill=BROW + (255,), width=7)
-        d.line((20 * K, 12.2 * K, 28 * K, 13 * K), fill=BROW + (255,), width=7)
+        brow(12, 4, 12.4, 13.2, 0.2); brow(20, 28, 12.4, 13.2, 0.2)
     else:
-        d.arc((4 * K, 11.4 * K, 12 * K, 15 * K), 205, 335, fill=BROW + (255,), width=7)
-        d.arc((20 * K, 11.4 * K, 28 * K, 15 * K), 205, 335, fill=BROW + (255,), width=7)
+        brow(12, 4, 12.6, 13.0, 0.9); brow(20, 28, 12.6, 13.0, 0.9)
     # ojos grandes
     for side, x0 in ((-1, 3.0), (1, 19.0)):
-        e = eye_layer(expr, side)
-        e = e.resize((int(10 * K), int(12 * K)), Image.LANCZOS)
+        e = eye_layer(expr, side).resize((10 * K, 12 * K), Image.LANCZOS)
         big.alpha_composite(e, (int(x0 * K), int(13.4 * K)))
-    # nariz: un toque de sombra
-    d.line((15.6 * K, 24.2 * K, 16.6 * K, 25.0 * K), fill=SKIN_DK + (200,), width=5)
+    # nariz: sombra a un lado y un puntito de luz
+    d.line((16.4 * K, 23.6 * K, 16.9 * K, 25.0 * K), fill=SKIN_DK + (190,), width=int(K * 0.45))
+    d.ellipse((15.2 * K, 24.0 * K, 15.9 * K, 24.6 * K), fill=SKIN_HI + (200,))
     # boca
     if expr in ("normal", "blink"):
-        d.arc((13.4 * K, 25.6 * K, 18.6 * K, 28.8 * K), 20, 160, fill=LIP + (255,), width=7)
+        d.arc((13.4 * K, 25.4 * K, 18.6 * K, 28.6 * K), 20, 160, fill=LIP + (255,), width=int(K * 0.55))
+        d.arc((14.8 * K, 27.4 * K, 17.2 * K, 29.0 * K), 30, 150, fill=(222, 140, 140, 160), width=int(K * 0.35))
     elif expr == "happy":
-        d.chord((13.0 * K, 25.6 * K, 19.0 * K, 30.2 * K), 0, 180, fill=MOUTH + (255,))
-        d.chord((14.4 * K, 27.8 * K, 17.6 * K, 30.0 * K), 180, 360, fill=(232, 120, 132, 255))
-        d.line((13.4 * K, 26.4 * K, 18.6 * K, 26.4 * K), fill=(250, 246, 246, 255), width=5)
+        d.chord((13.0 * K, 25.4 * K, 19.0 * K, 30.4 * K), 0, 180, fill=MOUTH + (255,))
+        d.chord((14.4 * K, 27.8 * K, 17.6 * K, 30.2 * K), 180, 360, fill=(232, 120, 132, 255))
+        d.line((13.4 * K, 26.2 * K, 18.6 * K, 26.2 * K), fill=(250, 246, 246, 255), width=int(K * 0.5))
     elif expr == "surprised":
         d.ellipse((14.6 * K, 25.8 * K, 17.4 * K, 29.0 * K), fill=MOUTH + (255,))
+        d.ellipse((15.2 * K, 27.6 * K, 16.8 * K, 28.8 * K), fill=(214, 110, 124, 255))
     elif expr == "focused":
-        d.line((14.2 * K, 27.0 * K, 17.8 * K, 26.8 * K), fill=LIP + (255,), width=6)
+        d.line((14.2 * K, 27.0 * K, 17.8 * K, 26.8 * K), fill=LIP + (255,), width=int(K * 0.5))
     elif expr == "tired":
-        d.line((14.0 * K, 27.4 * K, 15.6 * K, 26.8 * K, 17.0 * K, 27.4 * K, 18.2 * K, 26.9 * K), fill=LIP + (255,), width=5)
+        d.line((14.0 * K, 27.4 * K, 15.6 * K, 26.8 * K, 17.0 * K, 27.4 * K, 18.2 * K, 26.9 * K), fill=LIP + (255,),
+               width=int(K * 0.45))
         d.ellipse((26.0 * K, 15.0 * K, 27.6 * K, 17.4 * K), fill=(170, 210, 240, 220))      # gotita
-    small = big.resize((32, 32), Image.LANCZOS)
-    return small
+    return big.resize((64, 64), Image.LANCZOS)
 
 
 def skin(expr):
@@ -579,14 +628,18 @@ def skin(expr):
     img = Image.new("RGBA", (64 * S, 64 * S), T)
     paint_region(img, 0, 0, 8, 8, 8, head_paint)
     AO = True
-    face = face_image(expr)
-    img.alpha_composite(face, (8 * S, 8 * S))
     paint_region(img, 16, 16, 8, 12, 4, body_paint)
     paint_region(img, 40, 16, 3, 12, 4, arm_paint)          # brazo derecho (delgado)
     paint_region(img, 32, 48, 3, 12, 4, arm_paint)          # brazo izquierdo
     paint_region(img, 0, 16, 4, 12, 4, leg_paint)
     paint_region(img, 16, 48, 4, 12, 4, leg_paint)
     AO = True
+    # la skin final es de 512x512: el cuerpo se duplica tal cual y la cara va en alta resolución (64x64)
+    img = img.resize((img.width * 2, img.height * 2), Image.NEAREST)
+    face = face_image(expr)
+    base = img.crop((64, 64, 128, 128))
+    base.alpha_composite(face)
+    img.paste(base, (64, 64))
     return img
 
 
@@ -697,10 +750,11 @@ def quads_for(img, x0, y0, z0, w, h, d, u, v, chain, step=2):
     shade = {"front": 1.0, "back": 0.75, "left": 0.86, "right": 0.86, "top": 1.08, "bottom": 0.6}
     for f, (a, bb, c) in corners.items():
         fx, fy, fw, fh = face_rects(u, v, w, h, d)[f]
-        nx, ny = max(1, round(fw * S / step)), max(1, round(fh * S / step))
+        sc = img.width / 64.0
+        nx, ny = max(1, round(fw * sc / step)), max(1, round(fh * sc / step))
         for i in range(nx):
             for j in range(ny):
-                px, py = int((fx + (i + 0.5) * fw / nx) * S), int((fy + (j + 0.5) * fh / ny) * S)
+                px, py = int((fx + (i + 0.5) * fw / nx) * sc), int((fy + (j + 0.5) * fh / ny) * sc)
                 if not (0 <= px < img.width and 0 <= py < img.height):
                     continue
                 col = img.getpixel((px, py))

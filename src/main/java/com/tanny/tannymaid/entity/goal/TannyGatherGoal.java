@@ -96,6 +96,10 @@ public class TannyGatherGoal extends Goal {
             return;
         }
 
+        // lleva la herramienta en la mano desde que camina hacia el bloque
+        if (!tool.isEmpty() && tanny.getMainHandItem() != tool) {
+            tanny.setItemSlot(EquipmentSlot.MAINHAND, tool);
+        }
         tanny.getLookControl().setLookAt(job.getX() + 0.5, job.getY() + 0.5, job.getZ() + 0.5);
         double dist = tanny.getEyePosition().distanceToSqr(job.getX() + 0.5, job.getY() + 0.5, job.getZ() + 0.5);
         if (dist > 4.2 * 4.2) {

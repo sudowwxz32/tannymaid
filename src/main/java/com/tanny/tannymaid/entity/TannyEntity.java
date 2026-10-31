@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
@@ -145,14 +146,19 @@ public class TannyEntity extends PathfinderMob {
         for (EquipmentSlot slot : EquipmentSlot.values()) this.setDropChance(slot, 0.0F);
     }
 
+    public static final double BASE_HEALTH = 60.0D, BASE_DAMAGE = 7.0D, BASE_ARMOR = 6.0D;
+
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 40.0D)
+                .add(Attributes.MAX_HEALTH, BASE_HEALTH)
                 .add(Attributes.MOVEMENT_SPEED, 0.32D)
-                .add(Attributes.ATTACK_DAMAGE, 6.0D)
+                .add(Attributes.ATTACK_DAMAGE, BASE_DAMAGE)
+                .add(Attributes.ATTACK_SPEED, 4.0D)
                 .add(Attributes.ATTACK_KNOCKBACK, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(Attributes.ARMOR, 4.0D);
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.3D)
+                .add(Attributes.ARMOR_TOUGHNESS, 2.0D)
+                .add(Attributes.ARMOR, BASE_ARMOR);
     }
 
     @Override
@@ -167,7 +173,7 @@ public class TannyEntity extends PathfinderMob {
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new TannyWeakenedGoal(this));
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
+        this.goalSelector.addGoal(2, new TannyCombatGoal(this));
         this.goalSelector.addGoal(2, new TannyChatGoal(this));
         this.goalSelector.addGoal(3, new TannyGatherGoal(this));
         this.goalSelector.addGoal(3, new TannyFollowOwnerGoal(this, 1.1D, 4.5F, 2.2F));
@@ -291,8 +297,10 @@ public class TannyEntity extends PathfinderMob {
             if (weakenedTimer <= 0) {
                 recover(owner);
             }
-        } else if (tickCount % 60 == 0 && getHealth() < getMaxHealth() && getTarget() == null) {
-            heal(1.0F);
+        } else if (getHealth() < getMaxHealth()) {
+            // Regeneración: 1 ♥ cada 2 s peleando y cada 1 s descansando
+            int every = getTarget() == null ? 20 : 40;
+            if (tickCount % every == 0) heal(2.0F);
         }
 
         if (getY() < level().getMinBuildHeight() - 8) {
@@ -421,8 +429,10 @@ public class TannyEntity extends PathfinderMob {
             return false;
         }
         ItemStack shield = tools.getItem(4);
+        // Escudo en alto (lo levanta de verdad en combate) o un bloqueo rápido de reflejo (25 %)
+        boolean raised = isBlocking() && isDamageSourceBlocked(source);
         if (!shield.isEmpty() && attacker != null && !source.is(DamageTypeTags.BYPASSES_SHIELD)
-                && getRandom().nextFloat() < 0.5F) {
+                && (raised || getRandom().nextFloat() < 0.25F)) {
             // ¡Bloqueo con escudo!
             level().playSound(null, blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.NEUTRAL, 1.0F, 0.9F + getRandom().nextFloat() * 0.2F);
             shield.hurtAndBreak(1 + (int) amount, this, e -> e.broadcastBreakEvent(EquipmentSlot.OFFHAND));
@@ -432,6 +442,8 @@ public class TannyEntity extends PathfinderMob {
             }
             return false;
         }
+        // Resistencia: recibe un 20 % menos de daño
+        if (!source.is(DamageTypeTags.BYPASSES_RESISTANCE)) amount *= 0.8F;
         if (amount >= getHealth()) {
             becomeWeakened();
             return true;
@@ -686,6 +698,140 @@ public class TannyEntity extends PathfinderMob {
     public void updateArmor() {
         if (level().isClientSide) return;
         for (int i = 0; i < 4; i++) setItemSlot(ARMOR_SLOTS[i], armor.getItem(i));
+    }
+
+    // ------------------------------------------------------------------ armas de verdad
+
+    public void holdInMainHand(ItemStack stack) {
+        setItemSlot(EquipmentSlot.MAINHAND, stack);
+    }
+
+    /** Espada; si no tiene, el hacha; si no, el pico. */
+    public ItemStack getMeleeWeapon() {
+        for (int slot : new int[] {3, 2, 0}) {
+            ItemStack s = tools.getItem(slot);
+            if (!s.isEmpty()) return s;
+        }
+        return ItemStack.EMPTY;
+    }
+
+    public ItemStack getBow() {
+        return tools.getItem(TannyMenu.BOW_SLOT);
+    }
+
+    /** Ticks entre golpes según la velocidad de ataque del arma (espada ≈ 12, hacha ≈ 20). */
+    public int attackInterval() {
+        double speed = getAttributeValue(Attributes.ATTACK_SPEED);
+        return (int) Math.max(8, Math.min(30, Math.round(20.0 / Math.max(0.5, speed))));
+    }
+
+    private boolean infiniteArrows() {
+        return net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel(
+                net.minecraft.world.item.enchantment.Enchantments.INFINITY_ARROWS, getBow()) > 0;
+    }
+
+    private int findArrowSlot() {
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            if (inventory.getItem(i).getItem() instanceof net.minecraft.world.item.ArrowItem) return i;
+        }
+        return -1;
+    }
+
+    public boolean hasBowReady() {
+        return getBow().getItem() instanceof net.minecraft.world.item.BowItem && (infiniteArrows() || findArrowSlot() >= 0);
+    }
+
+    /** No dispara si el Master (o Gardevoir/Lucario) está en la línea de tiro. */
+    public boolean isShotSafe(LivingEntity target) {
+        ServerPlayer owner = getOwnerPlayer();
+        net.minecraft.world.phys.Vec3 a = getEyePosition(), b = target.position().add(0, target.getBbHeight() * 0.5, 0);
+        for (LivingEntity friend : level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(24.0),
+                e -> e == owner || LucarioCompanion.isTannyPokemon(e))) {
+            net.minecraft.world.phys.Vec3 p = friend.position().add(0, friend.getBbHeight() * 0.5, 0);
+            net.minecraft.world.phys.Vec3 ab = b.subtract(a);
+            double t = Math.max(0, Math.min(1, p.subtract(a).dot(ab) / Math.max(1e-6, ab.lengthSqr())));
+            if (a.add(ab.scale(t)).distanceToSqr(p) < 1.4 * 1.4) return false;
+        }
+        return true;
+    }
+
+    /** Dispara una flecha real con su arco (gasta flechas de la mochila salvo con Infinidad). */
+    public void shootArrow(LivingEntity target, float power) {
+        ItemStack bow = getBow();
+        if (!(bow.getItem() instanceof net.minecraft.world.item.BowItem bowItem)) return;
+        int slot = findArrowSlot();
+        boolean infinite = infiniteArrows();
+        ItemStack ammo = slot >= 0 ? inventory.getItem(slot).copyWithCount(1) : new ItemStack(Items.ARROW);
+        if (slot < 0 && !infinite) return;
+        net.minecraft.world.entity.projectile.AbstractArrow arrow =
+                net.minecraft.world.entity.projectile.ProjectileUtil.getMobArrow(this, ammo, power);
+        arrow = bowItem.customArrow(arrow);
+        double dx = target.getX() - getX();
+        double dy = target.getY(0.3333) - arrow.getY();
+        double dz = target.getZ() - getZ();
+        double d = Math.sqrt(dx * dx + dz * dz);
+        arrow.shoot(dx, dy + d * 0.18, dz, 1.7F * Math.max(0.6F, power), 2.0F);
+        arrow.setBaseDamage(arrow.getBaseDamage() + 1.5D);
+        boolean free = infinite && ammo.is(Items.ARROW);
+        arrow.pickup = free ? net.minecraft.world.entity.projectile.AbstractArrow.Pickup.CREATIVE_ONLY
+                : net.minecraft.world.entity.projectile.AbstractArrow.Pickup.ALLOWED;
+        level().playSound(null, getX(), getY(), getZ(), SoundEvents.ARROW_SHOOT, SoundSource.NEUTRAL, 1.0F,
+                1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
+        level().addFreshEntity(arrow);
+        swing(InteractionHand.MAIN_HAND);
+        bow.hurtAndBreak(1, this, e -> e.broadcastBreakEvent(EquipmentSlot.MAINHAND));
+        if (!free && slot >= 0) {
+            inventory.getItem(slot).shrink(1);
+            inventory.setChanged();
+        }
+        tools.setChanged();
+    }
+
+    /** ¿Enemigo peligroso que Tanny derriba en dos golpes? (los jefes no: ahí solo pega fuerte). */
+    private static boolean isBoss(LivingEntity e) {
+        return e instanceof net.minecraft.world.entity.boss.wither.WitherBoss
+                || e instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon
+                || e instanceof net.minecraft.world.entity.monster.warden.Warden
+                || e instanceof net.minecraft.world.entity.monster.ElderGuardian;
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        float damage = (float) getAttributeValue(Attributes.ATTACK_DAMAGE);
+        float knock = (float) getAttributeValue(Attributes.ATTACK_KNOCKBACK);
+        if (target instanceof LivingEntity living) {
+            damage += net.minecraft.world.item.enchantment.EnchantmentHelper.getDamageBonus(getMainHandItem(), living.getMobType());
+            knock += net.minecraft.world.item.enchantment.EnchantmentHelper.getKnockbackBonus(this);
+            if (living instanceof Enemy) {
+                if (isBoss(living)) {
+                    damage *= 1.3F;                                         // fuerte, pero sin exagerar
+                } else {
+                    // Fuerza: derriba a los enemigos peligrosos en dos golpes (máx. 40 por golpe)
+                    damage = Math.max(damage, Math.min(40.0F, living.getMaxHealth() * 0.6F + 1.0F));
+                }
+            }
+        }
+        int fire = net.minecraft.world.item.enchantment.EnchantmentHelper.getFireAspect(this);
+        if (fire > 0) target.setSecondsOnFire(fire * 4);
+        boolean hit = target.hurt(damageSources().mobAttack(this), damage);
+        if (hit) {
+            if (knock > 0 && target instanceof LivingEntity living) {
+                living.knockback(knock * 0.5F, Mth.sin(getYRot() * ((float) Math.PI / 180F)), -Mth.cos(getYRot() * ((float) Math.PI / 180F)));
+                setDeltaMovement(getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
+            }
+            doEnchantDamageEffects(this, target);
+            setLastHurtMob(target);
+            ItemStack weapon = getMainHandItem();
+            if (!weapon.isEmpty() && weapon.isDamageableItem()) {
+                weapon.hurtAndBreak(1, this, e -> e.broadcastBreakEvent(EquipmentSlot.MAINHAND));
+                tools.setChanged();
+            }
+            if (level() instanceof ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY(0.6), target.getZ(), 1, 0, 0, 0, 0);
+            }
+            level().playSound(null, target.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.NEUTRAL, 0.8F, 1.1F);
+        }
+        return hit;
     }
 
     // ------------------------------------------------------------------ bayas
@@ -1081,6 +1227,10 @@ public class TannyEntity extends PathfinderMob {
         anchorPos = tag.contains("AnchorPos") ? BlockPos.of(tag.getLong("AnchorPos")) : null;
         inventory.fromTag(tag.getList("Inventory", Tag.TAG_COMPOUND));
         loadTools(tag.getList("Tools", Tag.TAG_COMPOUND));
+        // mundos de versiones anteriores: sube su vida, daño y armadura base a los nuevos valores
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(BASE_HEALTH);
+        getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(BASE_DAMAGE);
+        getAttribute(Attributes.ARMOR).setBaseValue(BASE_ARMOR);
         loadSlots(armor, tag.getList("Armor", Tag.TAG_COMPOUND));
         loadSlots(balls, tag.getList("Balls", Tag.TAG_COMPOUND));
         updateArmor();

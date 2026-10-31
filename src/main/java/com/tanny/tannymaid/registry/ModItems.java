@@ -15,5 +15,8 @@ public final class ModItems {
     public static final RegistryObject<Item> TANNY_CONTRACT = ITEMS.register("tanny_contract",
             () -> new TannyContractItem(new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
 
+    public static final RegistryObject<Item> TANNY_WHISTLE = ITEMS.register("tanny_bell",
+            () -> new com.tanny.tannymaid.item.TannyWhistleItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+
     private ModItems() {}
 }

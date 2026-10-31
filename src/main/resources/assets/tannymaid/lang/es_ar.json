@@ -1,4 +1,8 @@
 {
   "entity.tannymaid.tanny": "Tanny",
-  "item.tannymaid.tanny_contract": "Contrato de Tanny Maid"
+  "item.tannymaid.tanny_contract": "Contrato de Tanny Maid",
+  "item.tannymaid.tanny_bell": "Campanita de Tanny",
+  "itemGroup.tannymaid": "TannyMaid",
+  "key.categories.tannymaid": "TannyMaid",
+  "key.tannymaid.menu": "Abrir el menú de Tanny"
 }

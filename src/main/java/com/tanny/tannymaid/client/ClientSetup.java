@@ -25,6 +25,14 @@ public final class ClientSetup {
         event.enqueueWork(() -> MenuScreens.register(ModMenus.TANNY.get(), TannyScreen::new));
     }
 
+    public static final net.minecraft.client.KeyMapping OPEN_MENU = new net.minecraft.client.KeyMapping("key.tannymaid.menu",
+            com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_G, "key.categories.tannymaid");
+
+    @SubscribeEvent
+    public static void registerKeys(net.minecraftforge.client.event.RegisterKeyMappingsEvent event) {
+        event.register(OPEN_MENU);
+    }
+
     @SubscribeEvent
     public static void registerOverlays(net.minecraftforge.client.event.RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("pokemon_watch", new WatchHud());

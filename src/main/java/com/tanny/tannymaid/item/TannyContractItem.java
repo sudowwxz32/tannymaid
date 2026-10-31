@@ -72,6 +72,8 @@ public class TannyContractItem extends Item {
         level.sendParticles(ParticleTypes.CHERRY_LEAVES, pos.x, pos.y + 1.0, pos.z, 30, 0.6, 0.8, 0.6, 0.05);
         level.playSound(null, BlockPos.containing(pos), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.3F);
         TannySpeech.say(tanny, player, TannySpeech.SUMMON);
+        TannySpeech.system(player, "§6✦ Guía rápida: §fclic derecho§7 = su menú · §fShift + clic derecho§7 = cambiar modo · "
+                + "§ftecla G§7 = menú desde donde estés · §fCampanita de Tanny§7 (oro + hilo) = llamarla · §f/tanny§7 = todas las órdenes");
         TannySpeech.system(player, "Escribe §d/tanny§7 para ver todas las órdenes.");
         if (!player.getAbilities().instabuild) {
             stack.shrink(1);

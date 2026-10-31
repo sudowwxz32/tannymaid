@@ -26,7 +26,12 @@ public final class TannyGeneratedModels {
         PartDefinition p_ruffle_4 = p_headband.addOrReplaceChild("ruffle_4", CubeListBuilder.create().texOffs(45, 0).addBox(-0.72F, -1.6F, -0.3F, 1.44F, 1.6F, 0.55F), PartPose.offsetAndRotation(1.3F, -0.55F, 0F, 0F, 0F, 0.08F));
         PartDefinition p_ruffle_5 = p_headband.addOrReplaceChild("ruffle_5", CubeListBuilder.create().texOffs(50, 0).addBox(-0.72F, -1.6F, -0.3F, 1.44F, 1.6F, 0.55F), PartPose.offsetAndRotation(2.6F, -0.55F, 0F, 0F, 0F, 0.16F));
         PartDefinition p_ruffle_6 = p_headband.addOrReplaceChild("ruffle_6", CubeListBuilder.create().texOffs(55, 0).addBox(-0.72F, -1.6F, -0.3F, 1.44F, 1.6F, 0.55F), PartPose.offsetAndRotation(3.9F, -0.55F, 0F, 0F, 0F, 0.24F));
+        PartDefinition p_lid_r = p_head.addOrReplaceChild("lid_r", CubeListBuilder.create().texOffs(5, 4).addBox(-0.95F, -0.12F, -0.18F, 1.9F, 0.24F, 0.2F), PartPose.offsetAndRotation(-2F, -4.14F, -4F, 0F, 0F, 0F));
+        PartDefinition p_lash_r = p_head.addOrReplaceChild("lash_r", CubeListBuilder.create().texOffs(17, 4).addBox(-0.9F, -0.12F, -0.18F, 0.9F, 0.24F, 0.22F), PartPose.offsetAndRotation(-3.05F, -4F, -4.02F, 0F, 0.25F, 0.55F));
+        PartDefinition p_nose = p_head.addOrReplaceChild("nose", CubeListBuilder.create().texOffs(25, 4).addBox(-0.22F, -0.3F, -0.2F, 0.44F, 0.45F, 0.22F), PartPose.offsetAndRotation(0F, -1.95F, -4F, 0.25F, 0F, 0F));
         PartDefinition p_hb_bow_r = p_headband.addOrReplaceChild("hb_bow_r", CubeListBuilder.create().texOffs(60, 0).addBox(-1F, -0.5F, -0.3F, 1F, 1F, 0.6F), PartPose.offsetAndRotation(-4.9F, -0.05F, 0.3F, 0F, 0.25F, 0.35F));
+        PartDefinition p_lid_l = p_head.addOrReplaceChild("lid_l", CubeListBuilder.create().texOffs(11, 4).addBox(-0.95F, -0.12F, -0.18F, 1.9F, 0.24F, 0.2F), PartPose.offsetAndRotation(2F, -4.14F, -4F, 0F, 0F, 0F));
+        PartDefinition p_lash_l = p_head.addOrReplaceChild("lash_l", CubeListBuilder.create().texOffs(21, 4).addBox(0F, -0.12F, -0.18F, 0.9F, 0.24F, 0.22F), PartPose.offsetAndRotation(3.05F, -4F, -4.02F, 0F, -0.25F, -0.55F));
         PartDefinition p_hb_bow_l = p_headband.addOrReplaceChild("hb_bow_l", CubeListBuilder.create().texOffs(0, 4).addBox(0F, -0.5F, -0.3F, 1F, 1F, 0.6F), PartPose.offsetAndRotation(4.9F, -0.05F, 0.3F, 0F, -0.25F, -0.35F));
         return LayerDefinition.create(mesh, 64, 32);
     }
@@ -42,7 +47,12 @@ public final class TannyGeneratedModels {
         m.put("ruffle_4", m.get("headband").getChild("ruffle_4"));
         m.put("ruffle_5", m.get("headband").getChild("ruffle_5"));
         m.put("ruffle_6", m.get("headband").getChild("ruffle_6"));
+        m.put("lid_r", m.get("head").getChild("lid_r"));
+        m.put("lash_r", m.get("head").getChild("lash_r"));
+        m.put("nose", m.get("head").getChild("nose"));
         m.put("hb_bow_r", m.get("headband").getChild("hb_bow_r"));
+        m.put("lid_l", m.get("head").getChild("lid_l"));
+        m.put("lash_l", m.get("head").getChild("lash_l"));
         m.put("hb_bow_l", m.get("headband").getChild("hb_bow_l"));
         return m;
     }

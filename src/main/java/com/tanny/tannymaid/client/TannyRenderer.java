@@ -32,16 +32,30 @@ public class TannyRenderer extends HumanoidMobRenderer<TannyEntity, TannyModel> 
         return new ResourceLocation(TannyMaid.MODID, "textures/entity/tanny/" + name + ".png");
     }
 
-    @Override
-    public ResourceLocation getTextureLocation(TannyEntity entity) {
-        if (entity.isWeakened()) return TIRED;
-        if (entity.hurtTime > 0) return SURPRISED;
+    public enum Face { NORMAL, BLINK, HAPPY, SURPRISED, FOCUSED, TIRED }
+
+    /** Expresión actual (la usan la textura y los detalles 3D de la cara). */
+    public static Face face(TannyEntity entity) {
+        if (entity.isWeakened()) return Face.TIRED;
+        if (entity.hurtTime > 0) return Face.SURPRISED;
         long t = entity.tickCount + entity.getId() * 31L;
         boolean blink = t % 90 < 3 || (t % 270 >= 6 && t % 270 < 9);
-        if (blink) return BLINK;
-        if (entity.isTalking()) return HAPPY;
-        if (entity.isAggressive()) return FOCUSED;
-        return NORMAL;
+        if (blink) return Face.BLINK;
+        if (entity.isTalking()) return Face.HAPPY;
+        if (entity.isAggressive()) return Face.FOCUSED;
+        return Face.NORMAL;
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(TannyEntity entity) {
+        return switch (face(entity)) {
+            case TIRED -> TIRED;
+            case SURPRISED -> SURPRISED;
+            case BLINK -> BLINK;
+            case HAPPY -> HAPPY;
+            case FOCUSED -> FOCUSED;
+            default -> NORMAL;
+        };
     }
 
     @Override

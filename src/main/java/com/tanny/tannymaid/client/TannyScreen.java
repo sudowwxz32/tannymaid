@@ -1,6 +1,7 @@
 package com.tanny.tannymaid.client;
 
 import com.tanny.tannymaid.entity.TannyEntity;
+import com.tanny.tannymaid.entity.TannyMode;
 import com.tanny.tannymaid.menu.TannyMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -17,19 +18,21 @@ import net.minecraft.world.item.Items;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * Pantalla de Tanny: pestañas (Equipo · Poké Balls · PC), su modelo 3D, vida y modo,
- * armadura, herramientas, mochila y un panel lateral con todas sus órdenes.
+ * Pantalla de Tanny, estilo elegante (carbón y dorado): pestañas (Equipo · Poké Balls · PC),
+ * su modelo 3D, vida, armadura y modo, armadura, armas/herramientas, mochila y un panel de órdenes
+ * agrupado (Modo · Acciones · Pokémon) que marca el modo activo.
  */
 public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
-    // Paleta
-    private static final int CREAM = 0xFFFBEFF2, CREAM_DK = 0xFFEBD3DB, PINK = 0xFFE58AAB, PINK_DK = 0xFFB0577A,
-            PLUM = 0xFF3A2236, PLUM_DK = 0xFF24151F, TEXT = 0xFF5A1E35, TEXT_SOFT = 0xFF8C5A6E, GOLD = 0xFFF2C14E;
+    // Paleta elegante
+    private static final int BG_TOP = 0xFF26222E, BG_BOT = 0xFF17151C, GOLD = 0xFFC9A45C, GOLD_DK = 0xFF8A6E36,
+            GOLD_HI = 0xFFE8CB8A, EDGE = 0xFF0C0B10, TEXT = 0xFFEDE3CF, TEXT_SOFT = 0xFFA79D8A, PANEL = 0xFF1F1C26,
+            SLOT = 0xFF2F2A37, SLOT_SPECIAL = 0xFF3A3144, SLOT_SH = 0xFF121016, SLOT_HI = 0xFF4C4558;
 
     private static final ItemStack[] GHOSTS = {
             new ItemStack(Items.IRON_PICKAXE), new ItemStack(Items.IRON_SHOVEL), new ItemStack(Items.IRON_AXE),
-            new ItemStack(Items.IRON_SWORD), new ItemStack(Items.SHIELD)
+            new ItemStack(Items.IRON_SWORD), new ItemStack(Items.SHIELD), new ItemStack(Items.BOW)
     };
-    private static final String[] TOOL_NAMES = {"pico", "pala", "hacha", "espada", "escudo"};
+    private static final String[] TOOL_NAMES = {"pico", "pala", "hacha", "espada", "escudo", "arco (usa flechas de la mochila)"};
     private static final String[] ARMOR_NAMES = {"casco", "pechera", "pantalones", "botas"};
     private static final String[] TABS = {"Equipo", "Poké Balls", "PC Pokémon"};
     private static final String[] ICONS = {"➤", "■", "⚔", "✿", "⌂", "✦", "☰", "✋", "◆", "♥", "☕", "●", "☂"};
@@ -40,14 +43,19 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
             "Saca o guarda a Gardevoir", "24 panes (cada 5 min)", "Bayas curativas de Cobblemon (cada 5 min)",
             "Te lleva a un lugar seguro"
     };
+    private static final TannyMode[] ORDER_MODE = {TannyMode.FOLLOW, TannyMode.STAY, TannyMode.DEFEND, TannyMode.FARM, TannyMode.HOME};
+    /** Grupos del panel de órdenes: título y los índices de TannyMenu.ORDERS. */
+    private static final String[] GROUPS = {"Modo", "Acciones", "Pokémon"};
+    private static final int[][] GROUP_ITEMS = {{0, 1, 2, 3, 4}, {5, 6, 7, 10, 11, 12}, {8, 9}};
 
-    private static final int SIDE_W = 86, SIDE_GAP = 4, BTN_H = 15, TAB_H = 16;
+    private static final int SIDE_W = 92, SIDE_GAP = 4, BTN_H = 14, TAB_H = 16, HEAD_H = 11;
     private ItemStack ballGhost = ItemStack.EMPTY;
 
     public TannyScreen(TannyMenu menu, Inventory playerInv, Component title) {
         super(menu, playerInv, title);
-        this.imageWidth = 176;
+        this.imageWidth = 194;
         this.imageHeight = 254;
+        this.inventoryLabelX = TannyMenu.INV_X;
         this.inventoryLabelY = TannyMenu.PLAYER_Y - 11;
         this.titleLabelY = 5;
     }
@@ -55,7 +63,7 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
     @Override
     protected void init() {
         super.init();
-        this.leftPos -= (SIDE_W + SIDE_GAP) / 2;  // centra el conjunto (panel + órdenes)
+        this.leftPos -= (SIDE_W + SIDE_GAP) / 2;
         this.topPos += TAB_H / 2;
         Item ball = ForgeRegistries.ITEMS.getValue(new ResourceLocation("cobblemon", "poke_ball"));
         ballGhost = ball != null && ball != Items.AIR ? new ItemStack(ball) : ItemStack.EMPTY;
@@ -75,148 +83,172 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
     protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
         int x = leftPos, y = topPos;
         boolean balls = menu.getPage() == TannyMenu.PAGE_BALLS;
-
         renderTabs(g, mouseX, mouseY);
 
-        // Panel principal con borde redondeado
         panel(g, x, y, imageWidth, imageHeight);
-        g.fillGradient(x + 3, y + 3, x + imageWidth - 3, y + 15, PINK, PINK_DK);
-        for (int i = 0; i < 6; i++) heart(g, x + imageWidth - 14 - i * 9, y + 6, i % 2 == 0 ? 0x55FFFFFF : 0x33FFFFFF);
+        header(g, x, y, imageWidth);
 
-        // Marco del modelo
+        // Marco del modelo con filete dorado
         int mx0 = x + 27, my0 = y + 17, mx1 = x + 77, my1 = y + 92;
-        g.fill(mx0 - 1, my0 - 1, mx1 + 1, my1 + 1, PINK_DK);
-        g.fillGradient(mx0, my0, mx1, my1, PLUM, PLUM_DK);
-        for (int i = 0; i < 5; i++) heart(g, mx0 + 5 + (i * 11) % 44, my0 + 6 + (i * 17) % 62, 0x22FF9AC2);
-        g.fill(mx0, my1 - 10, mx1, my1, 0x33000000);
+        g.fill(mx0 - 1, my0 - 1, mx1 + 1, my1 + 1, GOLD_DK);
+        g.fillGradient(mx0, my0, mx1, my1, 0xFF2E2838, 0xFF121016);
+        g.fill(mx0, my1 - 9, mx1, my1, 0x40000000);
+        g.fill(mx0 + 6, my1 - 6, mx1 - 6, my1 - 5, 0x55C9A45C);     // "suelo"
 
         TannyEntity t = menu.getTanny();
-        // Vida
-        int barX = x + 82, barY = y + 30, barW = 86, barH = 7;
-        g.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, PINK_DK);
-        g.fill(barX, barY, barX + barW, barY + barH, 0xFF3A1A22);
+        int barX = x + 82, barY = y + 30, barW = 104, barH = 6;
+        g.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, GOLD_DK);
+        g.fill(barX, barY, barX + barW, barY + barH, 0xFF2A1218);
         if (t != null) {
             float pct = Math.max(0.0F, Math.min(1.0F, t.getHealth() / t.getMaxHealth()));
-            int color = t.isWeakened() ? 0xFF8A8A8A : pct > 0.5F ? 0xFFE0436B : pct > 0.25F ? 0xFFE89A3C : 0xFFD43030;
+            int color = t.isWeakened() ? 0xFF7A7A7A : pct > 0.5F ? 0xFFB8323F : pct > 0.25F ? 0xFFC9822E : 0xFFD43030;
             g.fill(barX, barY, barX + (int) (barW * pct), barY + barH, color);
-            g.fill(barX, barY, barX + (int) (barW * pct), barY + 2, 0x66FFFFFF);
+            g.fill(barX, barY, barX + (int) (barW * pct), barY + 2, 0x44FFFFFF);
         }
 
-        // Ranuras
         for (Slot slot : menu.slots) {
             boolean special = slot instanceof TannyMenu.BallSlot || slot instanceof TannyMenu.ArmorSlot || slot instanceof TannyMenu.ToolSlot;
             slotBg(g, x + slot.x - 1, y + slot.y - 1, special);
         }
 
         if (balls) {
-            // Recuadro informativo y botón del PC
-            g.fill(x + 81, y + 44, x + 169, y + 92, CREAM_DK);
+            g.fill(x + 81, y + 44, x + 187, y + 92, PANEL);
+            g.fill(x + 81, y + 44, x + 187, y + 45, GOLD_DK);
             int total = 0;
             for (Slot s : menu.slots) if (s instanceof TannyMenu.BallSlot && s.hasItem()) total += s.getItem().getCount();
-            g.drawString(font, "Poké Balls: §l" + total, x + 85, y + 48, TEXT, false);
-            button(g, x + 82, y + 66, 86, 22, "▣ Abrir mis cajas", isIn(mouseX, mouseY, x + 82, y + 66, 86, 22), true);
-            // Fantasmas de Poké Ball en las ranuras vacías
+            g.drawString(font, "Poké Balls: " + total, x + 86, y + 49, TEXT, false);
+            button(g, x + 84, y + 66, 100, 22, "▣ Abrir mis cajas", isIn(mouseX, mouseY, x + 84, y + 66, 100, 22), false);
             if (!ballGhost.isEmpty()) {
                 for (Slot s : menu.slots) {
-                    if (s instanceof TannyMenu.BallSlot && !s.hasItem()) ghost(g, ballGhost, x + s.x, y + s.y, 0xC8C9A3B1);
+                    if (s instanceof TannyMenu.BallSlot && !s.hasItem()) ghost(g, ballGhost, x + s.x, y + s.y);
                 }
             }
         } else {
-            g.fill(x + TannyMenu.TOOL_X, y + TannyMenu.TOOL_Y - 1, x + TannyMenu.TOOL_X + 18 * 5, y + TannyMenu.TOOL_Y, PINK);
+            g.fill(x + TannyMenu.TOOL_X, y + TannyMenu.TOOL_Y - 1, x + TannyMenu.TOOL_X + 18 * TannyMenu.TOOL_COUNT, y + TannyMenu.TOOL_Y, GOLD_DK);
             for (int i = 0; i < TannyMenu.TOOL_COUNT; i++) {
                 Slot slot = menu.slots.get(menu.toolStart() + i);
-                if (!slot.hasItem()) ghost(g, GHOSTS[i], x + slot.x, y + slot.y, 0xB89B8B93);
+                if (!slot.hasItem()) ghost(g, GHOSTS[i], x + slot.x, y + slot.y);
             }
         }
 
-        // Tanny en 3D
         if (t != null) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + 52, y + 86, 30,
                     (float) (x + 52 - mouseX), (float) (y + 36 - mouseY), t);
         }
-
-        renderOrders(g, mouseX, mouseY);
+        renderOrders(g, mouseX, mouseY, t);
     }
 
     private void renderTabs(GuiGraphics g, int mouseX, int mouseY) {
-        int x = leftPos + 4, y = topPos - TAB_H + 2;
+        int x = leftPos + 6, y = topPos - TAB_H + 2;
         int active = menu.getPage() == TannyMenu.PAGE_BALLS ? 1 : 0;
         for (int i = 0; i < TABS.length; i++) {
             int w = tabWidth(i);
             boolean on = i == active, hover = isIn(mouseX, mouseY, x, y, w, TAB_H);
-            g.fill(x, y, x + w, y + TAB_H + (on ? 2 : 0), on ? PINK_DK : 0xFF7A4560);
-            g.fill(x + 1, y + 1, x + w - 1, y + TAB_H + (on ? 2 : -1), on ? CREAM : hover ? 0xFFF3D5E0 : CREAM_DK);
-            g.drawCenteredString(font, TABS[i], x + w / 2, y + 4, on ? 0xFFB0577A : 0xFF7A4560);
+            g.fill(x, y, x + w, y + TAB_H + (on ? 2 : 0), on ? GOLD : EDGE);
+            g.fillGradient(x + 1, y + 1, x + w - 1, y + TAB_H + (on ? 2 : -1), on ? BG_TOP : hover ? 0xFF2C2834 : 0xFF1A1820,
+                    on ? BG_TOP : 0xFF141218);
+            g.drawCenteredString(font, TABS[i], x + w / 2, y + 4, on ? GOLD_HI : hover ? TEXT : TEXT_SOFT);
             x += w + 2;
         }
     }
 
     private int tabWidth(int i) {
-        return font.width(TABS[i]) + 14;
+        return font.width(TABS[i]) + 16;
     }
 
-    private void renderOrders(GuiGraphics g, int mouseX, int mouseY) {
-        int x = leftPos + imageWidth + SIDE_GAP, y = topPos;
-        int h = 18 + TannyMenu.ORDERS.length * (BTN_H + 1) + 4;
-        panel(g, x, y, SIDE_W, h);
-        g.fillGradient(x + 3, y + 3, x + SIDE_W - 3, y + 15, PINK, PINK_DK);
-        g.drawCenteredString(font, "Órdenes", x + SIDE_W / 2, y + 5, 0xFFFFFFFF);
-        for (int i = 0; i < TannyMenu.ORDERS.length; i++) {
-            int by = y + 18 + i * (BTN_H + 1);
-            button(g, x + 4, by, SIDE_W - 8, BTN_H, ICONS[i] + " " + TannyMenu.ORDERS[i],
-                    isIn(mouseX, mouseY, x + 4, by, SIDE_W - 8, BTN_H), false);
+    private int sideX() {
+        return leftPos + imageWidth + SIDE_GAP;
+    }
+
+    /** Recorre los botones de órdenes: devuelve el índice en el que está el ratón, o -1. Si g != null los dibuja. */
+    private int walkOrders(GuiGraphics g, double mouseX, double mouseY, TannyEntity t) {
+        int x = sideX() + 5, y = topPos + 18, hit = -1;
+        for (int gi = 0; gi < GROUPS.length; gi++) {
+            if (g != null) {
+                g.drawString(font, GROUPS[gi], x + 1, y + 2, GOLD, false);
+                g.fill(x + font.width(GROUPS[gi]) + 4, y + 6, x + SIDE_W - 10, y + 7, 0x55C9A45C);
+            }
+            y += HEAD_H;
+            for (int idx : GROUP_ITEMS[gi]) {
+                boolean hover = isIn(mouseX, mouseY, x, y, SIDE_W - 10, BTN_H);
+                if (hover) hit = idx;
+                if (g != null) {
+                    boolean active = t != null && idx < ORDER_MODE.length && t.getMode() == ORDER_MODE[idx] && !t.isWeakened();
+                    button(g, x, y, SIDE_W - 10, BTN_H, ICONS[idx] + " " + TannyMenu.ORDERS[idx], hover, active);
+                }
+                y += BTN_H + 1;
+            }
+            y += 3;
         }
+        return hit;
+    }
+
+    private int ordersHeight() {
+        int h = 18;
+        for (int[] items : GROUP_ITEMS) h += HEAD_H + items.length * (BTN_H + 1) + 3;
+        return h + 4;
+    }
+
+    private void renderOrders(GuiGraphics g, int mouseX, int mouseY, TannyEntity t) {
+        int x = sideX(), y = topPos;
+        panel(g, x, y, SIDE_W, ordersHeight());
+        header(g, x, y, SIDE_W);
+        g.drawCenteredString(font, "Órdenes", x + SIDE_W / 2, y + 5, GOLD_HI);
+        walkOrders(g, mouseX, mouseY, t);
     }
 
     // ------------------------------------------------------------------ dibujo
 
     private static void panel(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x + 2, y, x + w - 2, y + h, PINK_DK);
-        g.fill(x, y + 2, x + w, y + h - 2, PINK_DK);
-        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, PINK_DK);
-        g.fillGradient(x + 2, y + 2, x + w - 2, y + h - 2, CREAM, CREAM_DK);
+        g.fill(x + 1, y, x + w - 1, y + h, EDGE);
+        g.fill(x, y + 1, x + w, y + h - 1, EDGE);
+        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, GOLD_DK);
+        g.fillGradient(x + 2, y + 2, x + w - 2, y + h - 2, BG_TOP, BG_BOT);
+        // esquinas doradas
+        for (int[] c : new int[][] {{x + 3, y + 3}, {x + w - 6, y + 3}, {x + 3, y + h - 6}, {x + w - 6, y + h - 6}}) {
+            g.fill(c[0], c[1], c[0] + 3, c[1] + 3, GOLD);
+        }
     }
 
-    private void button(GuiGraphics g, int x, int y, int w, int h, String text, boolean hover, boolean big) {
-        g.fill(x, y, x + w, y + h, hover ? PINK_DK : 0xFFC98AA3);
-        g.fillGradient(x + 1, y + 1, x + w - 1, y + h - 1, hover ? 0xFFFFB5CE : 0xFFFFF6F9, hover ? PINK : 0xFFF2D7E1);
+    private static void header(GuiGraphics g, int x, int y, int w) {
+        g.fillGradient(x + 2, y + 2, x + w - 2, y + 15, 0xFF3A3046, 0xFF241E2C);
+        g.fill(x + 2, y + 15, x + w - 2, y + 16, GOLD_DK);
+    }
+
+    private void button(GuiGraphics g, int x, int y, int w, int h, String text, boolean hover, boolean active) {
+        int border = active ? GOLD_HI : hover ? GOLD : 0xFF3E3848;
+        g.fill(x, y, x + w, y + h, border);
+        int top = active ? 0xFF8C7340 : hover ? 0xFF3A3346 : 0xFF2A2633;
+        int bot = active ? 0xFF5E4C28 : hover ? 0xFF2A2433 : 0xFF1C1A22;
+        g.fillGradient(x + 1, y + 1, x + w - 1, y + h - 1, top, bot);
+        int color = active ? 0xFFFFF4DA : hover ? GOLD_HI : TEXT;
         int tw = font.width(text);
-        if (big || tw <= w - 6) {
-            g.drawString(font, text, x + (w - tw) / 2, y + (h - 8) / 2, hover ? 0xFFFFFFFF : TEXT, false);
+        if (tw <= w - 6) {
+            g.drawString(font, text, x + 4, y + (h - 8) / 2, color, false);
         } else {
             float s = (w - 6) / (float) tw;
             g.pose().pushPose();
             g.pose().translate(x + 3, y + (h - 8 * s) / 2, 0);
             g.pose().scale(s, s, 1);
-            g.drawString(font, text, 0, 0, hover ? 0xFFFFFFFF : TEXT, false);
+            g.drawString(font, text, 0, 0, color, false);
             g.pose().popPose();
         }
     }
 
     private static void slotBg(GuiGraphics g, int x, int y, boolean special) {
-        g.fill(x, y, x + 18, y + 18, special ? 0xFFC9A3B1 : 0xFFB89AA6);
-        g.fill(x, y, x + 17, y + 1, 0xFF6E4457);
-        g.fill(x, y, x + 1, y + 17, 0xFF6E4457);
-        g.fill(x + 1, y + 17, x + 18, y + 18, 0xFFFFFFFF);
-        g.fill(x + 17, y + 1, x + 18, y + 18, 0xFFFFFFFF);
+        g.fill(x, y, x + 18, y + 18, special ? SLOT_SPECIAL : SLOT);
+        g.fill(x, y, x + 17, y + 1, SLOT_SH);
+        g.fill(x, y, x + 1, y + 17, SLOT_SH);
+        g.fill(x + 1, y + 17, x + 18, y + 18, SLOT_HI);
+        g.fill(x + 17, y + 1, x + 18, y + 18, SLOT_HI);
     }
 
-    private static void ghost(GuiGraphics g, ItemStack stack, int x, int y, int veil) {
+    private static void ghost(GuiGraphics g, ItemStack stack, int x, int y) {
         g.renderFakeItem(stack, x, y);
         g.pose().pushPose();
         g.pose().translate(0, 0, 300);
-        g.fill(x, y, x + 16, y + 16, veil);
+        g.fill(x, y, x + 16, y + 16, 0xC0302A38);
         g.pose().popPose();
-    }
-
-    /** Corazón pixelado de 7x6. */
-    private static void heart(GuiGraphics g, int x, int y, int color) {
-        g.fill(x + 1, y, x + 3, y + 1, color);
-        g.fill(x + 4, y, x + 6, y + 1, color);
-        g.fill(x, y + 1, x + 7, y + 3, color);
-        g.fill(x + 1, y + 3, x + 6, y + 4, color);
-        g.fill(x + 2, y + 4, x + 5, y + 5, color);
-        g.fill(x + 3, y + 5, x + 4, y + 6, color);
     }
 
     private static boolean isIn(double mx, double my, int x, int y, int w, int h) {
@@ -227,22 +259,24 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
 
     @Override
     protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
-        g.drawString(font, "♡ " + title.getString(), 7, titleLabelY, 0xFFFFFFFF, true);
+        g.drawString(font, "✦ " + title.getString(), 7, titleLabelY, GOLD_HI, false);
         TannyEntity t = menu.getTanny();
         if (t != null) {
-            g.drawString(font, String.format("♥ %.0f / %.0f", t.getHealth(), t.getMaxHealth()), 82, 20, 0xFF8B1E3F, false);
+            g.drawString(font, String.format("♥ %.0f / %.0f", t.getHealth(), t.getMaxHealth()), 82, 20, TEXT, false);
+            String armor = "◈ " + t.getArmorValue();
+            g.drawString(font, armor, 186 - font.width(armor), 20, TEXT_SOFT, false);
             String state = t.isWeakened() ? "Debilitada" : t.getMode().displayName();
-            g.drawString(font, "Modo: ", 82, 41, TEXT_SOFT, false);
-            g.drawString(font, state, 82 + font.width("Modo: "), 41, TEXT, false);
+            g.drawString(font, "Modo:", 82, 41, TEXT_SOFT, false);
+            g.drawString(font, state, 82 + font.width("Modo: "), 41, GOLD_HI, false);
         }
         if (menu.getPage() == TannyMenu.PAGE_BALLS) {
-            g.drawString(font, "Bolsa de Poké Balls", 8, TannyMenu.BAG_Y - 10, TEXT, false);
-            g.drawString(font, "Solo Poké Balls", 85, 57, TEXT_SOFT, false);
+            g.drawString(font, "Bolsa de Poké Balls", TannyMenu.INV_X, TannyMenu.BAG_Y - 10, TEXT, false);
+            g.drawString(font, "Solo Poké Balls", 86, 57, TEXT_SOFT, false);
         } else {
-            g.drawString(font, "Herramientas", 82, TannyMenu.TOOL_Y - 10, TEXT, false);
-            g.drawString(font, "Mochila", 8, TannyMenu.BAG_Y - 10, TEXT, false);
+            g.drawString(font, "Armas y herramientas", 82, TannyMenu.TOOL_Y - 10, TEXT, false);
+            g.drawString(font, "Mochila", TannyMenu.INV_X, TannyMenu.BAG_Y - 10, TEXT, false);
         }
-        g.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT, false);
+        g.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT_SOFT, false);
     }
 
     private void renderHints(GuiGraphics g, int mouseX, int mouseY) {
@@ -254,13 +288,9 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
             else if (slot instanceof TannyMenu.BallSlot) hint = "Solo Poké Balls";
             if (hint != null) g.renderTooltip(font, Component.literal(hint), mouseX, mouseY);
         }
-        int x = leftPos + imageWidth + SIDE_GAP + 4, y = topPos + 18;
-        for (int i = 0; i < TannyMenu.ORDERS.length; i++) {
-            if (isIn(mouseX, mouseY, x, y + i * (BTN_H + 1), SIDE_W - 8, BTN_H)) {
-                g.renderTooltip(font, Component.literal(ORDER_HELP[i]), mouseX, mouseY);
-            }
-        }
-        if (menu.getPage() == TannyMenu.PAGE_BALLS && isIn(mouseX, mouseY, leftPos + 82, topPos + 66, 86, 22)) {
+        int hit = walkOrders(null, mouseX, mouseY, null);
+        if (hit >= 0) g.renderTooltip(font, Component.literal(ORDER_HELP[hit]), mouseX, mouseY);
+        if (menu.getPage() == TannyMenu.PAGE_BALLS && isIn(mouseX, mouseY, leftPos + 84, topPos + 66, 100, 22)) {
             g.renderTooltip(font, Component.literal("Abre el PC de Cobblemon: tus cajas de Pokémon"), mouseX, mouseY);
         }
     }
@@ -270,7 +300,7 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (button == 0) {
-            int tx = leftPos + 4, ty = topPos - TAB_H + 2;
+            int tx = leftPos + 6, ty = topPos - TAB_H + 2;
             for (int i = 0; i < TABS.length; i++) {
                 int w = tabWidth(i);
                 if (isIn(mx, my, tx, ty, w, TAB_H)) {
@@ -279,14 +309,12 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
                 }
                 tx += w + 2;
             }
-            int ox = leftPos + imageWidth + SIDE_GAP + 4, oy = topPos + 18;
-            for (int i = 0; i < TannyMenu.ORDERS.length; i++) {
-                if (isIn(mx, my, ox, oy + i * (BTN_H + 1), SIDE_W - 8, BTN_H)) {
-                    press(TannyMenu.BTN_ORDER + i);
-                    return true;
-                }
+            int hit = walkOrders(null, mx, my, null);
+            if (hit >= 0) {
+                press(TannyMenu.BTN_ORDER + hit);
+                return true;
             }
-            if (menu.getPage() == TannyMenu.PAGE_BALLS && isIn(mx, my, leftPos + 82, topPos + 66, 86, 22)) {
+            if (menu.getPage() == TannyMenu.PAGE_BALLS && isIn(mx, my, leftPos + 84, topPos + 66, 100, 22)) {
                 press(TannyMenu.BTN_PC);
                 return true;
             }
@@ -296,8 +324,7 @@ public class TannyScreen extends AbstractContainerScreen<TannyMenu> {
 
     @Override
     protected boolean hasClickedOutside(double mx, double my, int left, int top, int button) {
-        int sideX = leftPos + imageWidth + SIDE_GAP;
-        if (isIn(mx, my, sideX, topPos, SIDE_W, imageHeight) || isIn(mx, my, leftPos, topPos - TAB_H, imageWidth, TAB_H)) return false;
+        if (isIn(mx, my, sideX(), topPos, SIDE_W, ordersHeight()) || isIn(mx, my, leftPos, topPos - TAB_H, imageWidth, TAB_H)) return false;
         return super.hasClickedOutside(mx, my, left, top, button);
     }
 

@@ -15,6 +15,21 @@ public class TannyModel extends PlayerModel<TannyEntity> {
         super(root, true);
     }
 
+    /** Brazos según lo que usa: escudo en alto, arco tensado o arma en la mano. */
+    @Override
+    public void prepareMobModel(TannyEntity e, float limbSwing, float limbSwingAmount, float partialTick) {
+        super.prepareMobModel(e, limbSwing, limbSwingAmount, partialTick);
+        this.rightArmPose = e.getMainHandItem().isEmpty() ? ArmPose.EMPTY : ArmPose.ITEM;
+        this.leftArmPose = e.getOffhandItem().isEmpty() ? ArmPose.EMPTY : ArmPose.ITEM;
+        if (e.isUsingItem()) {
+            net.minecraft.world.item.UseAnim anim = e.getUseItem().getUseAnimation();
+            ArmPose pose = anim == net.minecraft.world.item.UseAnim.BLOCK ? ArmPose.BLOCK
+                    : anim == net.minecraft.world.item.UseAnim.BOW ? ArmPose.BOW_AND_ARROW : ArmPose.ITEM;
+            if (e.getUsedItemHand() == net.minecraft.world.InteractionHand.MAIN_HAND) this.rightArmPose = pose;
+            else this.leftArmPose = pose;
+        }
+    }
+
     @Override
     public void setupAnim(TannyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
                           float netHeadYaw, float headPitch) {
