@@ -27,13 +27,13 @@ chmod +x gradlew
 La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
 
 ```
-build/libs/tannymaid-forge-1.20.1-1.7.0.jar
+build/libs/tannymaid-forge-1.20.1-1.8.0.jar
 ```
 
 ## 2. Instalación
 
 Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
-- `tannymaid-forge-1.20.1-1.7.0.jar`
+- `tannymaid-forge-1.20.1-1.8.0.jar`
 - `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
 
 Para un servidor, el mod va tanto en el servidor como en los clientes.
@@ -70,7 +70,7 @@ Solo puedes tener una Tanny; si usas otro contrato estando ella cargada, simplem
 | `/tanny collect` | Activa/desactiva recoger objetos del suelo |
 | `/tanny status` | Vida, modo, estado de Lucario y posición |
 | `/tanny dismiss` | La despide: te devuelve su inventario, herramientas y el contrato |
-| `/tanny recolectar <madera\|piedra\|carbon\|hierro\|tierra> [1-64]` | Busca y pica esos bloques cerca (máx. 64 por pedido). Piedra, carbón y hierro necesitan un pico en su barra |
+| `/tanny recolectar <madera\|piedra\|carbon\|hierro\|tierra\|apricorn> [1-64]` | Busca y pica esos bloques cerca (los Bonguris/Apricorns los cosecha sin romper el árbol) (máx. 64 por pedido). Piedra, carbón y hierro necesitan un pico en su barra |
 | `/tanny craftear <objeto> [cantidad]` | Fabrica con lo que tenga en su mochila: `palos`, `tablones`, `pico_piedra`, `hacha_hierro`, `espada_diamante`, `escudo`, `pokebola`, `superball`, `ultraball`… Si faltan cosas: "Amo, requiero de más materiales para lo que me pidió." |
 | `/tanny pan` | Te da 24 panes (cada 5 minutos) |
 | `/tanny seguro` | Te lleva al lugar seguro más cercano: la superficie si estás bajo tierra, tu cama, su casa o el punto de aparición |
@@ -124,6 +124,13 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 
 ## 7. Notas y límites conocidos
 
+- **Novedades 1.8.0.**
+  - Gardevoir: aparece y se teletransporta solo en lugares seguros (suelo firme, espacio libre, sin
+    lava ni fuego), sale sola si queda enterrada o atascada y no recibe daño por asfixia, caídas ni
+    ahogo. Es más rápida (+60 %), te sigue más de cerca, llega al instante si tienes poca vida y avisa
+    en la barra de acción lo que hace (te protege, Psíquico, Fuerza Lunar).
+  - `/tanny recolectar apricorn [1-64]`: Tanny cosecha Bonguris (Apricorns) maduros de Cobblemon
+    sin romper el árbol, así vuelven a crecer.
 - **Novedades 1.7.0.** Cabello tomboy más desordenado y con más estilo: 64 mechones lisos (picos en
   distintas direcciones), flequillo de dos capas con 15 mechones peinado hacia un lado y 10 mechones
   que bajan por los lados de la cara hasta la mandíbula.
@@ -194,7 +201,7 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
    Si no arranca solo, entra en él y pulsa **Run workflow**.
 6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
-   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.7.0.jar`.
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.8.0.jar`.
 7. Copia ese `.jar` a tu carpeta `mods`.
 
 Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.

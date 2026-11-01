@@ -102,7 +102,8 @@ public class TannyGatherGoal extends Goal {
         }
         tanny.getLookControl().setLookAt(job.getX() + 0.5, job.getY() + 0.5, job.getZ() + 0.5);
         double dist = tanny.getEyePosition().distanceToSqr(job.getX() + 0.5, job.getY() + 0.5, job.getZ() + 0.5);
-        if (dist > 4.2 * 4.2) {
+        double reach = res == TannyResource.APRICORN ? 5.5 : 4.2;   // los Bonguris cuelgan alto en el árbol
+        if (dist > reach * reach) {
             if (walkTicks++ % 20 == 0) {
                 tanny.getNavigation().moveTo(job.getX() + 0.5, job.getY(), job.getZ() + 0.5, 1.1D);
             }
@@ -117,6 +118,12 @@ public class TannyGatherGoal extends Goal {
         tanny.getNavigation().stop();
         if (tanny.getMainHandItem() != tool) {
             tanny.setItemSlot(EquipmentSlot.MAINHAND, tool);
+        }
+        if (res == TannyResource.APRICORN) {
+            // Bonguris: se cosechan con la mano (el árbol no se rompe y vuelve a dar fruto)
+            if (++progress >= 10) harvestApricorn(level, state);
+            else if (progress == 1) tanny.swing(InteractionHand.MAIN_HAND);
+            return;
         }
         if (progress == 0) {
             needed = breakTicks(level, state, tool);
@@ -153,6 +160,27 @@ public class TannyGatherGoal extends Goal {
         tanny.onGatheredBlock();
     }
 
+    private void harvestApricorn(ServerLevel level, BlockState state) {
+        List<ItemStack> drops = Block.getDrops(state, level, job, level.getBlockEntity(job), tanny, ItemStack.EMPTY);
+        net.minecraft.world.level.block.state.properties.IntegerProperty age = TannyResource.ageOf(state);
+        if (age != null) {
+            level.setBlock(job, state.setValue(age, 0), Block.UPDATE_ALL);
+        } else {
+            level.destroyBlock(job, false, tanny);
+        }
+        if (drops.isEmpty()) {
+            net.minecraft.resources.ResourceLocation id = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(state.getBlock());
+            net.minecraft.world.item.Item fruit = id == null ? null : net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(id);
+            if (fruit != null && fruit != net.minecraft.world.item.Items.AIR) drops = List.of(new ItemStack(fruit));
+        }
+        for (ItemStack drop : drops) tanny.storeOrDrop(drop);
+        level.playSound(null, job, net.minecraft.sounds.SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, 1.2F);
+        tanny.swing(InteractionHand.MAIN_HAND);
+        clearProgress();
+        job = null;
+        tanny.onGatheredBlock();
+    }
+
     private void clearProgress() {
         if (job != null && tanny.level() instanceof ServerLevel level) {
             level.destroyBlockProgress(tanny.getId(), job, -1);
@@ -179,7 +207,7 @@ public class TannyGatherGoal extends Goal {
             if (!level.isLoaded(pos)) continue;          // optimización: nunca carga chunks nuevos
             if (!res.matches(level.getBlockState(pos))) continue;
             if (tanny.isGatherBlockSkipped(pos)) continue;
-            if (home != null && pos.distSqr(home) < 8 * 8) continue; // no rompe la casa
+            if (res != TannyResource.APRICORN && home != null && pos.distSqr(home) < 8 * 8) continue; // no rompe la casa
             if (owner != null && owner.level() == level && owner.blockPosition().below().equals(pos)) continue;
             if (!isExposed(level, pos)) continue;
             double d = pos.distSqr(center);

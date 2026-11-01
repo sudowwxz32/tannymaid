@@ -58,7 +58,9 @@ public final class GardevoirCompanion {
             "Gardevoir te abraza y su energía te cura ♡"
     };
 
+    private static final UUID SPEED_ID = UUID.fromString("5f1c2b7e-3a44-4d6b-9e0a-6c0d2f9a7b11");
     private final UUID playerId;
+    private int stuck;
     @Nullable private Mob mob;
     @Nullable private LivingEntity target;
     private int cooldown, psychicCd, moonCd, wishCd, protectMsgCd, repath, scan;
@@ -105,6 +107,8 @@ public final class GardevoirCompanion {
         if (c.protectMsgCd == 0) {
             c.protectMsgCd = 600;
             say(player, pick(player.getRandom(), PROTECT));
+        } else {
+            bar(player, "✿ Gardevoir te protege §7(−30 % de daño)");
         }
         return amount * 0.7F;   // Protección: 30 % menos de daño
     }
@@ -157,6 +161,10 @@ public final class GardevoirCompanion {
     }
 
     private void tick(ServerPlayer player) {
+        if (mob != null && mob.isAlive() && mob.level() == player.level()
+                && (mob.isInWall() || mob.isInLava() || mob.getY() < player.level().getMinBuildHeight() + 1)) {
+            teleportSafe(player);                 // nunca se queda enterrada ni en la lava
+        }
         if (cooldown > 0) cooldown--;
         if (psychicCd > 0) psychicCd--;
         if (moonCd > 0) moonCd--;
@@ -190,8 +198,13 @@ public final class GardevoirCompanion {
             return;
         }
 
+        // el Master está en peligro y ella está lejos: aparece a su lado al instante
+        if (player.getHealth() < player.getMaxHealth() * 0.3F && mob.distanceToSqr(player) > 6 * 6) {
+            teleportSafe(player);
+            bar(player, "✿ ¡Gardevoir se teletransportó a tu lado!");
+        }
         if (--scan <= 0) {
-            scan = 10;
+            scan = 6;
             pickTarget(player);
         }
         if (target != null && (!target.isAlive() || target.level() != level || target.distanceToSqr(player) > 24 * 24)) {
@@ -212,8 +225,14 @@ public final class GardevoirCompanion {
             cooldown = 1200;
             return;
         }
-        Vec3 side = sidePos(player);
-        m.moveTo(side.x, player.getY(), side.z, player.getYRot(), 0.0F);
+        Vec3 side = safeSpot(level, m, player);
+        m.moveTo(side.x, side.y, side.z, player.getYRot(), 0.0F);
+        // más rápida: +60 % de velocidad mientras acompaña al Master
+        net.minecraft.world.entity.ai.attributes.AttributeInstance speed = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+        if (speed != null && speed.getModifier(SPEED_ID) == null) {
+            speed.addTransientModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(SPEED_ID, "Gardevoir veloz", 0.6,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_TOTAL));
+        }
         m.addTag(LucarioCompanion.TAG);
         m.setPersistenceRequired();
         LucarioCompanion.track(m.getUUID());
@@ -223,8 +242,9 @@ public final class GardevoirCompanion {
             return;
         }
         mob = m;
-        level.sendParticles(PINK, side.x, player.getY() + 1.0, side.z, 30, 0.4, 0.7, 0.4, 0.0);
-        level.sendParticles(ParticleTypes.HEART, side.x, player.getY() + 1.8, side.z, 3, 0.3, 0.2, 0.3, 0.0);
+        level.sendParticles(PINK, side.x, side.y + 1.0, side.z, 30, 0.4, 0.7, 0.4, 0.0);
+        level.sendParticles(ParticleTypes.HEART, side.x, side.y + 1.8, side.z, 3, 0.3, 0.2, 0.3, 0.0);
+        bar(player, "✿ Gardevoir está contigo ♡  §7(/tanny gardevoir para guardarla)");
         level.playSound(null, m.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.0F, 1.3F);
     }
 
@@ -236,18 +256,67 @@ public final class GardevoirCompanion {
         return new Vec3(p.getX() + rx * 1.4 - fx * 0.6, p.getY(), p.getZ() + rz * 1.4 - fz * 0.6);
     }
 
+    /**
+     * Busca un lugar seguro junto al Master: suelo firme debajo, espacio libre para su cuerpo,
+     * sin lava ni fuego. Así nunca aparece enterrada entre bloques.
+     */
+    private static Vec3 safeSpot(ServerLevel level, Mob m, Player p) {
+        Vec3 side = sidePos(p);
+        java.util.List<Vec3> tries = new java.util.ArrayList<>();
+        tries.add(side);
+        for (int r = 1; r <= 3; r++) {
+            for (int k = 0; k < 8; k++) {
+                double a = k / 8.0 * Math.PI * 2;
+                tries.add(new Vec3(p.getX() + Math.cos(a) * r * 1.2, p.getY(), p.getZ() + Math.sin(a) * r * 1.2));
+            }
+        }
+        for (Vec3 c : tries) {
+            for (int dy : new int[] {0, 1, -1, 2}) {
+                net.minecraft.core.BlockPos feet = net.minecraft.core.BlockPos.containing(c.x, p.getY() + dy, c.z);
+                if (isSafe(level, m, feet)) return new Vec3(c.x, feet.getY(), c.z);
+            }
+        }
+        return p.position();   // el lugar del Master siempre es seguro
+    }
+
+    private static boolean isSafe(ServerLevel level, Mob m, net.minecraft.core.BlockPos feet) {
+        if (!level.isLoaded(feet)) return false;
+        net.minecraft.world.level.block.state.BlockState below = level.getBlockState(feet.below());
+        if (!below.isFaceSturdy(level, feet.below(), net.minecraft.core.Direction.UP)) return false;
+        if (below.is(net.minecraft.world.level.block.Blocks.MAGMA_BLOCK) || below.is(net.minecraft.world.level.block.Blocks.CAMPFIRE)) return false;
+        net.minecraft.world.phys.AABB box = m.getDimensions(m.getPose()).makeBoundingBox(feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5);
+        if (!level.noCollision(m, box)) return false;
+        for (net.minecraft.core.BlockPos q : net.minecraft.core.BlockPos.betweenClosed(feet, feet.above((int) Math.ceil(box.getYsize())))) {
+            net.minecraft.world.level.block.state.BlockState st = level.getBlockState(q);
+            if (!st.getFluidState().isEmpty() || st.is(net.minecraft.tags.BlockTags.FIRE)) return false;
+        }
+        return true;
+    }
+
+    private void teleportSafe(ServerPlayer player) {
+        ServerLevel level = (ServerLevel) player.level();
+        Vec3 spot = safeSpot(level, mob, player);
+        level.sendParticles(PINK, mob.getX(), mob.getY() + 0.8, mob.getZ(), 12, 0.3, 0.5, 0.3, 0.0);
+        mob.moveTo(spot.x, spot.y, spot.z, mob.getYRot(), mob.getXRot());
+        mob.setDeltaMovement(Vec3.ZERO);
+        mob.fallDistance = 0;
+        mob.getNavigation().stop();
+        stuck = 0;
+        level.sendParticles(PINK, spot.x, spot.y + 0.8, spot.z, 16, 0.3, 0.5, 0.3, 0.0);
+        level.playSound(null, mob.blockPosition(), SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.NEUTRAL, 0.5F, 1.6F);
+    }
+
     private void follow(ServerPlayer player) {
         double d = mob.distanceToSqr(player);
-        if (d > 18 * 18) {
-            Vec3 side = sidePos(player);
-            mob.moveTo(side.x, player.getY(), side.z, mob.getYRot(), mob.getXRot());
-            mob.getNavigation().stop();
-            mob.level().playSound(null, mob.blockPosition(), SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.NEUTRAL, 0.5F, 1.6F);
-        } else if (d > 2.4 * 2.4) {
+        // se atascó (no avanza hacia el Master): se teletransporta a su lado
+        stuck = d > 5 * 5 && mob.getDeltaMovement().horizontalDistanceSqr() < 0.0025 ? stuck + 1 : 0;
+        if (d > 12 * 12 || stuck > 40) {
+            teleportSafe(player);
+        } else if (d > 2.2 * 2.2) {
             if (--repath <= 0) {
-                repath = 8;
+                repath = 5;
                 Vec3 side = sidePos(player);
-                mob.getNavigation().moveTo(side.x, player.getY(), side.z, d > 8 * 8 ? 1.6D : 1.25D);
+                mob.getNavigation().moveTo(side.x, player.getY(), side.z, d > 6 * 6 ? 2.0D : 1.5D);
             }
         } else {
             mob.getNavigation().stop();
@@ -313,14 +382,16 @@ public final class GardevoirCompanion {
             Vec3 dir = t.position().subtract(player.position());
             Vec3 guard = dir.lengthSqr() > 0.01 ? player.position().add(dir.normalize().scale(Math.min(2.5, dir.length() * 0.5)))
                     : player.position();
-            mob.getNavigation().moveTo(guard.x, guard.y, guard.z, 1.5D);
+            mob.getNavigation().moveTo(guard.x, guard.y, guard.z, 1.9D);
         }
         double d = mob.distanceToSqr(t);
         if (d > 18 * 18 || !mob.hasLineOfSight(t)) return;
         if (moonCd == 0) {
             moonblast(level, t);
+            bar(player, "✿ ¡Gardevoir usó Fuerza Lunar!");
         } else if (psychicCd == 0) {
             psychic(level, t);
+            bar(player, "✿ ¡Gardevoir usó Psíquico!");
         }
     }
 
@@ -373,6 +444,10 @@ public final class GardevoirCompanion {
 
     private static String pick(RandomSource r, String[] lines) {
         return lines[r.nextInt(lines.length)];
+    }
+
+    private static void bar(ServerPlayer player, String text) {
+        player.displayClientMessage(Component.literal("§d" + text), true);
     }
 
     private static void say(ServerPlayer player, String text) {

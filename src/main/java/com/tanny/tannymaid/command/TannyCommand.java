@@ -96,7 +96,7 @@ public final class TannyCommand {
         TannyResource res = TannyResource.byName(name);
         if (res == null) {
             TannySpeech.system(ctx.getSource().getPlayerOrException(),
-                    "Recurso desconocido. Usa: madera, piedra, carbon, hierro o tierra.");
+                    "Recurso desconocido. Usa: madera, piedra, carbon, hierro, tierra o apricorn.");
             return 0;
         }
         return run(ctx, (t, p) -> t.commandGather(p, res, amount));
@@ -175,7 +175,7 @@ public final class TannyCommand {
         TannySpeech.system(p, "§f/tanny collect§7 – activa/desactiva recoger objetos del suelo");
         TannySpeech.system(p, "§f/tanny status§7 – vida, modo y posición");
         TannySpeech.system(p, "§f/tanny dismiss§7 – la despide y te devuelve el contrato");
-        TannySpeech.system(p, "§f/tanny recolectar <madera|piedra|carbon|hierro|tierra> [1-64]§7 – recolecta bloques");
+        TannySpeech.system(p, "§f/tanny recolectar <madera|piedra|carbon|hierro|tierra|apricorn> [1-64]§7 – recolecta bloques o Bonguris");
         TannySpeech.system(p, "§f/tanny craftear <objeto> [cantidad]§7 – palos, herramientas, escudo, Poké Balls");
         TannySpeech.system(p, "§f/tanny pan§7 – te da 24 panes (cada 5 min)");
         TannySpeech.system(p, "§f/tanny seguro§7 – te lleva al lugar seguro más cercano");

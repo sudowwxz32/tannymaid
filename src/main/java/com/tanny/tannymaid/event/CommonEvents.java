@@ -117,7 +117,12 @@ public final class CommonEvents {
     /** El Master no puede lastimar por accidente a los Pokémon de Tanny. */
     @SubscribeEvent
     public static void onAttack(LivingAttackEvent event) {
-        if (LucarioCompanion.isTannyPokemon(event.getEntity()) && event.getSource().getEntity() instanceof Player) {
+        if (!LucarioCompanion.isTannyPokemon(event.getEntity())) return;
+        net.minecraft.world.damagesource.DamageSource src = event.getSource();
+        // ni el Master la lastima por accidente, ni se ahoga entre bloques, ni se hace daño al caer
+        if (src.getEntity() instanceof Player || src.is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)
+                || src.is(net.minecraft.world.damagesource.DamageTypes.CRAMMING) || src.is(net.minecraft.world.damagesource.DamageTypes.FALL)
+                || src.is(net.minecraft.world.damagesource.DamageTypes.DROWN)) {
             event.setCanceled(true);
         }
     }
