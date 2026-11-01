@@ -20,7 +20,7 @@ SIDES = 4
 # columnas de la tabla
 #  0 phi   1 th0   2 th1   3 hang   4 flare   5 curl   6 width   7 thick   8 lift   9 shade   10 kind
 #  kind: 0 = capa / bob, 1 = flequillo, 2 = mechón largo de la cara, 3 = ahoge
-KIND_BOB, KIND_BANG, KIND_LONG, KIND_AHOGE = 0, 1, 2, 3
+KIND_BOB, KIND_BANG, KIND_LONG, KIND_AHOGE, KIND_SOFTBANG = 0, 1, 2, 3, 4
 
 
 def locks():
@@ -60,6 +60,36 @@ def locks():
         L.append([math.radians(deg + j(3)), 0.25, 0.92, hang, 0.35, -0.3, 1.9, 0.75, 0.85, 1.0, KIND_BANG])
     # ahoge
     L.append([math.radians(-12), 0.0, 0.0, 3.0, 0, 0, 1.1, 0.7, 0.6, 1.0, KIND_AHOGE])
+    return L
+
+
+def yunn_locks():
+    """Yunn: cabello largo y liso hasta la espalda, flequillo suave con raya al medio y mechones
+    largos que enmarcan la cara (diseño original)."""
+    rnd = random.Random(7)
+    j = lambda a: rnd.uniform(-a, a)
+    L = []
+    for i in range(12):
+        phi = i / 12 * 2 * math.pi + 0.15
+        L.append([phi, 0.04, 1.12, 0.0, 0, 0, 2.9, 0.8, 0.5, 1.0, KIND_BOB])
+    # espalda: cabello largo y liso
+    for i in range(12):
+        phi = math.radians(112 + i * 12.4) + j(0.03)
+        L.append([phi, 0.15, math.pi / 2 + 0.12, 12.0 + j(0.6), 0.06, 0.2, 2.8, 0.85, 0.35, 1.0, KIND_LONG])
+    for i in range(8):
+        phi = math.radians(118 + i * 17.5)
+        L.append([phi, 0.2, math.pi / 2 + 0.1, 10.5 + j(0.5), 0.1, 0.25, 2.6, 0.8, 0.7, 1.0, KIND_LONG])
+    # lados: hasta los hombros (no chocan con los brazos)
+    for s_ in (-1, 1):
+        for deg in (66, 80, 94, 106):
+            L.append([s_ * math.radians(deg), 0.2, math.pi / 2 + 0.05, 5.2 + j(0.4), 0.14, 0.3, 2.4, 0.9, 0.35, 1.0, KIND_BOB])
+    # mechones largos que enmarcan la cara
+    for s_ in (-1, 1):
+        L.append([s_ * math.radians(46), 0.3, math.pi / 2 - 0.06, 8.6, 0.05, 0.25, 2.0, 0.85, 0.5, 1.0, KIND_LONG])
+        L.append([s_ * math.radians(55), 0.3, math.pi / 2 - 0.03, 7.6, 0.06, 0.3, 2.0, 0.85, 0.7, 1.0, KIND_LONG])
+    # flequillo suave con raya al medio
+    for deg, hang in ((-36, 2.0), (-26, 2.3), (-16, 2.2), (-6, 1.9), (6, 1.9), (16, 2.2), (26, 2.3), (36, 2.0)):
+        L.append([math.radians(deg), 0.3, 1.0, hang, 0.1, -0.1, 2.1, 0.75, 0.5, 1.0, KIND_SOFTBANG])
     return L
 
 
@@ -117,6 +147,9 @@ def path(lock, sway_x=0.0, sway_z=0.0):
         # flequillo con raya al medio: se abre hacia los lados
         if kind == KIND_BANG:
             sw = (phi * 0.7 - 0.75) * t       # todo el flequillo se peina hacia un lado
+            d = norm((d[0] + cp * sw, d[1], d[2] + sp * sw))
+        elif kind == KIND_SOFTBANG:
+            sw = phi * 1.3 * t                # flequillo suave con raya al medio
             d = norm((d[0] + cp * sw, d[1], d[2] + sp * sw))
         # vaivén: hacia atrás (x) y de lado (z)
         tw = t ** 1.5
@@ -191,9 +224,13 @@ def cap_quads():
     return quads
 
 
-def mesh_quads(sway_x=0.0, sway_z=0.0, helmet=False):
+def mesh_quads(sway_x=0.0, sway_z=0.0, helmet=False, table=None, color=None):
+    global HAIR_UNIFORM
+    old = HAIR_UNIFORM
+    if color:
+        HAIR_UNIFORM = color
     quads = cap_quads()
-    for lock in locks():
+    for lock in (table if table is not None else locks()):
         pts = path(lock, sway_x, sway_z)
         rings = []
         for i, (p, n, t) in enumerate(pts):
@@ -209,6 +246,7 @@ def mesh_quads(sway_x=0.0, sway_z=0.0, helmet=False):
                 q = [r0[j][0], r0[jj][0], r1[jj][0], r1[j][0]]
                 nrm = norm(tuple(r0[j][1][k] + r0[jj][1][k] for k in range(3)))
                 quads.append((q, c0, nrm))
+    HAIR_UNIFORM = old
     return quads
 
 
@@ -324,6 +362,14 @@ def write_java():
         out.append("            {" + ", ".join(fjava(v) for v in l) + "},")
     out += ["    };", "}", ""]
     open(JAVA, "w").write("\n".join(out))
+    Y = yunn_locks()
+    out = ["// GENERADO por tools/hair_mesh.py — no editar a mano.", "package com.tanny.tannymaid.client;", "",
+           "/** Mechones de Yunn (mismo formato que TannyHairLocks). */",
+           "public final class YunnHairLocks {", "    private YunnHairLocks() {}", "", "    public static final float[][] L = {"]
+    for l in Y:
+        out.append("            {" + ", ".join(fjava(v) for v in l) + "},")
+    out += ["    };", "}", ""]
+    open(JAVA.replace("TannyHairLocks", "YunnHairLocks"), "w").write("\n".join(out))
     return len(L)
 
 

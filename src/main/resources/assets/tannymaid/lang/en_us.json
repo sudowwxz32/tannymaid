@@ -4,5 +4,8 @@
   "item.tannymaid.tanny_bell": "Tanny's Bell",
   "itemGroup.tannymaid": "TannyMaid",
   "key.categories.tannymaid": "TannyMaid",
-  "key.tannymaid.menu": "Open Tanny's menu"
+  "key.tannymaid.menu": "Open Tanny's menu",
+  "entity.tannymaid.yunn": "Yunn",
+  "item.tannymaid.yunn_contract": "Yunn's Contract",
+  "item.tannymaid.heart_scepter": "Heart Scepter"
 }

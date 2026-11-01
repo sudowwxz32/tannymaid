@@ -18,5 +18,11 @@ public final class ModEntities {
                     .clientTrackingRange(10)
                     .build("tanny"));
 
+    public static final RegistryObject<EntityType<com.tanny.tannymaid.yunn.YunnEntity>> YUNN = ENTITIES.register("yunn",
+            () -> EntityType.Builder.<com.tanny.tannymaid.yunn.YunnEntity>of(com.tanny.tannymaid.yunn.YunnEntity::new, MobCategory.MISC)
+                    .sized(0.6F, 1.65F)
+                    .clientTrackingRange(10)
+                    .build("yunn"));
+
     private ModEntities() {}
 }

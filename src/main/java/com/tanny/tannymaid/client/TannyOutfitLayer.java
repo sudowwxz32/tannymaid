@@ -25,9 +25,11 @@ import java.util.Map;
  * puños, medias con volante y zapatos. La falda se abre siguiendo las piernas y se esconden
  * las piezas que chocarían con la armadura puesta.
  */
-public class TannyOutfitLayer extends RenderLayer<TannyEntity, TannyModel> {
+public class TannyOutfitLayer<T extends net.minecraft.world.entity.LivingEntity, M extends net.minecraft.client.model.PlayerModel<T>>
+        extends RenderLayer<T, M> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(new ResourceLocation(TannyMaid.MODID, "tanny"), "outfit");
-    private static final ResourceLocation TEXTURE = new ResourceLocation(TannyMaid.MODID, "textures/entity/tanny/outfit.png");
+    public static final ResourceLocation TANNY_TEXTURE = new ResourceLocation(TannyMaid.MODID, "textures/entity/tanny/outfit.png");
+    private final ResourceLocation texture;
 
     private final ModelPart root, body, rightArm, leftArm, rightLeg, leftLeg;
     private final ModelPart front, back, left, right, fr, fl, br, bl, tailR, tailL, ribbonTailR, ribbonTailL;
@@ -35,8 +37,9 @@ public class TannyOutfitLayer extends RenderLayer<TannyEntity, TannyModel> {
     private final List<ModelPart> legsHidden = new ArrayList<>();
     private final List<ModelPart> feetHidden = new ArrayList<>();
 
-    public TannyOutfitLayer(RenderLayerParent<TannyEntity, TannyModel> parent, EntityModelSet models) {
+    public TannyOutfitLayer(RenderLayerParent<T, M> parent, EntityModelSet models, ResourceLocation texture) {
         super(parent);
+        this.texture = texture;
         this.root = models.bakeLayer(LAYER);
         Map<String, ModelPart> m = TannyGeneratedModels.bakeOutfit(root);
         body = m.get("body");
@@ -63,11 +66,11 @@ public class TannyOutfitLayer extends RenderLayer<TannyEntity, TannyModel> {
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, TannyEntity entity,
+    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T entity,
                        float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks,
                        float netHeadYaw, float headPitch) {
         if (entity.isInvisible()) return;
-        TannyModel model = getParentModel();
+        M model = getParentModel();
         body.copyFrom(model.body);
         rightArm.copyFrom(model.rightArm);
         leftArm.copyFrom(model.leftArm);
@@ -97,7 +100,7 @@ public class TannyOutfitLayer extends RenderLayer<TannyEntity, TannyModel> {
         setVisible(legs, legsHidden, false);
         setVisible(feet, feetHidden, false);
 
-        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
+        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
         root.render(poseStack, vc, packedLight, LivingEntityRenderer.getOverlayCoords(entity, 0.0F));
 
         setVisible(chest, chestHidden, true);

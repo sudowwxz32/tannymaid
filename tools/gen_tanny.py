@@ -321,6 +321,29 @@ def nose3d(f, x, y, w, h):
     return mix(SKIN_HI, SKIN, y / max(1, h - 1) * 0.6)
 
 
+def heart_cap(f, x, y, w, h):
+    """Cofia de enfermera blanca con un corazón rosado al frente y borde rosado."""
+    if f == "front":
+        cx, cy = w / 2, h * 0.5
+        u, v = (x - cx) / (h * 0.42), (cy - y) / (h * 0.42)
+        if (u * u + v * v - 1) ** 3 - u * u * v ** 3 < 0:       # corazón
+            return (236, 96, 140)
+    if y >= h - 2 and f != "top":
+        return (240, 150, 182)
+    return mix(WHITE, WHITE_SH, y / max(1, h - 1) * 0.5)
+
+
+def yunn_cap_parts():
+    P = []
+    P.append(Part("cap", "head", (0, -9.0, -1.6), (-0.32, 0, 0), [Box(-3.4, -1.0, -1.2, 6.8, 2.2, 2.4, heart_cap)]))
+    P.append(Part("cap_band", "head", (0, -8.6, -1.4), (-0.3, 0, 0), [Box(-4.9, -0.4, -0.6, 9.8, 0.8, 1.2, heart_cap)]))
+    P.append(Part("lid_r", "head", (-1.25, -4.62, -4.02), (0, 0, 0.19), [Box(-0.68, -0.21, -0.26, 1.36, 0.42, 0.34, lash3d)]))
+    P.append(Part("lidb_r", "head", (-2.55, -4.65, -4.02), (0, 0, -0.15), [Box(-0.68, -0.21, -0.26, 1.36, 0.42, 0.34, lash3d)]))
+    P.append(Part("lash_r", "head", (-3.62, -4.1, -4.04), (0, 0.2, -0.755), [Box(-0.6, -0.18, -0.24, 1.2, 0.36, 0.32, lash3d)]))
+    P += mirror([p for p in P if p.name.endswith("_r")])
+    return P, [("head", (0, 0, 0))]
+
+
 def strand_texture():
     """Textura de los mechones: casi lisa (color uniforme); el color lo pone cada vértice."""
     img = Image.new("RGBA", (16, 16), T)
@@ -563,6 +586,8 @@ LINE = (52, 30, 24)          # pestañas / cejas café oscuro
 
 
 LASH_BLACK = (14, 10, 12)
+PUPIL_W = 0.7          # pupila rasgada (Tanny); Yunn la tiene redonda
+BLUSH_ON = False       # rubor suave (solo Yunn)
 
 
 def face_image(expr):
@@ -621,7 +646,7 @@ def face_image(expr):
             layer.paste(iris, (0, 0), ring)
             ld = ImageDraw.Draw(layer)
             ld.ellipse(box(cx - rx, cy - ry, cx + rx, cy + ry, mirror), outline=EYE_RING + (255,), width=int(0.45 * K))
-            pw = 0.7 if expr != "surprised" else 0.9
+            pw = PUPIL_W if expr != "surprised" else PUPIL_W + 0.2
             ld.ellipse(((pcx - pw) * K, (cy - 3.0) * K, (pcx + pw) * K, (cy + 2.8) * K), fill=(30, 12, 6, 255))
             # brillos: uno grande arriba y uno pequeño abajo
             hx = pcx + (0.9 if not mirror else -2.3)
@@ -665,6 +690,11 @@ def face_image(expr):
             pts = [(2.8, 11.8), (6.0, 10.6), (9.8, 10.3), (13.2, 10.9), (13.2, 11.7), (9.8, 11.1), (6.0, 11.4), (2.8, 12.5)]
         d.polygon(P(pts, mirror), fill=(34, 22, 20, 255))
 
+    if BLUSH_ON:
+        for cx in (7.5, 24.5):
+            bl = Image.new("RGBA", big.size, T)
+            ImageDraw.Draw(bl).ellipse(((cx - 4.0) * K, 23.6 * K, (cx + 4.0) * K, 26.8 * K), fill=BLUSH + (120,))
+            big.alpha_composite(bl.filter(ImageFilter.GaussianBlur(K)))
     for m in (False, True):
         brow(m)
         eye(m)
@@ -775,6 +805,11 @@ def main():
            "    public static final float SKIRT_FLARE = %s;" % fnum(SKIRT_FLARE), ""]
     out += java_layer("createHair", hparts, hanchors, hw, hh) + [""]
     out += java_bake("bakeHair", hparts, hanchors) + [""]
+    yparts, yanchors = yunn_cap_parts()
+    yw, yh = pack(yparts, 64)
+    build_texture(yparts, yw, yh).save(os.path.join(TEX, "..", "yunn", "cap.png")) if os.path.isdir(os.path.join(TEX, "..", "yunn")) else None
+    out += java_layer("createYunnCap", yparts, yanchors, yw, yh) + [""]
+    out += java_bake("bakeYunnCap", yparts, yanchors) + [""]
     out += java_layer("createOutfit", oparts, oanchors, ow, oh) + [""]
     out += java_bake("bakeOutfit", oparts, oanchors) + ["}", ""]
     open(JAVA, "w").write("\n".join(out))

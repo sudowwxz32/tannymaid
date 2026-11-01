@@ -22,6 +22,8 @@ public final class Net {
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(1, OpenMenuPacket.class, (p, b) -> {}, b -> new OpenMenuPacket(), OpenMenuPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(2, YunnActionPacket.class, YunnActionPacket::encode, YunnActionPacket::decode, YunnActionPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void send(ServerPlayer player, Object msg) {

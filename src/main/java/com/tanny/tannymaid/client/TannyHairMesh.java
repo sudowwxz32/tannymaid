@@ -14,7 +14,23 @@ import static com.tanny.tannymaid.client.TannyHairLocks.*;
  * se vean huecos. Es la misma geometría que tools/hair_mesh.py (con el que se hace la vista previa).
  */
 public final class TannyHairMesh {
-    private static final int KIND_BOB = 0, KIND_BANG = 1, KIND_LONG = 2, KIND_AHOGE = 3;
+    private static final int KIND_BOB = 0, KIND_BANG = 1, KIND_LONG = 2, KIND_AHOGE = 3, KIND_SOFTBANG = 4;
+
+    private final float[][] locks;
+    private final float cr, cg, cb;
+
+    /** Cabello de Tanny (negro). */
+    public TannyHairMesh() {
+        this(L, 0x28242E);
+    }
+
+    /** Otro peinado (por ejemplo el de Yunn) con su propio color. */
+    public TannyHairMesh(float[][] locks, int rgb) {
+        this.locks = locks;
+        this.cr = ((rgb >> 16) & 255) / 255F;
+        this.cg = ((rgb >> 8) & 255) / 255F;
+        this.cb = (rgb & 255) / 255F;
+    }
     private static final int MAXP = SCALP_STEPS + HANG_STEPS + 2;
     private static final float HAIR_R = 26 / 255F, HAIR_G = 24 / 255F, HAIR_B = 34 / 255F;
     private static final float SHINE_R = 118 / 255F, SHINE_G = 122 / 255F, SHINE_B = 162 / 255F;
@@ -35,12 +51,12 @@ public final class TannyHairMesh {
     public void render(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay,
                        float swayX, float swayZ, float bangSway, float ahogeBounce, boolean helmet) {
         if (!helmet) cap(vc, mat, nm, light, overlay);
-        for (int li = 0; li < L.length; li++) {
-            float[] lock = L[li];
+        for (int li = 0; li < locks.length; li++) {
+            float[] lock = locks[li];
             int kind = (int) lock[10];
-            if (helmet && (kind == KIND_BANG || kind == KIND_AHOGE || lock[3] <= 0)) continue;
+            if (helmet && (kind == KIND_BANG || kind == KIND_SOFTBANG || kind == KIND_AHOGE || lock[3] <= 0)) continue;
             float sx = swayX, sz = swayZ;
-            if (kind == KIND_BANG) { sx = bangSway; sz = swayZ * 0.3F; }
+            if (kind == KIND_BANG || kind == KIND_SOFTBANG) { sx = bangSway; sz = swayZ * 0.3F; }
             else if (kind == KIND_LONG) { sx = swayX * 0.7F; }
             else if (kind == KIND_AHOGE) { sx = ahogeBounce; sz = swayZ; }
             path(lock, sx, sz);
@@ -103,8 +119,9 @@ public final class TannyHairMesh {
             dx -= ox * c; dz -= oz * c;
             l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
             dx /= l; dy /= l; dz /= l;
-            if (kind == KIND_BANG) {          // flequillo con raya al medio: se abre hacia los lados
-                float sw = (phi * 0.7F - 0.75F) * t;   // todo el flequillo se peina hacia un lado
+            if (kind == KIND_BANG || kind == KIND_SOFTBANG) {
+                float sw = kind == KIND_BANG ? (phi * 0.7F - 0.75F) * t     // peinado hacia un lado
+                        : phi * 1.3F * t;                                    // raya al medio
                 dx += cp * sw; dz += sp * sw;
                 l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
                 dx /= l; dy /= l; dz /= l;
@@ -170,10 +187,10 @@ public final class TannyHairMesh {
     }
 
     /** Color uniforme del cabello: la forma la marca la luz sobre los mechones lisos. */
-    private static void color(float[] lock, float y, float ny, float t, float[] out) {
-        out[0] = 40 / 255F;
-        out[1] = 36 / 255F;
-        out[2] = 46 / 255F;
+    private void color(float[] lock, float y, float ny, float t, float[] out) {
+        out[0] = cr;
+        out[1] = cg;
+        out[2] = cb;
     }
 
     private void emit(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay, int from) {
@@ -315,25 +332,24 @@ public final class TannyHairMesh {
     }
 
     private void cap(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay) {
-        float c = 38 / 255F, cb = 46 / 255F;
         for (int i = 0; i < CAP_PHI; i++) {
             float p0 = Mth.TWO_PI * i / CAP_PHI, p1 = Mth.TWO_PI * (i + 1) / CAP_PHI;
             float m0 = capMaxTh(p0), m1 = capMaxTh(p1);
             for (int j = 0; j < CAP_TH; j++) {
                 float a0 = (float) j / CAP_TH, a1 = (float) (j + 1) / CAP_TH;
-                capVert(vc, mat, nm, m0 * a0, p0, 0, a0, c, cb, light, overlay);
-                capVert(vc, mat, nm, m1 * a0, p1, 1, a0, c, cb, light, overlay);
-                capVert(vc, mat, nm, m1 * a1, p1, 1, a1, c, cb, light, overlay);
-                capVert(vc, mat, nm, m0 * a1, p0, 0, a1, c, cb, light, overlay);
+                capVert(vc, mat, nm, m0 * a0, p0, 0, a0, cr * 0.92F, cg * 0.92F, this.cb * 0.92F, light, overlay);
+                capVert(vc, mat, nm, m1 * a0, p1, 1, a0, cr * 0.92F, cg * 0.92F, this.cb * 0.92F, light, overlay);
+                capVert(vc, mat, nm, m1 * a1, p1, 1, a1, cr * 0.92F, cg * 0.92F, this.cb * 0.92F, light, overlay);
+                capVert(vc, mat, nm, m0 * a1, p0, 0, a1, cr * 0.92F, cg * 0.92F, this.cb * 0.92F, light, overlay);
             }
         }
     }
 
     private static void capVert(VertexConsumer vc, Matrix4f mat, Matrix3f nm, float th, float phi, float u, float v,
-                                float c, float cb, int light, int overlay) {
+                                float r, float g, float b, int light, int overlay) {
         float dx = Mth.sin(th) * Mth.sin(phi), dy = -Mth.cos(th), dz = -Mth.sin(th) * Mth.cos(phi);
         float s = seScale(dx, dy, dz) + 0.05F;
-        vc.vertex(mat, dx * s / 16.0F, (CY + dy * s) / 16.0F, dz * s / 16.0F).color(c, c, cb, 1.0F).uv(u, v)
+        vc.vertex(mat, dx * s / 16.0F, (CY + dy * s) / 16.0F, dz * s / 16.0F).color(r, g, b, 1.0F).uv(u, v)
                 .overlayCoords(overlay).uv2(light).normal(nm, dx, dy, dz).endVertex();
     }
 }

@@ -18,5 +18,11 @@ public final class ModItems {
     public static final RegistryObject<Item> TANNY_WHISTLE = ITEMS.register("tanny_bell",
             () -> new com.tanny.tannymaid.item.TannyWhistleItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
 
+    public static final RegistryObject<Item> YUNN_CONTRACT = ITEMS.register("yunn_contract",
+            () -> new com.tanny.tannymaid.item.YunnContractItem(new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+
+    public static final RegistryObject<Item> HEART_SCEPTER = ITEMS.register("heart_scepter",
+            () -> new com.tanny.tannymaid.item.HeartScepterItem(new Item.Properties().rarity(Rarity.RARE)));
+
     private ModItems() {}
 }

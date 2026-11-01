@@ -24,7 +24,7 @@ public class TannyRenderer extends HumanoidMobRenderer<TannyEntity, TannyModel> 
                 new net.minecraft.client.model.HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM_INNER_ARMOR)),
                 new net.minecraft.client.model.HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM_OUTER_ARMOR)),
                 context.getModelManager()));
-        this.addLayer(new TannyOutfitLayer(this, context.getModelSet()));
+        this.addLayer(new TannyOutfitLayer<>(this, context.getModelSet(), TannyOutfitLayer.TANNY_TEXTURE));
         this.addLayer(new TannyHairLayer(this, context.getModelSet()));
     }
 

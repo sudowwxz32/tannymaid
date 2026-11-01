@@ -27,6 +27,8 @@ public class TannyMaid {
                     .displayItems((params, out) -> {
                         out.accept(ModItems.TANNY_CONTRACT.get());
                         out.accept(ModItems.TANNY_WHISTLE.get());
+                        out.accept(ModItems.YUNN_CONTRACT.get());
+                        out.accept(ModItems.HEART_SCEPTER.get());
                     })
                     .build());
 
@@ -44,5 +46,6 @@ public class TannyMaid {
 
     private void onAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntities.TANNY.get(), TannyEntity.createAttributes().build());
+        event.put(ModEntities.YUNN.get(), com.tanny.tannymaid.yunn.YunnEntity.createAttributes().build());
     }
 }

@@ -4,5 +4,8 @@
   "item.tannymaid.tanny_bell": "Campanita de Tanny",
   "itemGroup.tannymaid": "TannyMaid",
   "key.categories.tannymaid": "TannyMaid",
-  "key.tannymaid.menu": "Abrir el menú de Tanny"
+  "key.tannymaid.menu": "Abrir el menú de Tanny",
+  "entity.tannymaid.yunn": "Yunn",
+  "item.tannymaid.yunn_contract": "Contrato de Yunn",
+  "item.tannymaid.heart_scepter": "Cetro Corazón"
 }

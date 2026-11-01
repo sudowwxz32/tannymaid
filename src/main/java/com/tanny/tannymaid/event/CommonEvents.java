@@ -39,6 +39,7 @@ public final class CommonEvents {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         TannyCommand.register(event.getDispatcher());
+        com.tanny.tannymaid.command.YunnCommand.register(event.getDispatcher());
     }
 
     /** Conversación: si le escribes "Tanny, ..." en el chat, ella te responde. */

@@ -59,6 +59,35 @@ public final class TannyGeneratedModels {
         return m;
     }
 
+    public static LayerDefinition createYunnCap() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition p_head = root.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.offset(0F, 0F, 0F));
+        PartDefinition p_cap = p_head.addOrReplaceChild("cap", CubeListBuilder.create().texOffs(0, 0).addBox(-3.4F, -1F, -1.2F, 6.8F, 2.2F, 2.4F), PartPose.offsetAndRotation(0F, -9F, -1.6F, -0.32F, 0F, 0F));
+        PartDefinition p_cap_band = p_head.addOrReplaceChild("cap_band", CubeListBuilder.create().texOffs(20, 0).addBox(-4.9F, -0.4F, -0.6F, 9.8F, 0.8F, 1.2F), PartPose.offsetAndRotation(0F, -8.6F, -1.4F, -0.3F, 0F, 0F));
+        PartDefinition p_lid_r = p_head.addOrReplaceChild("lid_r", CubeListBuilder.create().texOffs(43, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(-1.25F, -4.62F, -4.02F, 0F, 0F, 0.19F));
+        PartDefinition p_lidb_r = p_head.addOrReplaceChild("lidb_r", CubeListBuilder.create().texOffs(48, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(-2.55F, -4.65F, -4.02F, 0F, 0F, -0.15F));
+        PartDefinition p_lash_r = p_head.addOrReplaceChild("lash_r", CubeListBuilder.create().texOffs(53, 0).addBox(-0.6F, -0.18F, -0.24F, 1.2F, 0.36F, 0.32F), PartPose.offsetAndRotation(-3.62F, -4.1F, -4.04F, 0F, 0.2F, -0.755F));
+        PartDefinition p_lid_l = p_head.addOrReplaceChild("lid_l", CubeListBuilder.create().texOffs(58, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(1.25F, -4.62F, -4.02F, 0F, 0F, -0.19F));
+        PartDefinition p_lidb_l = p_head.addOrReplaceChild("lidb_l", CubeListBuilder.create().texOffs(0, 6).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(2.55F, -4.65F, -4.02F, 0F, 0F, 0.15F));
+        PartDefinition p_lash_l = p_head.addOrReplaceChild("lash_l", CubeListBuilder.create().texOffs(5, 6).addBox(-0.6F, -0.18F, -0.24F, 1.2F, 0.36F, 0.32F), PartPose.offsetAndRotation(3.62F, -4.1F, -4.04F, 0F, -0.2F, 0.755F));
+        return LayerDefinition.create(mesh, 64, 32);
+    }
+
+    public static Map<String, ModelPart> bakeYunnCap(ModelPart root) {
+        Map<String, ModelPart> m = new LinkedHashMap<>();
+        m.put("head", root.getChild("head"));
+        m.put("cap", m.get("head").getChild("cap"));
+        m.put("cap_band", m.get("head").getChild("cap_band"));
+        m.put("lid_r", m.get("head").getChild("lid_r"));
+        m.put("lidb_r", m.get("head").getChild("lidb_r"));
+        m.put("lash_r", m.get("head").getChild("lash_r"));
+        m.put("lid_l", m.get("head").getChild("lid_l"));
+        m.put("lidb_l", m.get("head").getChild("lidb_l"));
+        m.put("lash_l", m.get("head").getChild("lash_l"));
+        return m;
+    }
+
     public static LayerDefinition createOutfit() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();

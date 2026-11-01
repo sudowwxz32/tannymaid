@@ -249,7 +249,7 @@ public final class GardevoirCompanion {
     }
 
     /** Un lugar a la derecha y un poco detrás del Master. */
-    private static Vec3 sidePos(Player p) {
+    private static Vec3 sidePos(LivingEntity p) {
         float yaw = p.getYRot() * ((float) Math.PI / 180F);
         double fx = -Math.sin(yaw), fz = Math.cos(yaw);
         double rx = -fz, rz = fx;
@@ -260,7 +260,7 @@ public final class GardevoirCompanion {
      * Busca un lugar seguro junto al Master: suelo firme debajo, espacio libre para su cuerpo,
      * sin lava ni fuego. Así nunca aparece enterrada entre bloques.
      */
-    private static Vec3 safeSpot(ServerLevel level, Mob m, Player p) {
+    public static Vec3 safeSpot(ServerLevel level, Mob m, LivingEntity p) {
         Vec3 side = sidePos(p);
         java.util.List<Vec3> tries = new java.util.ArrayList<>();
         tries.add(side);

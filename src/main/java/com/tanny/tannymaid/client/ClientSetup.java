@@ -18,6 +18,7 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.TANNY.get(), TannyRenderer::new);
+        event.registerEntityRenderer(ModEntities.YUNN.get(), YunnRenderer::new);
     }
 
     @SubscribeEvent
@@ -42,5 +43,6 @@ public final class ClientSetup {
     public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(TannyHairLayer.LAYER, TannyGeneratedModels::createHair);
         event.registerLayerDefinition(TannyOutfitLayer.LAYER, TannyGeneratedModels::createOutfit);
+        event.registerLayerDefinition(YunnHairLayer.LAYER, TannyGeneratedModels::createYunnCap);
     }
 }
