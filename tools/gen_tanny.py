@@ -298,8 +298,8 @@ def hair_parts():
         P.append(Part("ruffle_%d" % i, "headband", (x, -0.55, 0.0), (0.0, 0, (i - 3) * 0.08),
                       [Box(-0.72, -1.6, -0.3, 1.44, 1.6, 0.55, lace)]))
     # detalles 3D de la cara: pestañas con relieve, alitas en la comisura y nariz
-    P.append(Part("lid_r", "head", (-2.0, -4.14, -4.0), (0, 0, 0.0), [Box(-0.95, -0.12, -0.18, 1.9, 0.24, 0.2, lash3d)]))
-    P.append(Part("lash_r", "head", (-3.05, -4.0, -4.02), (0.0, 0.25, 0.55), [Box(-0.9, -0.12, -0.18, 0.9, 0.24, 0.22, lash3d)]))
+    P.append(Part("lid_r", "head", (-2.0, -4.42, -4.0), (0, 0, 0.0), [Box(-1.0, -0.13, -0.18, 2.0, 0.26, 0.2, lash3d)]))
+    P.append(Part("lash_r", "head", (-3.45, -4.05, -4.02), (0.0, 0.25, -0.75), [Box(-0.8, -0.13, -0.18, 0.8, 0.26, 0.22, lash3d)]))
     P.append(Part("nose", "head", (0, -1.95, -4.0), (0.25, 0, 0), [Box(-0.22, -0.3, -0.2, 0.44, 0.45, 0.22, nose3d)]))
     P.append(Part("hb_bow_r", "headband", (-4.9, -0.05, 0.3), (0, 0.25, 0.35), [Box(-1.0, -0.5, -0.3, 1.0, 1.0, 0.6, pink_bow)]))
     P += mirror([p for p in P if p.name.endswith("_r")])
@@ -321,18 +321,17 @@ def nose3d(f, x, y, w, h):
 
 
 def strand_texture():
-    """Textura de los mechones (gris claro con hebras finas); el color lo pone cada vértice."""
+    """Textura de los cubos del cabello: celdas de 4x4 con brillo distinto (aspecto de vóxel);
+    el color lo pone cada cubo."""
     r = random.Random(5)
-    img = Image.new("RGBA", (32, 64), T)
-    cols = [r.uniform(0.78, 1.0) for _ in range(32)]
-    for x in range(32):
-        for y in range(64):
-            v = cols[x]
-            if x % 5 == 0:
-                v *= 0.82
-            v *= 0.94 + 0.06 * math.sin(y * 0.4 + x)
-            c = int(255 * max(0.0, min(1.0, v)))
-            img.putpixel((x, y), (c, c, c, 255))
+    img = Image.new("RGBA", (16, 16), T)
+    for cy in range(4):
+        for cx in range(4):
+            v = r.choice([0.80, 0.86, 0.92, 0.97, 1.0])
+            for y in range(4):
+                for x in range(4):
+                    c = int(255 * v)
+                    img.putpixel((cx * 4 + x, cy * 4 + y), (c, c, c, 255))
     return img
 
 
@@ -561,63 +560,120 @@ def eye_layer(expr, side):
     return im
 
 
+# ojos ámbar (estilo de la referencia): iris dorado con anillo naranja, pupila rasgada y un brillo
+EYE_DK, EYE_MID, EYE_HI, EYE_RING = (150, 78, 12), (226, 160, 34), (252, 216, 96), (170, 84, 20)
+LINE = (52, 30, 24)          # pestañas / cejas café oscuro
+
+
 def face_image(expr):
-    """Cara de 64x64 (8x8 del modelo a 8x), dibujada a 16x por unidad y reducida para un acabado suave."""
+    """Cara de 64x64 estilo de la referencia: ojos almendrados con delineado grueso que cae hacia afuera,
+    iris ámbar con pupila rasgada, cejas gruesas, nariz mínima y boca pequeña. Sin rubor."""
     K = 16
-    N = 32                      # la cara se describe en una cuadrícula de 32x32
+    N = 32
     big = Image.new("RGBA", (N * K, N * K), T)
     d = ImageDraw.Draw(big)
-    # piel: sombra suave bajo el flequillo, mejillas cálidas y sombra bajo la barbilla
     shade = Image.new("RGBA", big.size, T)
     sd = ImageDraw.Draw(shade)
-    sd.rectangle((0, 0, N * K, 11 * K), fill=SKIN_DK + (38,))
-    sd.ellipse((-6 * K, 28 * K, 38 * K, 42 * K), fill=SKIN_DK + (40,))
+    sd.rectangle((0, 0, N * K, 10.5 * K), fill=SKIN_DK + (34,))           # sombra del flequillo
+    sd.ellipse((-6 * K, 29 * K, 38 * K, 42 * K), fill=SKIN_DK + (36,))      # bajo la barbilla
     big.alpha_composite(shade.filter(ImageFilter.GaussianBlur(3 * K)))
-    for cx in (8.5, 23.5):
-        blush = Image.new("RGBA", big.size, T)
-        ImageDraw.Draw(blush).ellipse(((cx - 4.8) * K, 22.8 * K, (cx + 4.8) * K, 26.8 * K), fill=BLUSH + (150,))
-        big.alpha_composite(blush.filter(ImageFilter.GaussianBlur(K)))
-        for i in range(3):
-            x0 = (cx - 2.6 + i * 1.8) * K
-            d.line((x0 + K * 0.7, 23.7 * K, x0 - K * 0.2, 25.5 * K), fill=BLUSH_DK + (190,), width=int(K * 0.5))
-    # cejas finas, afinadas hacia afuera
-    def brow(x0, x1, y0, y1, bend):
-        pts = [(x0 + (x1 - x0) * t / 10, y0 + (y1 - y0) * t / 10 - bend * math.sin(math.pi * t / 10)) for t in range(11)]
-        for i in range(10):
-            w = int(K * (0.85 - 0.05 * i if x1 > x0 else 0.35 + 0.05 * i))
-            d.line((pts[i][0] * K, pts[i][1] * K, pts[i + 1][0] * K, pts[i + 1][1] * K), fill=BROW + (255,), width=max(2, w))
-    if expr == "focused":
-        brow(12, 4, 13.4, 12.2, 0.0); brow(20, 28, 13.4, 12.2, 0.0)
-    elif expr == "surprised":
-        brow(12, 4, 11.6, 12.2, 1.2); brow(20, 28, 11.6, 12.2, 1.2)
-    elif expr == "tired":
-        brow(12, 4, 12.4, 13.2, 0.2); brow(20, 28, 12.4, 13.2, 0.2)
-    else:
-        brow(12, 4, 12.6, 13.0, 0.9); brow(20, 28, 12.6, 13.0, 0.9)
-    # ojos grandes
-    for side, x0 in ((-1, 3.0), (1, 19.0)):
-        e = eye_layer(expr, side).resize((10 * K, 12 * K), Image.LANCZOS)
-        big.alpha_composite(e, (int(x0 * K), int(13.4 * K)))
-    # nariz: sombra a un lado y un puntito de luz
-    d.line((16.4 * K, 23.6 * K, 16.9 * K, 25.0 * K), fill=SKIN_DK + (190,), width=int(K * 0.45))
-    d.ellipse((15.2 * K, 24.0 * K, 15.9 * K, 24.6 * K), fill=SKIN_HI + (200,))
-    # boca
+
+    def P(pts, mirror):
+        return [((N - x) * K if mirror else x * K, y * K) for x, y in pts]
+
+    def eye(mirror):
+        if expr in ("normal", "surprised", "focused"):
+            top = 15.6 if expr != "focused" else 16.6
+            bot = 21.4 if expr != "surprised" else 22.0
+            if expr == "surprised":
+                top = 15.0
+            # blanco almendrado
+            almond = [(13.2, 18.0), (11.8, top + 0.5), (8.4, top), (4.6, top + 0.8), (3.0, 18.4),
+                      (4.6, bot - 0.6), (8.6, bot), (12.0, bot - 0.8)]
+            mask = Image.new("L", big.size, 0)
+            ImageDraw.Draw(mask).polygon(P(almond, mirror), fill=255)
+            layer = Image.new("RGBA", big.size, T)
+            ld = ImageDraw.Draw(layer)
+            ld.polygon(P(almond, mirror), fill=(250, 246, 240, 255))
+            # iris
+            cx, cy = 8.5, (top + bot) / 2 + 0.3
+            rx, ry = (3.3, 3.5) if expr != "surprised" else (2.7, 3.0)
+            for k in range(30):
+                f = k / 29
+                col = mix(EYE_DK, EYE_MID, f * 1.6) if f < 0.6 else mix(EYE_MID, EYE_HI, (f - 0.6) * 2.5)
+                yy0 = cy - ry + 2 * ry * f
+                (x0, y0), (x1, y1) = P([(cx - rx, yy0), (cx + rx, yy0 + 2 * ry / 29 + 0.05)], mirror)
+                ld.rectangle((min(x0, x1), y0, max(x0, x1), y1), fill=col + (255,))
+            ring = Image.new("L", big.size, 0)
+            ImageDraw.Draw(ring).ellipse(P([(cx - rx, cy - ry), (cx + rx, cy + ry)], mirror) if not mirror else
+                                         [((N - cx - rx) * K, (cy - ry) * K), ((N - cx + rx) * K, (cy + ry) * K)], fill=255)
+            iris_layer = Image.new("RGBA", big.size, T)
+            iris_layer.paste(layer, (0, 0), ring)
+            base = Image.new("RGBA", big.size, T)
+            white = Image.new("RGBA", big.size, T)
+            ImageDraw.Draw(white).polygon(P(almond, mirror), fill=(250, 246, 240, 255))
+            base.alpha_composite(white)
+            base.alpha_composite(iris_layer)
+            bd = ImageDraw.Draw(base)
+            ex0, ex1 = ((N - cx - rx) * K, (N - cx + rx) * K) if mirror else ((cx - rx) * K, (cx + rx) * K)
+            bd.ellipse((ex0, (cy - ry) * K, ex1, (cy + ry) * K), outline=EYE_RING + (255,), width=int(0.35 * K))
+            # pupila rasgada
+            pw = 0.55 if expr != "surprised" else 0.75
+            px = (N - cx) if mirror else cx
+            bd.ellipse(((px - pw) * K, (cy - 2.3) * K, (px + pw) * K, (cy + 2.2) * K), fill=(36, 16, 8, 255))
+            # brillo cuadrado (estilo pixel)
+            hx = (px + 0.6) if not mirror else (px - 1.5)
+            bd.rectangle((hx * K, (cy - 2.0) * K, (hx + 0.9) * K, (cy - 1.1) * K), fill=(255, 255, 255, 255))
+            clipped = Image.new("RGBA", big.size, T)
+            clipped.paste(base, (0, 0), mask)
+            big.alpha_composite(clipped)
+            # delineado superior grueso que cae hacia afuera, como en la referencia
+            lash = [(13.6, 17.4), (12.2, top - 0.9), (8.4, top - 1.5), (4.2, top - 0.7), (2.0, top + 0.8), (0.8, top + 3.2),
+                    (2.6, top + 2.6), (4.4, top + 1.6), (8.4, top + 0.9), (12.0, top + 1.2), (13.6, 18.6)]
+            d.polygon(P(lash, mirror), fill=LINE + (255,))
+            # línea inferior fina
+            d.line(P([(4.2, bot - 0.4), (8.6, bot + 0.1), (11.8, bot - 0.6)], mirror), fill=(120, 70, 50, 200), width=int(0.35 * K))
+            if expr == "focused":
+                d.polygon(P([(3.0, top - 0.5), (13.4, top + 0.6), (13.4, top + 1.3), (3.0, top + 0.6)], mirror), fill=LINE + (255,))
+        elif expr == "happy":
+            d.line(P([(3.4, 19.4), (5.6, 17.8), (8.4, 17.2), (11.2, 17.8), (13.0, 19.2)], mirror), fill=LINE + (255,), width=int(1.0 * K))
+        elif expr == "blink":
+            d.line(P([(3.0, 18.2), (5.4, 19.4), (8.4, 19.8), (11.4, 19.4), (13.2, 18.4)], mirror), fill=LINE + (255,), width=int(0.9 * K))
+            d.line(P([(3.0, 18.2), (1.8, 19.4)], mirror), fill=LINE + (255,), width=int(0.6 * K))
+        elif expr == "tired":
+            d.line(P([(3.2, 18.8), (8.4, 18.4), (13.0, 18.8)], mirror), fill=LINE + (255,), width=int(0.9 * K))
+            d.line(P([(4.6, 20.2), (8.4, 20.6), (11.6, 20.2)], mirror), fill=(120, 70, 50, 180), width=int(0.4 * K))
+
+    def brow(mirror):
+        if expr == "focused":
+            pts = [(3.4, 12.6), (8.0, 13.2), (12.6, 14.4), (12.6, 15.2), (8.0, 14.2), (3.4, 13.6)]
+        elif expr == "surprised":
+            pts = [(3.2, 12.6), (8.0, 11.4), (12.4, 12.4), (12.4, 13.2), (8.0, 12.3), (3.2, 13.5)]
+        elif expr == "tired":
+            pts = [(3.4, 13.4), (8.0, 13.0), (12.4, 12.2), (12.4, 13.0), (8.0, 13.9), (3.4, 14.3)]
+        else:   # cejas gruesas, un poco caídas hacia afuera (mirada dulce)
+            pts = [(3.2, 14.0), (6.0, 12.8), (9.6, 12.4), (12.6, 12.9), (12.6, 13.9), (9.6, 13.4), (6.0, 13.8), (3.2, 14.8)]
+        d.polygon(P(pts, mirror), fill=LINE + (255,))
+
+    for m in (False, True):
+        brow(m)
+        eye(m)
+    # nariz: dos píxeles de sombra
+    d.rectangle((15.4 * K, 23.6 * K, 16.6 * K, 24.4 * K), fill=SKIN_DK + (150,))
+    # boca pequeña
     if expr in ("normal", "blink"):
-        d.arc((13.4 * K, 25.4 * K, 18.6 * K, 28.6 * K), 20, 160, fill=LIP + (255,), width=int(K * 0.55))
-        d.arc((14.8 * K, 27.4 * K, 17.2 * K, 29.0 * K), 30, 150, fill=(222, 140, 140, 160), width=int(K * 0.35))
+        d.line((14.2 * K, 26.8 * K, 15.4 * K, 27.4 * K, 16.6 * K, 27.4 * K, 17.8 * K, 26.8 * K), fill=(130, 64, 56, 255), width=int(0.5 * K))
     elif expr == "happy":
-        d.chord((13.0 * K, 25.4 * K, 19.0 * K, 30.4 * K), 0, 180, fill=MOUTH + (255,))
-        d.chord((14.4 * K, 27.8 * K, 17.6 * K, 30.2 * K), 180, 360, fill=(232, 120, 132, 255))
-        d.line((13.4 * K, 26.2 * K, 18.6 * K, 26.2 * K), fill=(250, 246, 246, 255), width=int(K * 0.5))
+        d.chord((13.6 * K, 25.8 * K, 18.4 * K, 29.6 * K), 0, 180, fill=(110, 40, 44, 255))
+        d.chord((14.6 * K, 27.6 * K, 17.4 * K, 29.4 * K), 180, 360, fill=(214, 110, 116, 255))
     elif expr == "surprised":
-        d.ellipse((14.6 * K, 25.8 * K, 17.4 * K, 29.0 * K), fill=MOUTH + (255,))
-        d.ellipse((15.2 * K, 27.6 * K, 16.8 * K, 28.8 * K), fill=(214, 110, 124, 255))
+        d.ellipse((15.0 * K, 26.0 * K, 17.0 * K, 28.6 * K), fill=(110, 40, 44, 255))
     elif expr == "focused":
-        d.line((14.2 * K, 27.0 * K, 17.8 * K, 26.8 * K), fill=LIP + (255,), width=int(K * 0.5))
+        d.line((14.4 * K, 27.2 * K, 17.6 * K, 27.0 * K), fill=(130, 64, 56, 255), width=int(0.5 * K))
     elif expr == "tired":
-        d.line((14.0 * K, 27.4 * K, 15.6 * K, 26.8 * K, 17.0 * K, 27.4 * K, 18.2 * K, 26.9 * K), fill=LIP + (255,),
-               width=int(K * 0.45))
-        d.ellipse((26.0 * K, 15.0 * K, 27.6 * K, 17.4 * K), fill=(170, 210, 240, 220))      # gotita
+        d.line((14.2 * K, 27.4 * K, 15.6 * K, 26.9 * K, 16.8 * K, 27.4 * K, 18.0 * K, 27.0 * K), fill=(130, 64, 56, 255),
+               width=int(0.45 * K))
+        d.ellipse((26.4 * K, 13.0 * K, 27.8 * K, 15.2 * K), fill=(170, 210, 240, 220))      # gotita
     return big.resize((64, 64), Image.LANCZOS)
 
 

@@ -26,36 +26,33 @@ KIND_BOB, KIND_BANG, KIND_LONG, KIND_AHOGE = 0, 1, 2, 3
 def locks():
     rnd = random.Random(21)
     L = []
-    # bob: dos capas alrededor de la cabeza (de un lado de la cara al otro, por detrás)
-    for layer in range(2):
-        n = 22
-        a0, a1 = math.radians(56), math.radians(304)
+    # bob: capa externa de mechones gruesos y bien definidos + capa interna de relleno
+    for layer, n in ((0, 17), (1, 12)):
+        a0, a1 = math.radians(54), math.radians(306)
         for i in range(n):
-            t = i / (n - 1)
-            phi = a0 + (a1 - a0) * t + (0.5 / n * (a1 - a0) if layer else 0)
-            if phi > a1:
-                continue
+            t = (i + (0.5 if layer else 0)) / (n - (0 if layer else 1))
+            phi = a0 + (a1 - a0) * min(1.0, t)
             back = 0.5 - 0.5 * math.cos(phi)               # 0 delante, 1 detrás
-            hang = 3.9 + 1.3 * back + rnd.uniform(-0.3, 0.3) - (0.5 if layer else 0)
-            L.append([phi, rnd.uniform(0.05, 0.25), math.pi / 2 + 0.08, hang,
-                      0.14 + 0.05 * back, 0.65 + rnd.uniform(-0.1, 0.15),
-                      2.5 if layer == 0 else 2.2, 0.75, 0.22 if layer == 0 else 0.62,
-                      rnd.uniform(0.9, 1.06) * (0.92 if layer == 0 else 1.0), KIND_BOB])
-    # coronilla: mechones cortos que cubren la parte de arriba con volumen
-    for i in range(12):
-        phi = i / 12 * 2 * math.pi + 0.2
-        L.append([phi, 0.02, 1.15, 0.0, 0, 0, 2.6, 0.7, 0.75, rnd.uniform(0.95, 1.08), KIND_BOB])
-    # flequillo: mechones en punta que caen sobre la frente
-    bangs = [(-38, 2.0, 0.98), (-27, 2.4, 1.02), (-16, 1.8, 0.96), (-6, 2.6, 1.0), (5, 1.9, 0.97),
-             (15, 2.5, 1.02), (26, 2.0, 0.98), (37, 2.3, 1.0)]
-    for deg, hang, th1 in bangs:
-        L.append([math.radians(deg), 0.3, th1, hang, 0.10, -0.25, 1.9, 0.6, 0.45, rnd.uniform(0.95, 1.08), KIND_BANG])
-    # mechones largos que enmarcan la cara (hasta el pecho)
+            hang = 4.0 + 1.3 * back + rnd.uniform(-0.25, 0.25) - (0.6 if layer else 0)
+            L.append([phi, rnd.uniform(0.08, 0.22), math.pi / 2 + 0.08, hang,
+                      0.15 + 0.05 * back, 0.6 + rnd.uniform(-0.1, 0.1),
+                      2.8 if layer == 0 else 2.4, 0.9, 0.38 if layer == 0 else 0.02,
+                      (1.0 if i % 2 == 0 else 0.86) if layer == 0 else 0.8, KIND_BOB])
+    # coronilla: pocos mechones grandes desde la raya del medio
+    for i in range(8):
+        phi = i / 8 * 2 * math.pi + 0.4
+        L.append([phi, 0.04, 1.12, 0.0, 0, 0, 3.0, 0.8, 0.62, 1.05 if i % 2 else 0.92, KIND_BOB])
+    # flequillo: raya al medio, mechones que se abren hacia los lados
+    bangs = [(-36, 2.3, 1.02), (-22, 2.1, 0.98), (-8, 1.9, 0.95), (8, 1.9, 0.95), (22, 2.1, 0.98), (36, 2.3, 1.02)]
+    for k, (deg, hang, th1) in enumerate(bangs):
+        L.append([math.radians(deg), 0.3, th1, hang, 0.22 * (1 if deg > 0 else -1) * 0 + 0.12, -0.2, 2.1, 0.75, 0.6,
+                  1.02 if k % 2 else 0.9, KIND_BANG])
+    # mechones largos que enmarcan la cara
     for s in (-1, 1):
-        L.append([s * math.radians(47), 0.35, math.pi / 2 - 0.05, 7.6, 0.02, 0.35, 1.7, 0.75, 0.55, 1.05, KIND_LONG])
-        L.append([s * math.radians(55), 0.35, math.pi / 2 - 0.02, 6.2, 0.05, 0.4, 1.5, 0.7, 0.75, 0.98, KIND_LONG])
+        L.append([s * math.radians(46), 0.35, math.pi / 2 - 0.05, 7.4, 0.03, 0.35, 2.0, 0.9, 0.75, 1.0, KIND_LONG])
+        L.append([s * math.radians(57), 0.35, math.pi / 2 - 0.02, 6.0, 0.06, 0.4, 1.8, 0.85, 0.85, 0.88, KIND_LONG])
     # ahoge
-    L.append([math.radians(-12), 0.0, 0.0, 3.4, 0, 0, 0.8, 0.6, 0.6, 1.1, KIND_AHOGE])
+    L.append([math.radians(-12), 0.0, 0.0, 3.4, 0, 0, 1.0, 0.7, 0.6, 1.05, KIND_AHOGE])
     return L
 
 
@@ -110,6 +107,10 @@ def path(lock, sway_x=0.0, sway_z=0.0):
         # punta curvada hacia adentro (bob)
         c = curl * max(0.0, (t - 0.55) / 0.45) ** 1.5
         d = norm((d[0] - out_h[0] * c, d[1], d[2] - out_h[2] * c))
+        # flequillo con raya al medio: se abre hacia los lados
+        if kind == KIND_BANG:
+            sw = phi * 1.6 * t
+            d = norm((d[0] + cp * sw, d[1], d[2] + sp * sw))
         # vaivén: hacia atrás (x) y de lado (z)
         tw = t ** 1.5
         d = norm((d[0] + sway_z * tw, d[1], d[2] + sway_x * tw))
@@ -214,6 +215,99 @@ def mesh_quads(sway_x=0.0, sway_z=0.0, helmet=False):
     return quads
 
 
+# ================================================================= mechones de cubos (estilo vóxel)
+VOX_STEP = 0.72
+PALETTE = [(34, 27, 30), (54, 41, 41), (76, 58, 54), (20, 16, 18)]
+WAVE_AMP = 0.24
+WAVE_FREQ = 1.3
+
+
+def vox_hash(a, b):
+    return ((a * 31 + b) * 2654435761) & 0xffffffff
+
+
+def resample(pts):
+    """Puntos cada VOX_STEP a lo largo del mechón: [(p, n, t, s)]."""
+    out = []
+    acc = 0.0
+    need = 0.0
+    for i in range(len(pts) - 1):
+        (a, na, ta), (b, nb, tb) = pts[i], pts[i + 1]
+        seg = math.sqrt(sum((b[k] - a[k]) ** 2 for k in range(3)))
+        while need <= acc + seg + 1e-6:
+            f = (need - acc) / seg if seg > 1e-6 else 0.0
+            p = tuple(a[k] + (b[k] - a[k]) * f for k in range(3))
+            n = norm(tuple(na[k] + (nb[k] - na[k]) * f for k in range(3)))
+            out.append((p, n, ta + (tb - ta) * f, need))
+            need += VOX_STEP
+        acc += seg
+    return out
+
+
+def frame(p_prev, p_next, n):
+    t = norm(tuple(p_next[k] - p_prev[k] for k in range(3)))
+    b = norm((t[1] * n[2] - t[2] * n[1], t[2] * n[0] - t[0] * n[2], t[0] * n[1] - t[1] * n[0]))
+    m = norm((b[1] * t[2] - b[2] * t[1], b[2] * t[0] - b[0] * t[2], b[0] * t[1] - b[1] * t[0]))
+    if m[0] * n[0] + m[1] * n[1] + m[2] * n[2] < 0:
+        m = (-m[0], -m[1], -m[2])
+    return t, b, m
+
+
+def voxels(index, lock, sway_x=0.0, sway_z=0.0):
+    """Cubos de un mechón: (centro, T, B, N, medio_largo, medio_ancho, medio_grosor, color)."""
+    kind = int(lock[10])
+    rs = resample(path(lock, sway_x, sway_z))
+    cubes = []
+    wavy = 0.0 if kind in (KIND_AHOGE,) else (0.6 if kind == KIND_BANG else 1.0)
+    for i, (p, n, t, sl) in enumerate(rs):
+        a = rs[max(0, i - 1)][0]
+        b = rs[min(len(rs) - 1, i + 1)][0]
+        if a == b:
+            continue
+        T, B, N = frame(a, b, n)
+        amp = WAVE_AMP * wavy * min(1.0, t * 2.5)
+        off = math.sin(sl * WAVE_FREQ + lock[0] * 5.0) * amp
+        c = tuple(p[k] + B[k] * off for k in range(3))
+        w = width_at(lock, t)
+        hb = max(0.32, min(0.95, w * 0.34))
+        hn = max(0.32, hb * 0.8)
+        ht = VOX_STEP * 0.62
+        # franjas de color a lo largo del mechón (como un mechón de vóxeles), con un toque al azar
+        h = vox_hash(index, i)
+        band = (index + i // 2) % 3
+        col = PALETTE[3 if h % 7 == 0 else band]
+        if c[1] < -7.3:
+            col = tuple(min(255, int(v * 1.15)) for v in col)
+        shade = lock[9]
+        col = tuple(int(v * shade) for v in col)
+        cubes.append((c, T, B, N, ht, hb, hn, col))
+    return cubes
+
+
+def cube_quads(c, T, B, N, ht, hb, hn, col):
+    q = []
+    axes = [(T, ht), (B, hb), (N, hn)]
+    for ai in range(3):
+        for sg in (-1, 1):
+            ax, ha = axes[ai]
+            u, hu = axes[(ai + 1) % 3]
+            v, hv = axes[(ai + 2) % 3]
+            ctr = tuple(c[k] + ax[k] * ha * sg for k in range(3))
+            corners = []
+            for (su, sv) in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+                corners.append(tuple(ctr[k] + u[k] * hu * su + v[k] * hv * sv for k in range(3)))
+            q.append((corners, col, tuple(ax[k] * sg for k in range(3))))
+    return q
+
+
+def voxel_quads(sway_x=0.0, sway_z=0.0):
+    quads = cap_quads()
+    for i, lock in enumerate(locks()):
+        for cube in voxels(i, lock, sway_x, sway_z):
+            quads += cube_quads(*cube)
+    return quads
+
+
 def fjava(v):
     s = ("%.4f" % v).rstrip("0").rstrip(".")
     return ("0" if s in ("-0", "") else s) + "F"
@@ -226,6 +320,8 @@ def write_java():
            "public final class TannyHairLocks {", "    private TannyHairLocks() {}", "",
            "    public static final float CY = %s, R = %s, P = %s;" % (fjava(CY), fjava(R), fjava(P)),
            "    public static final int SCALP_STEPS = %d, HANG_STEPS = %d, SIDES = %d;" % (SCALP_STEPS, HANG_STEPS, SIDES),
+           "    public static final float VOX_STEP = %s, WAVE_AMP = %s, WAVE_FREQ = %s;" % (fjava(VOX_STEP), fjava(WAVE_AMP), fjava(WAVE_FREQ)),
+           "    public static final int[] PALETTE = {" + ", ".join("0x%02X%02X%02X" % c for c in PALETTE) + "};",
            "", "    public static final float[][] L = {"]
     for l in L:
         out.append("            {" + ", ".join(fjava(v) for v in l) + "},")

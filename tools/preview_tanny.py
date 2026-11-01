@@ -37,7 +37,7 @@ def main(outdir, expr="tanny"):
     for p in op:
         for b in p.boxes:
             quads += G.quads_for(ot, b.x, b.y, b.z, b.w, b.h, b.d, b.u, b.v, tf[p.name], 2)
-    for q, c, n in H.mesh_quads():
+    for q, c, n in H.voxel_quads():
         l = 0.62 + 0.45 * max(0.0, -(n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]) * -1 + 0.0)
         l = 0.55 + 0.5 * max(0.0, n[0] * -LIGHT[0] + n[1] * -LIGHT[1] + n[2] * -LIGHT[2])
         quads.append((q, tuple(int(min(255, v * l)) for v in c)))

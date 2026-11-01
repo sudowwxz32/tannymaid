@@ -35,7 +35,8 @@ public final class TannyHairMesh {
     public void render(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay,
                        float swayX, float swayZ, float bangSway, float ahogeBounce, boolean helmet) {
         if (!helmet) cap(vc, mat, nm, light, overlay);
-        for (float[] lock : L) {
+        for (int li = 0; li < L.length; li++) {
+            float[] lock = L[li];
             int kind = (int) lock[10];
             if (helmet && (kind == KIND_BANG || kind == KIND_AHOGE || lock[3] <= 0)) continue;
             float sx = swayX, sz = swayZ;
@@ -43,8 +44,7 @@ public final class TannyHairMesh {
             else if (kind == KIND_LONG) { sx = swayX * 0.7F; }
             else if (kind == KIND_AHOGE) { sx = ahogeBounce; sz = swayZ; }
             path(lock, sx, sz);
-            build(lock);
-            emit(vc, mat, nm, light, overlay, helmet ? SCALP_STEPS : 0);
+            voxels(li, lock, vc, mat, nm, light, overlay, helmet);
         }
     }
 
@@ -102,6 +102,12 @@ public final class TannyHairMesh {
             dx -= ox * c; dz -= oz * c;
             l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
             dx /= l; dy /= l; dz /= l;
+            if (kind == KIND_BANG) {          // flequillo con raya al medio: se abre hacia los lados
+                float sw = phi * 1.6F * t;
+                dx += cp * sw; dz += sp * sw;
+                l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
+                dx /= l; dy /= l; dz /= l;
+            }
             float tw = (float) Math.pow(t, 1.5);
             dx += swayZ * tw; dz += swayX * tw;
             l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
@@ -202,6 +208,116 @@ public final class TannyHairMesh {
                       int light, int overlay) {
         vc.vertex(mat, rx[i][j] / 16.0F, ry[i][j] / 16.0F, rz[i][j] / 16.0F).color(c[0], c[1], c[2], 1.0F).uv(u, v)
                 .overlayCoords(overlay).uv2(light).normal(nm, qx[i][j], qy[i][j], qz[i][j]).endVertex();
+    }
+
+    // ------------------------------------------------------------------ mechones de cubos (vóxel)
+
+    private static final int MAXS = 64;
+    private final float[] sx = new float[MAXS], sy = new float[MAXS], sz = new float[MAXS];
+    private final float[] snx = new float[MAXS], sny = new float[MAXS], snz = new float[MAXS], st = new float[MAXS], ss = new float[MAXS];
+    private int scount;
+
+    private static long hash(int a, int b) {
+        return ((long) (a * 31 + b) * 2654435761L) & 0xffffffffL;
+    }
+
+    /** Remuestrea el mechón cada VOX_STEP (igual que hair_mesh.resample). */
+    private void resample() {
+        scount = 0;
+        float acc = 0, need = 0;
+        for (int i = 0; i < count - 1 && scount < MAXS; i++) {
+            float ax = px[i], ay = py[i], az = pz[i], bx = px[i + 1], by = py[i + 1], bz = pz[i + 1];
+            float seg = Mth.sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay) + (bz - az) * (bz - az));
+            while (need <= acc + seg + 1e-6F && scount < MAXS) {
+                float f = seg > 1e-6F ? (need - acc) / seg : 0;
+                sx[scount] = ax + (bx - ax) * f;
+                sy[scount] = ay + (by - ay) * f;
+                sz[scount] = az + (bz - az) * f;
+                float nx0 = nx[i] + (nx[i + 1] - nx[i]) * f, ny0 = ny[i] + (ny[i + 1] - ny[i]) * f, nz0 = nz[i] + (nz[i + 1] - nz[i]) * f;
+                float nl = Mth.sqrt(nx0 * nx0 + ny0 * ny0 + nz0 * nz0);
+                if (nl < 1e-6F) nl = 1;
+                snx[scount] = nx0 / nl; sny[scount] = ny0 / nl; snz[scount] = nz0 / nl;
+                st[scount] = pt[i] + (pt[i + 1] - pt[i]) * f;
+                ss[scount] = need;
+                scount++;
+                need += VOX_STEP;
+            }
+            acc += seg;
+        }
+    }
+
+    private final float[] cT = new float[3], cB = new float[3], cN = new float[3], cC = new float[3];
+
+    private void voxels(int index, float[] lock, VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay, boolean helmet) {
+        resample();
+        int kind = (int) lock[10];
+        float wavy = kind == KIND_AHOGE ? 0.0F : kind == KIND_BANG ? 0.6F : 1.0F;
+        for (int i = 0; i < scount; i++) {
+            int a = Math.max(0, i - 1), b = Math.min(scount - 1, i + 1);
+            float tx = sx[b] - sx[a], ty = sy[b] - sy[a], tz = sz[b] - sz[a];
+            float tl = Mth.sqrt(tx * tx + ty * ty + tz * tz);
+            if (tl < 1e-6F) continue;
+            tx /= tl; ty /= tl; tz /= tl;
+            float n0 = snx[i], n1 = sny[i], n2 = snz[i];
+            float bx = ty * n2 - tz * n1, by = tz * n0 - tx * n2, bz = tx * n1 - ty * n0;
+            float bl = Mth.sqrt(bx * bx + by * by + bz * bz);
+            if (bl < 1e-6F) { bx = 1; by = 0; bz = 0; bl = 1; }
+            bx /= bl; by /= bl; bz /= bl;
+            float mx = by * tz - bz * ty, my = bz * tx - bx * tz, mz = bx * ty - by * tx;
+            float ml = Mth.sqrt(mx * mx + my * my + mz * mz);
+            if (ml < 1e-6F) ml = 1;
+            mx /= ml; my /= ml; mz /= ml;
+            if (mx * n0 + my * n1 + mz * n2 < 0) { mx = -mx; my = -my; mz = -mz; }
+            float t = st[i];
+            float amp = WAVE_AMP * wavy * Math.min(1.0F, t * 2.5F);
+            float off = Mth.sin(ss[i] * WAVE_FREQ + lock[0] * 5.0F) * amp;
+            float cx = sx[i] + bx * off, cy = sy[i] + by * off, cz = sz[i] + bz * off;
+            if (helmet && cy < CY - 0.5F) continue;          // con casco solo el pelo de abajo
+            float w = widthAt(lock, t);
+            float hb = Math.max(0.32F, Math.min(0.95F, w * 0.34F));
+            float hn = Math.max(0.30F, hb * 0.8F);
+            float ht = VOX_STEP * 0.62F;
+            long h = hash(index, i);
+            int band = (index + i / 2) % 3;
+            int rgb = PALETTE[h % 7 == 0 ? 3 : band];
+            float r = ((rgb >> 16) & 255) / 255F, g = ((rgb >> 8) & 255) / 255F, bb = (rgb & 255) / 255F;
+            if (cy < -7.3F) { r = Math.min(1, r * 1.15F); g = Math.min(1, g * 1.15F); bb = Math.min(1, bb * 1.15F); }
+            float shade = lock[9];
+            r *= shade; g *= shade; bb *= shade;
+            cT[0] = tx; cT[1] = ty; cT[2] = tz;
+            cB[0] = bx; cB[1] = by; cB[2] = bz;
+            cN[0] = mx; cN[1] = my; cN[2] = mz;
+            cC[0] = cx; cC[1] = cy; cC[2] = cz;
+            cube(vc, mat, nm, light, overlay, ht, hb, hn, r, g, bb, (h & 1) == 0);
+        }
+    }
+
+    private final float[][] axes = new float[3][];
+    private final float[] half = new float[3];
+
+    private void cube(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay, float ht, float hb, float hn,
+                      float r, float g, float b, boolean flip) {
+        axes[0] = cT; axes[1] = cB; axes[2] = cN;
+        half[0] = ht; half[1] = hb; half[2] = hn;
+        for (int ai = 0; ai < 3; ai++) {
+            float[] ax = axes[ai], u = axes[(ai + 1) % 3], v = axes[(ai + 2) % 3];
+            float ha = half[ai], hu = half[(ai + 1) % 3], hv = half[(ai + 2) % 3];
+            for (int sg = -1; sg <= 1; sg += 2) {
+                float ox = cC[0] + ax[0] * ha * sg, oy = cC[1] + ax[1] * ha * sg, oz = cC[2] + ax[2] * ha * sg;
+                float nxv = ax[0] * sg, nyv = ax[1] * sg, nzv = ax[2] * sg;
+                float u0 = flip ? 1 : 0, u1 = flip ? 0 : 1;
+                cv(vc, mat, nm, ox - u[0] * hu - v[0] * hv, oy - u[1] * hu - v[1] * hv, oz - u[2] * hu - v[2] * hv, u0, 0, r, g, b, light, overlay, nxv, nyv, nzv);
+                cv(vc, mat, nm, ox + u[0] * hu - v[0] * hv, oy + u[1] * hu - v[1] * hv, oz + u[2] * hu - v[2] * hv, u1, 0, r, g, b, light, overlay, nxv, nyv, nzv);
+                cv(vc, mat, nm, ox + u[0] * hu + v[0] * hv, oy + u[1] * hu + v[1] * hv, oz + u[2] * hu + v[2] * hv, u1, 1, r, g, b, light, overlay, nxv, nyv, nzv);
+                cv(vc, mat, nm, ox - u[0] * hu + v[0] * hv, oy - u[1] * hu + v[1] * hv, oz - u[2] * hu + v[2] * hv, u0, 1, r, g, b, light, overlay, nxv, nyv, nzv);
+            }
+        }
+    }
+
+    private static void cv(VertexConsumer vc, Matrix4f mat, Matrix3f nm, float x, float y, float z, float u, float v,
+                           float r, float g, float b, int light, int overlay, float nx, float ny, float nz) {
+        vc.vertex(mat, x / 16.0F, y / 16.0F, z / 16.0F).color(r, g, b, 1.0F).uv(u, v)
+                .overlayCoords(overlay).uv2(light).normal(nm, nx, ny, nz).endVertex();
     }
 
     // ------------------------------------------------------------------ casquete

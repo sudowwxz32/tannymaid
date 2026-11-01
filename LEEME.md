@@ -27,13 +27,13 @@ chmod +x gradlew
 La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
 
 ```
-build/libs/tannymaid-forge-1.20.1-1.4.0.jar
+build/libs/tannymaid-forge-1.20.1-1.5.0.jar
 ```
 
 ## 2. Instalación
 
 Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
-- `tannymaid-forge-1.20.1-1.4.0.jar`
+- `tannymaid-forge-1.20.1-1.5.0.jar`
 - `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
 
 Para un servidor, el mod va tanto en el servidor como en los clientes.
@@ -124,6 +124,10 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 
 ## 7. Notas y límites conocidos
 
+- **Novedades 1.5.0.** Cara al estilo de la referencia: ojos almendrados ámbar con pupila rasgada,
+  delineado grueso que cae hacia afuera, cejas gruesas, nariz mínima, boca pequeña y sin rubor.
+  Cabello de **mechones de cubos 3D** (estilo vóxel) con volumen y ondas: 48 mechones gruesos,
+  flequillo con raya al medio que se abre hacia los lados y franjas de color en cada mechón.
 - **Novedades 1.4.0.**
   - Cara en el doble de resolución (64x64): iris con vetas y borde, tres brillos, pestañas con alitas,
     cejas afinadas, nariz con luz, labios y rubor. Detalles 3D: pestañas con relieve, alitas en las
@@ -182,7 +186,7 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
    Si no arranca solo, entra en él y pulsa **Run workflow**.
 6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
-   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.4.0.jar`.
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.5.0.jar`.
 7. Copia ese `.jar` a tu carpeta `mods`.
 
 Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.
