@@ -44,7 +44,8 @@ public final class TannyHairMesh {
             else if (kind == KIND_LONG) { sx = swayX * 0.7F; }
             else if (kind == KIND_AHOGE) { sx = ahogeBounce; sz = swayZ; }
             path(lock, sx, sz);
-            voxels(li, lock, vc, mat, nm, light, overlay, helmet);
+            build(lock);
+            emit(vc, mat, nm, light, overlay, helmet ? SCALP_STEPS : 0);
         }
     }
 
@@ -103,7 +104,7 @@ public final class TannyHairMesh {
             l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
             dx /= l; dy /= l; dz /= l;
             if (kind == KIND_BANG) {          // flequillo con raya al medio: se abre hacia los lados
-                float sw = phi * 1.6F * t;
+                float sw = (phi * 0.7F - 0.75F) * t;   // todo el flequillo se peina hacia un lado
                 dx += cp * sw; dz += sp * sw;
                 l = Mth.sqrt(dx * dx + dy * dy + dz * dz);
                 dx /= l; dy /= l; dz /= l;
@@ -127,10 +128,9 @@ public final class TannyHairMesh {
 
     private static float widthAt(float[] lock, float t) {
         float w = lock[6];
-        if ((int) lock[10] == KIND_AHOGE) return w * (1.0F - 0.85F * t);
-        float root = 0.55F + 0.45F * Math.min(1.0F, t / 0.25F);
-        float tip = 1.0F - 0.92F * (float) Math.pow(Math.max(0.0F, (t - 0.45F) / 0.55F), 1.6);
-        return w * root * tip;
+        if ((int) lock[10] == KIND_AHOGE) return w * (1.0F - 0.9F * t);
+        float root = 0.75F + 0.25F * Math.min(1.0F, t / 0.2F);
+        return w * root * (float) Math.pow(Math.max(0.0F, 1.0F - t), 0.85);
     }
 
     /** Secciones elípticas planas a lo largo del mechón + color por anillo. */
@@ -169,24 +169,11 @@ public final class TannyHairMesh {
         }
     }
 
+    /** Color uniforme del cabello: la forma la marca la luz sobre los mechones lisos. */
     private static void color(float[] lock, float y, float ny, float t, float[] out) {
-        float shade = lock[9];
-        float r = HAIR_R * shade, g = HAIR_G * shade, b = HAIR_B * shade;
-        int kind = (int) lock[10];
-        if (kind != KIND_AHOGE) {
-            float centre = -6.55F + (shade - 1.0F) * 5.0F + Mth.sin(lock[0] * 7.0F) * 0.35F;
-            float band = (float) Math.pow(Math.max(0.0F, 1.0F - Math.abs(y - centre) / 0.5F), 0.8);
-            float facing = Math.max(0.0F, ny * -0.3F + 0.75F);
-            float k = band * facing * (kind == KIND_BANG ? 0.95F : 0.8F);
-            r += (SHINE_R - r) * k;
-            g += (SHINE_G - g) * k;
-            b += (SHINE_B - b) * k;
-        }
-        if (t > 0.8F) {
-            float d = 1.0F - (t - 0.8F) * 1.2F;
-            r *= d; g *= d; b *= d;
-        }
-        out[0] = r; out[1] = g; out[2] = b;
+        out[0] = 40 / 255F;
+        out[1] = 36 / 255F;
+        out[2] = 46 / 255F;
     }
 
     private void emit(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay, int from) {
@@ -328,7 +315,7 @@ public final class TannyHairMesh {
     }
 
     private void cap(VertexConsumer vc, Matrix4f mat, Matrix3f nm, int light, int overlay) {
-        float c = 20 / 255F, cb = 26 / 255F;
+        float c = 38 / 255F, cb = 46 / 255F;
         for (int i = 0; i < CAP_PHI; i++) {
             float p0 = Mth.TWO_PI * i / CAP_PHI, p1 = Mth.TWO_PI * (i + 1) / CAP_PHI;
             float m0 = capMaxTh(p0), m1 = capMaxTh(p1);

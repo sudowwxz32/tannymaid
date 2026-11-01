@@ -28,7 +28,7 @@ public class TannyHairLayer extends RenderLayer<TannyEntity, TannyModel> {
     private static final ResourceLocation STRAND_TEX = new ResourceLocation(TannyMaid.MODID, "textures/entity/tanny/hair_strand.png");
 
     private final ModelPart root;
-    private final ModelPart head, headband, lidR, lidL, lashR, lashL;
+    private final ModelPart head, headband, lidR, lidL, lidBR, lidBL, lashR, lashL;
     private final TannyHairMesh mesh = new TannyHairMesh();
 
     public TannyHairLayer(RenderLayerParent<TannyEntity, TannyModel> parent, EntityModelSet models) {
@@ -39,6 +39,8 @@ public class TannyHairLayer extends RenderLayer<TannyEntity, TannyModel> {
         headband = m.get("headband");
         lidR = m.get("lid_r");
         lidL = m.get("lid_l");
+        lidBR = m.get("lidb_r");
+        lidBL = m.get("lidb_l");
         lashR = m.get("lash_r");
         lashL = m.get("lash_l");
     }
@@ -72,10 +74,10 @@ public class TannyHairLayer extends RenderLayer<TannyEntity, TannyModel> {
         boolean open = face == TannyRenderer.Face.NORMAL || face == TannyRenderer.Face.SURPRISED;
         boolean wings = open || face == TannyRenderer.Face.FOCUSED || face == TannyRenderer.Face.BLINK;
         headband.visible = !helmet;
-        lidR.visible = lidL.visible = open;
+        lidR.visible = lidL.visible = lidBR.visible = lidBL.visible = open;
         lashR.visible = lashL.visible = wings;
         head.copyFrom(parentHead);
         root.render(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(BAND_TEX)), packedLight, overlay);
-        headband.visible = lidR.visible = lidL.visible = lashR.visible = lashL.visible = true;
+        headband.visible = lidR.visible = lidL.visible = lidBR.visible = lidBL.visible = lashR.visible = lashL.visible = true;
     }
 }

@@ -27,13 +27,13 @@ chmod +x gradlew
 La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
 
 ```
-build/libs/tannymaid-forge-1.20.1-1.5.0.jar
+build/libs/tannymaid-forge-1.20.1-1.6.0.jar
 ```
 
 ## 2. Instalación
 
 Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
-- `tannymaid-forge-1.20.1-1.5.0.jar`
+- `tannymaid-forge-1.20.1-1.6.0.jar`
 - `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
 
 Para un servidor, el mod va tanto en el servidor como en los clientes.
@@ -124,6 +124,11 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 
 ## 7. Notas y límites conocidos
 
+- **Novedades 1.6.0.** Ojos más grandes con pestañas negras gruesas (también en 3D: dos segmentos sobre
+  cada ojo y la punta que cae hacia afuera), iris ámbar con vetas y dos brillos, sin nariz ni rubor.
+  Cabello tomboy de anime con mechones lisos en 3D y punta afilada (como en Block Dragon Super Z),
+  de un solo color: corto con picos, nuca corta con las puntas hacia afuera, flequillo desordenado
+  peinado hacia un lado y dos mechones delante de las orejas.
 - **Novedades 1.5.0.** Cara al estilo de la referencia: ojos almendrados ámbar con pupila rasgada,
   delineado grueso que cae hacia afuera, cejas gruesas, nariz mínima, boca pequeña y sin rubor.
   Cabello de **mechones de cubos 3D** (estilo vóxel) con volumen y ondas: 48 mechones gruesos,
@@ -186,7 +191,7 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
    Si no arranca solo, entra en él y pulsa **Run workflow**.
 6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
-   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.5.0.jar`.
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-1.6.0.jar`.
 7. Copia ese `.jar` a tu carpeta `mods`.
 
 Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.

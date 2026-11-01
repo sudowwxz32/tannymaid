@@ -15,7 +15,7 @@ R = 4.42           # radio de la "caja redondeada"
 P = 4.0            # exponente (4 = cubo con esquinas suaves)
 SCALP_STEPS = 6
 HANG_STEPS = 9
-SIDES = 6
+SIDES = 4
 
 # columnas de la tabla
 #  0 phi   1 th0   2 th1   3 hang   4 flare   5 curl   6 width   7 thick   8 lift   9 shade   10 kind
@@ -24,35 +24,34 @@ KIND_BOB, KIND_BANG, KIND_LONG, KIND_AHOGE = 0, 1, 2, 3
 
 
 def locks():
-    rnd = random.Random(21)
+    """Peinado tomboy de anime: corto y con picos lisos, nuca corta con las puntas hacia afuera,
+    flequillo desordenado peinado hacia un lado y dos mechones a los lados de la cara."""
+    rnd = random.Random(33)
     L = []
-    # bob: capa externa de mechones gruesos y bien definidos + capa interna de relleno
-    for layer, n in ((0, 17), (1, 12)):
-        a0, a1 = math.radians(54), math.radians(306)
-        for i in range(n):
-            t = (i + (0.5 if layer else 0)) / (n - (0 if layer else 1))
-            phi = a0 + (a1 - a0) * min(1.0, t)
-            back = 0.5 - 0.5 * math.cos(phi)               # 0 delante, 1 detrás
-            hang = 4.0 + 1.3 * back + rnd.uniform(-0.25, 0.25) - (0.6 if layer else 0)
-            L.append([phi, rnd.uniform(0.08, 0.22), math.pi / 2 + 0.08, hang,
-                      0.15 + 0.05 * back, 0.6 + rnd.uniform(-0.1, 0.1),
-                      2.8 if layer == 0 else 2.4, 0.9, 0.38 if layer == 0 else 0.02,
-                      (1.0 if i % 2 == 0 else 0.86) if layer == 0 else 0.8, KIND_BOB])
-    # coronilla: pocos mechones grandes desde la raya del medio
-    for i in range(8):
-        phi = i / 8 * 2 * math.pi + 0.4
-        L.append([phi, 0.04, 1.12, 0.0, 0, 0, 3.0, 0.8, 0.62, 1.05 if i % 2 else 0.92, KIND_BOB])
-    # flequillo: raya al medio, mechones que se abren hacia los lados
-    bangs = [(-36, 2.3, 1.02), (-22, 2.1, 0.98), (-8, 1.9, 0.95), (8, 1.9, 0.95), (22, 2.1, 0.98), (36, 2.3, 1.02)]
-    for k, (deg, hang, th1) in enumerate(bangs):
-        L.append([math.radians(deg), 0.3, th1, hang, 0.22 * (1 if deg > 0 else -1) * 0 + 0.12, -0.2, 2.1, 0.75, 0.6,
-                  1.02 if k % 2 else 0.9, KIND_BANG])
-    # mechones largos que enmarcan la cara
-    for s in (-1, 1):
-        L.append([s * math.radians(46), 0.35, math.pi / 2 - 0.05, 7.4, 0.03, 0.35, 2.0, 0.9, 0.75, 1.0, KIND_LONG])
-        L.append([s * math.radians(57), 0.35, math.pi / 2 - 0.02, 6.0, 0.06, 0.4, 1.8, 0.85, 0.85, 0.88, KIND_LONG])
+    # coronilla: picos que salen de la raya y se abren hacia afuera
+    for i in range(11):
+        phi = i / 11 * 2 * math.pi + 0.25
+        back = 0.5 - 0.5 * math.cos(phi)
+        L.append([phi, 0.05, 0.95 + 0.15 * back, 1.6 + rnd.uniform(-0.3, 0.4), 0.7, -0.35,
+                  2.7, 1.0, 0.55, 1.0, KIND_BOB])
+    # nuca y parte de atrás: cortos, con las puntas levantadas hacia afuera
+    for i in range(9):
+        phi = math.radians(118 + i * 15.5)
+        L.append([phi, 0.2, math.pi / 2 + 0.1, 2.6 + rnd.uniform(-0.3, 0.4), 0.3, -0.45,
+                  2.7, 1.0, 0.3, 1.0, KIND_BOB])
+    # lados: hasta la oreja
+    for s_ in (-1, 1):
+        for deg in (70, 86, 102):
+            L.append([s_ * math.radians(deg), 0.2, math.pi / 2 + 0.05, 2.3 + rnd.uniform(-0.2, 0.3), 0.22, -0.25,
+                      2.4, 0.95, 0.3, 1.0, KIND_BOB])
+    # mechones delante de las orejas (un poco más largos, con punta)
+    for s_ in (-1, 1):
+        L.append([s_ * math.radians(53), 0.3, math.pi / 2 - 0.08, 4.0, 0.06, 0.25, 1.9, 0.9, 0.5, 1.0, KIND_LONG])
+    # flequillo desordenado, peinado hacia un lado
+    for deg, hang in ((-34, 2.2), (-22, 2.6), (-10, 2.4), (2, 2.7), (14, 2.3), (26, 2.5), (37, 2.0)):
+        L.append([math.radians(deg), 0.3, 1.0, hang, 0.12, -0.15, 2.1, 0.8, 0.55, 1.0, KIND_BANG])
     # ahoge
-    L.append([math.radians(-12), 0.0, 0.0, 3.4, 0, 0, 1.0, 0.7, 0.6, 1.05, KIND_AHOGE])
+    L.append([math.radians(-12), 0.0, 0.0, 3.0, 0, 0, 1.1, 0.7, 0.6, 1.0, KIND_AHOGE])
     return L
 
 
@@ -109,7 +108,7 @@ def path(lock, sway_x=0.0, sway_z=0.0):
         d = norm((d[0] - out_h[0] * c, d[1], d[2] - out_h[2] * c))
         # flequillo con raya al medio: se abre hacia los lados
         if kind == KIND_BANG:
-            sw = phi * 1.6 * t
+            sw = (phi * 0.7 - 0.75) * t       # todo el flequillo se peina hacia un lado
             d = norm((d[0] + cp * sw, d[1], d[2] + sp * sw))
         # vaivén: hacia atrás (x) y de lado (z)
         tw = t ** 1.5
@@ -124,10 +123,9 @@ def width_at(lock, t):
     kind = int(lock[10])
     w = lock[6]
     if kind == KIND_AHOGE:
-        return w * (1.0 - 0.85 * t)
-    root = 0.55 + 0.45 * min(1.0, t / 0.25)
-    tip = 1.0 - 0.92 * max(0.0, (t - 0.45) / 0.55) ** 1.6
-    return w * root * tip
+        return w * (1.0 - 0.9 * t)
+    root = 0.75 + 0.25 * min(1.0, t / 0.2)
+    return w * root * max(0.0, 1.0 - t) ** 0.85
 
 
 def ring(p, tdir, n, w, k):
@@ -149,21 +147,12 @@ HAIR = (26, 24, 34)
 SHINE = (118, 122, 162)
 
 
+HAIR_UNIFORM = (40, 36, 46)
+
+
 def color_at(lock, p, n, t):
-    """Color por vértice: negro con un anillo de brillo anime a la misma altura en toda la cabeza."""
-    shade = lock[9]
-    c = [v * shade for v in HAIR]
-    y = p[1]
-    # anillo de brillo en zigzag: cada mechón lo tiene un poco más arriba o más abajo
-    centre = -6.55 + (shade - 1.0) * 5.0 + math.sin(lock[0] * 7.0) * 0.35
-    band = max(0.0, 1.0 - abs(y - centre) / 0.5) ** 0.8
-    facing = max(0.0, n[1] * -0.3 + 0.75)
-    if int(lock[10]) != KIND_AHOGE:
-        k = band * facing * (0.95 if int(lock[10]) == KIND_BANG else 0.8)
-        c = [c[i] + (SHINE[i] - c[i]) * k for i in range(3)]
-    if t > 0.8:
-        c = [v * (1.0 - (t - 0.8) * 1.2) for v in c]
-    return tuple(int(max(0, min(255, v))) for v in c)
+    """Color uniforme: la forma la marca la luz sobre los mechones lisos."""
+    return HAIR_UNIFORM
 
 
 CAP_TH = 10
@@ -190,7 +179,7 @@ def cap_quads():
             m0, m1 = cap_max_th(p0), cap_max_th(p1)
             a0, a1 = j / CAP_TH, (j + 1) / CAP_TH
             q = [cap_point(m0 * a0, p0)[0], cap_point(m1 * a0, p1)[0], cap_point(m1 * a1, p1)[0], cap_point(m0 * a1, p0)[0]]
-            quads.append((q, (20, 18, 26), cap_point(m0 * a0, p0)[1]))
+            quads.append((q, HAIR_UNIFORM, cap_point(m0 * a0, p0)[1]))
     return quads
 
 
@@ -210,7 +199,7 @@ def mesh_quads(sway_x=0.0, sway_z=0.0, helmet=False):
             for j in range(SIDES):
                 jj = (j + 1) % SIDES
                 q = [r0[j][0], r0[jj][0], r1[jj][0], r1[j][0]]
-                nrm = r0[j][1]
+                nrm = norm(tuple(r0[j][1][k] + r0[jj][1][k] for k in range(3)))
                 quads.append((q, c0, nrm))
     return quads
 
