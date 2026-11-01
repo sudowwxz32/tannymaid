@@ -563,11 +563,11 @@ public class YunnEntity extends PathfinderMob {
             ServerPlayer o = getOwnerPlayer();
             if (o == null || o.level() != level()) return false;
             LivingEntity a = o.getLastHurtByMob();
-            if (a != null && o.tickCount - o.getLastHurtByMobTimestamp() < 100 && canAttack(a)) { pick = a; return true; }
+            if (a != null && o.tickCount - o.getLastHurtByMobTimestamp() < 100 && YunnEntity.this.canAttack(a)) { pick = a; return true; }
             LivingEntity b = o.getLastHurtMob();
-            if (b != null && o.tickCount - o.getLastHurtMobTimestamp() < 100 && canAttack(b) && !(b instanceof Player)) { pick = b; return true; }
+            if (b != null && o.tickCount - o.getLastHurtMobTimestamp() < 100 && YunnEntity.this.canAttack(b) && !(b instanceof Player)) { pick = b; return true; }
             List<Mob> near = level().getEntitiesOfClass(Mob.class, o.getBoundingBox().inflate(10, 5, 10),
-                    m -> m instanceof Enemy && m.isAlive() && canAttack(m)
+                    m -> m instanceof Enemy && m.isAlive() && YunnEntity.this.canAttack(m)
                             && !(m instanceof NeutralMob n && !n.isAngry() && m.getTarget() != o));
             pick = near.stream().min((x, y) -> Double.compare(x.distanceToSqr(o), y.distanceToSqr(o))).orElse(null);
             return pick != null;
