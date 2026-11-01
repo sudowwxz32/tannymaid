@@ -24,32 +24,40 @@ KIND_BOB, KIND_BANG, KIND_LONG, KIND_AHOGE = 0, 1, 2, 3
 
 
 def locks():
-    """Peinado tomboy de anime: corto y con picos lisos, nuca corta con las puntas hacia afuera,
-    flequillo desordenado peinado hacia un lado y dos mechones a los lados de la cara."""
-    rnd = random.Random(33)
+    """Peinado tomboy de anime desordenado: picos lisos en todas direcciones, mucho flequillo
+    (dos capas, peinado hacia un lado), varios mechones a los lados de la cara y nuca corta."""
+    rnd = random.Random(41)
     L = []
-    # coronilla: picos que salen de la raya y se abren hacia afuera
-    for i in range(11):
-        phi = i / 11 * 2 * math.pi + 0.25
+    j = lambda a: rnd.uniform(-a, a)
+    # coronilla: picos desordenados que salen hacia arriba y afuera
+    for i in range(15):
+        phi = i / 15 * 2 * math.pi + 0.2 + j(0.12)
         back = 0.5 - 0.5 * math.cos(phi)
-        L.append([phi, 0.05, 0.95 + 0.15 * back, 1.6 + rnd.uniform(-0.3, 0.4), 0.7, -0.35,
-                  2.7, 1.0, 0.55, 1.0, KIND_BOB])
-    # nuca y parte de atrás: cortos, con las puntas levantadas hacia afuera
-    for i in range(9):
-        phi = math.radians(118 + i * 15.5)
-        L.append([phi, 0.2, math.pi / 2 + 0.1, 2.6 + rnd.uniform(-0.3, 0.4), 0.3, -0.45,
-                  2.7, 1.0, 0.3, 1.0, KIND_BOB])
-    # lados: hasta la oreja
+        L.append([phi, 0.04 + j(0.03), 0.9 + 0.2 * back + j(0.08), 1.5 + j(0.5), 0.75 + j(0.3), -0.35 + j(0.25),
+                  2.5 + j(0.3), 1.0, 0.55 + j(0.12), 1.0, KIND_BOB])
+    # nuca y parte de atrás: cortos, con las puntas hacia afuera en distintas direcciones
+    for i in range(11):
+        phi = math.radians(112 + i * 13.6) + j(0.06)
+        L.append([phi, 0.2, math.pi / 2 + 0.1 + j(0.06), 2.6 + j(0.45), 0.32 + j(0.15), -0.45 + j(0.3),
+                  2.5, 1.0, 0.3, 1.0, KIND_BOB])
+    # lados: hasta la oreja, dos capas
     for s_ in (-1, 1):
-        for deg in (70, 86, 102):
-            L.append([s_ * math.radians(deg), 0.2, math.pi / 2 + 0.05, 2.3 + rnd.uniform(-0.2, 0.3), 0.22, -0.25,
-                      2.4, 0.95, 0.3, 1.0, KIND_BOB])
-    # mechones delante de las orejas (un poco más largos, con punta)
+        for deg in (68, 80, 92, 104):
+            L.append([s_ * math.radians(deg + j(3)), 0.2, math.pi / 2 + 0.05, 2.5 + j(0.35), 0.22 + j(0.1), -0.25 + j(0.2),
+                      2.3, 0.95, 0.3, 1.0, KIND_BOB])
+        for deg in (74, 98):
+            L.append([s_ * math.radians(deg + j(3)), 0.3, math.pi / 2, 2.0 + j(0.3), 0.45, -0.4, 2.0, 0.9, 0.65, 1.0, KIND_BOB])
+    # mucho pelo a los lados de la cara: mechones que bajan por las mejillas hasta la mandíbula
     for s_ in (-1, 1):
-        L.append([s_ * math.radians(53), 0.3, math.pi / 2 - 0.08, 4.0, 0.06, 0.25, 1.9, 0.9, 0.5, 1.0, KIND_LONG])
-    # flequillo desordenado, peinado hacia un lado
-    for deg, hang in ((-34, 2.2), (-22, 2.6), (-10, 2.4), (2, 2.7), (14, 2.3), (26, 2.5), (37, 2.0)):
-        L.append([math.radians(deg), 0.3, 1.0, hang, 0.12, -0.15, 2.1, 0.8, 0.55, 1.0, KIND_BANG])
+        for deg, hang, w, lift in ((44, 3.4, 1.7, 0.45), (50, 4.4, 1.9, 0.55), (57, 3.9, 1.9, 0.5), (63, 3.2, 1.8, 0.6), (53, 3.0, 1.5, 0.85)):
+            L.append([s_ * math.radians(deg + j(2)), 0.3, math.pi / 2 - 0.08 + j(0.04), hang + j(0.3), 0.05 + j(0.05),
+                      0.2 + j(0.15), w, 0.9, lift, 1.0, KIND_LONG])
+    # flequillo desordenado: dos capas, peinado hacia un lado, de largos distintos
+    for deg, hang in ((-38, 2.0), (-29, 2.3), (-20, 2.0), (-11, 2.35), (-2, 2.1), (7, 2.35), (16, 2.0), (25, 2.3), (34, 2.0), (41, 1.8)):
+        L.append([math.radians(deg + j(2.5)), 0.3, 1.0 + j(0.05), hang + j(0.2), 0.12 + j(0.08), -0.15 + j(0.15),
+                  2.0, 0.8, 0.5, 1.0, KIND_BANG])
+    for deg, hang in ((-33, 1.4), (-15, 1.6), (3, 1.5), (21, 1.6), (36, 1.3)):
+        L.append([math.radians(deg + j(3)), 0.25, 0.92, hang, 0.35, -0.3, 1.9, 0.75, 0.85, 1.0, KIND_BANG])
     # ahoge
     L.append([math.radians(-12), 0.0, 0.0, 3.0, 0, 0, 1.1, 0.7, 0.6, 1.0, KIND_AHOGE])
     return L

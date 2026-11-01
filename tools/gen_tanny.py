@@ -391,7 +391,7 @@ def head_paint(f, x, y, w, h):
     if f == "back":
         return HAIR if (x % 6) else HAIR_DK
     if f in ("left", "right"):
-        front = x > w * 0.5 if f == "right" else x < w * 0.5
+        front = x < w * 0.5 if f == "right" else x > w * 0.5
         if y < h * 0.82 or not front:
             return HAIR if x % 5 else HAIR_DK
         return SKIN_SH                                   # mandíbula (solo la mitad de delante)
