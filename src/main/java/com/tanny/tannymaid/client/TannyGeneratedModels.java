@@ -65,12 +65,12 @@ public final class TannyGeneratedModels {
         PartDefinition p_head = root.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.offset(0F, 0F, 0F));
         PartDefinition p_cap = p_head.addOrReplaceChild("cap", CubeListBuilder.create().texOffs(0, 0).addBox(-3.4F, -1F, -1.2F, 6.8F, 2.2F, 2.4F), PartPose.offsetAndRotation(0F, -9F, -1.6F, -0.32F, 0F, 0F));
         PartDefinition p_cap_band = p_head.addOrReplaceChild("cap_band", CubeListBuilder.create().texOffs(20, 0).addBox(-4.9F, -0.4F, -0.6F, 9.8F, 0.8F, 1.2F), PartPose.offsetAndRotation(0F, -8.6F, -1.4F, -0.3F, 0F, 0F));
-        PartDefinition p_lid_r = p_head.addOrReplaceChild("lid_r", CubeListBuilder.create().texOffs(43, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(-1.25F, -4.62F, -4.02F, 0F, 0F, 0.19F));
-        PartDefinition p_lidb_r = p_head.addOrReplaceChild("lidb_r", CubeListBuilder.create().texOffs(48, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(-2.55F, -4.65F, -4.02F, 0F, 0F, -0.15F));
-        PartDefinition p_lash_r = p_head.addOrReplaceChild("lash_r", CubeListBuilder.create().texOffs(53, 0).addBox(-0.6F, -0.18F, -0.24F, 1.2F, 0.36F, 0.32F), PartPose.offsetAndRotation(-3.62F, -4.1F, -4.04F, 0F, 0.2F, -0.755F));
-        PartDefinition p_lid_l = p_head.addOrReplaceChild("lid_l", CubeListBuilder.create().texOffs(58, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(1.25F, -4.62F, -4.02F, 0F, 0F, -0.19F));
-        PartDefinition p_lidb_l = p_head.addOrReplaceChild("lidb_l", CubeListBuilder.create().texOffs(0, 6).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(2.55F, -4.65F, -4.02F, 0F, 0F, 0.15F));
-        PartDefinition p_lash_l = p_head.addOrReplaceChild("lash_l", CubeListBuilder.create().texOffs(5, 6).addBox(-0.6F, -0.18F, -0.24F, 1.2F, 0.36F, 0.32F), PartPose.offsetAndRotation(3.62F, -4.1F, -4.04F, 0F, -0.2F, 0.755F));
+        PartDefinition p_lid_r = p_head.addOrReplaceChild("lid_r", CubeListBuilder.create().texOffs(43, 0).addBox(-0.63F, -0.17F, -0.24F, 1.26F, 0.34F, 0.3F), PartPose.offsetAndRotation(-1.35F, -4F, -4.02F, 0F, 0F, 0.32F));
+        PartDefinition p_lidb_r = p_head.addOrReplaceChild("lidb_r", CubeListBuilder.create().texOffs(53, 0).addBox(-0.55F, -0.17F, -0.24F, 1.1F, 0.34F, 0.3F), PartPose.offsetAndRotation(-2.48F, -4.22F, -4.02F, 0F, 0F, 0.05F));
+        PartDefinition p_lash_r = p_head.addOrReplaceChild("lash_r", CubeListBuilder.create().texOffs(57, 0).addBox(-0.45F, -0.15F, -0.22F, 0.9F, 0.3F, 0.3F), PartPose.offsetAndRotation(-3.38F, -4.43F, -4.04F, 0F, 0.2F, 0.44F));
+        PartDefinition p_lid_l = p_head.addOrReplaceChild("lid_l", CubeListBuilder.create().texOffs(48, 0).addBox(-0.63F, -0.17F, -0.24F, 1.26F, 0.34F, 0.3F), PartPose.offsetAndRotation(1.35F, -4F, -4.02F, 0F, 0F, -0.32F));
+        PartDefinition p_lidb_l = p_head.addOrReplaceChild("lidb_l", CubeListBuilder.create().texOffs(61, 0).addBox(-0.55F, -0.17F, -0.24F, 1.1F, 0.34F, 0.3F), PartPose.offsetAndRotation(2.48F, -4.22F, -4.02F, 0F, 0F, -0.05F));
+        PartDefinition p_lash_l = p_head.addOrReplaceChild("lash_l", CubeListBuilder.create().texOffs(0, 6).addBox(-0.45F, -0.15F, -0.22F, 0.9F, 0.3F, 0.3F), PartPose.offsetAndRotation(3.38F, -4.43F, -4.04F, 0F, -0.2F, -0.44F));
         return LayerDefinition.create(mesh, 64, 32);
     }
 
@@ -85,6 +85,49 @@ public final class TannyGeneratedModels {
         m.put("lid_l", m.get("head").getChild("lid_l"));
         m.put("lidb_l", m.get("head").getChild("lidb_l"));
         m.put("lash_l", m.get("head").getChild("lash_l"));
+        return m;
+    }
+
+    public static LayerDefinition createYunnOutfit() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create(), PartPose.offset(0F, 0F, 0F));
+        PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create(), PartPose.offset(-5F, 2.5F, 0F));
+        PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create(), PartPose.offset(5F, 2.5F, 0F));
+        PartDefinition p_right_leg = root.addOrReplaceChild("right_leg", CubeListBuilder.create(), PartPose.offset(-1.9F, 12F, 0F));
+        PartDefinition p_left_leg = root.addOrReplaceChild("left_leg", CubeListBuilder.create(), PartPose.offset(1.9F, 12F, 0F));
+        PartDefinition p_shirt = p_body.addOrReplaceChild("shirt", CubeListBuilder.create().texOffs(0, 0).addBox(-4.3F, -0.25F, -2.3F, 8.6F, 7.7F, 4.6F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_bust = p_body.addOrReplaceChild("bust", CubeListBuilder.create().texOffs(42, 34).addBox(-3.4F, 0F, -0.85F, 6.8F, 2.9F, 0.95F), PartPose.offsetAndRotation(0F, 2.9F, -2.25F, -0.28F, 0F, 0F));
+        PartDefinition p_shorts = p_body.addOrReplaceChild("shorts", CubeListBuilder.create().texOffs(28, 0).addBox(-4.35F, 7.2F, -2.35F, 8.7F, 4.9F, 4.7F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_sleeve_r = p_right_arm.addOrReplaceChild("sleeve_r", CubeListBuilder.create().texOffs(40, 14).addBox(-2.35F, -2.35F, -2.35F, 3.7F, 4.2F, 4.7F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_glove_r = p_right_arm.addOrReplaceChild("glove_r", CubeListBuilder.create().texOffs(18, 24).addBox(-2.25F, 6.6F, -2.25F, 3.5F, 3.6F, 4.5F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_short_leg_r = p_right_leg.addOrReplaceChild("short_leg_r", CubeListBuilder.create().texOffs(0, 14).addBox(-2.3F, -0.2F, -2.3F, 4.6F, 3.6F, 4.6F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_shoe_r = p_right_leg.addOrReplaceChild("shoe_r", CubeListBuilder.create().texOffs(0, 34).addBox(-2.25F, 9.5F, -2.85F, 4.5F, 2.6F, 5.05F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_sleeve_l = p_left_arm.addOrReplaceChild("sleeve_l", CubeListBuilder.create().texOffs(0, 24).addBox(-1.35F, -2.35F, -2.35F, 3.7F, 4.2F, 4.7F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_glove_l = p_left_arm.addOrReplaceChild("glove_l", CubeListBuilder.create().texOffs(35, 24).addBox(-1.25F, 6.6F, -2.25F, 3.5F, 3.6F, 4.5F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_short_leg_l = p_left_leg.addOrReplaceChild("short_leg_l", CubeListBuilder.create().texOffs(20, 14).addBox(-2.3F, -0.2F, -2.3F, 4.6F, 3.6F, 4.6F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        PartDefinition p_shoe_l = p_left_leg.addOrReplaceChild("shoe_l", CubeListBuilder.create().texOffs(21, 34).addBox(-2.25F, 9.5F, -2.85F, 4.5F, 2.6F, 5.05F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
+        return LayerDefinition.create(mesh, 64, 64);
+    }
+
+    public static Map<String, ModelPart> bakeYunnOutfit(ModelPart root) {
+        Map<String, ModelPart> m = new LinkedHashMap<>();
+        m.put("body", root.getChild("body"));
+        m.put("right_arm", root.getChild("right_arm"));
+        m.put("left_arm", root.getChild("left_arm"));
+        m.put("right_leg", root.getChild("right_leg"));
+        m.put("left_leg", root.getChild("left_leg"));
+        m.put("shirt", m.get("body").getChild("shirt"));
+        m.put("bust", m.get("body").getChild("bust"));
+        m.put("shorts", m.get("body").getChild("shorts"));
+        m.put("sleeve_r", m.get("right_arm").getChild("sleeve_r"));
+        m.put("glove_r", m.get("right_arm").getChild("glove_r"));
+        m.put("short_leg_r", m.get("right_leg").getChild("short_leg_r"));
+        m.put("shoe_r", m.get("right_leg").getChild("shoe_r"));
+        m.put("sleeve_l", m.get("left_arm").getChild("sleeve_l"));
+        m.put("glove_l", m.get("left_arm").getChild("glove_l"));
+        m.put("short_leg_l", m.get("left_leg").getChild("short_leg_l"));
+        m.put("shoe_l", m.get("left_leg").getChild("shoe_l"));
         return m;
     }
 

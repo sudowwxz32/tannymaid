@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
-/** Yunn: uniforme de enfermera rosa y blanco, cabello largo lavanda, cofia con corazón y expresiones tiernas. */
+/** Yunn: camiseta con corazón, shorts, guantes, cabello rubio con volumen, cofia con corazón y ojos pequeños rasgados. */
 public class YunnRenderer extends HumanoidMobRenderer<YunnEntity, YunnModel> {
     private static final ResourceLocation NORMAL = tex("yunn"), BLINK = tex("yunn_blink"), HAPPY = tex("yunn_happy"),
             SURPRISED = tex("yunn_surprised"), FOCUSED = tex("yunn_focused"), TIRED = tex("yunn_tired");
@@ -16,7 +16,7 @@ public class YunnRenderer extends HumanoidMobRenderer<YunnEntity, YunnModel> {
 
     public YunnRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new YunnModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM)), 0.45F);
-        addLayer(new TannyOutfitLayer<>(this, ctx.getModelSet(), OUTFIT));
+        addLayer(new YunnOutfitLayer(this, ctx.getModelSet()));
         addLayer(new YunnHairLayer(this, ctx.getModelSet()));
     }
 

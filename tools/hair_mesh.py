@@ -64,32 +64,36 @@ def locks():
 
 
 def yunn_locks():
-    """Yunn: cabello largo y liso hasta la espalda, flequillo suave con raya al medio y mechones
-    largos que enmarcan la cara (diseño original)."""
+    """Yunn: cabello rubio largo con mucho volumen (tres capas), flequillo de anime en punta con un
+    mechón entre los ojos, y mechones largos que enmarcan la cara (diseño original)."""
     rnd = random.Random(7)
     j = lambda a: rnd.uniform(-a, a)
     L = []
-    for i in range(12):
-        phi = i / 12 * 2 * math.pi + 0.15
-        L.append([phi, 0.04, 1.12, 0.0, 0, 0, 2.9, 0.8, 0.5, 1.0, KIND_BOB])
-    # espalda: cabello largo y liso
-    for i in range(12):
-        phi = math.radians(112 + i * 12.4) + j(0.03)
-        L.append([phi, 0.15, math.pi / 2 + 0.12, 12.0 + j(0.6), 0.06, 0.2, 2.8, 0.85, 0.35, 1.0, KIND_LONG])
-    for i in range(8):
-        phi = math.radians(118 + i * 17.5)
-        L.append([phi, 0.2, math.pi / 2 + 0.1, 10.5 + j(0.5), 0.1, 0.25, 2.6, 0.8, 0.7, 1.0, KIND_LONG])
-    # lados: hasta los hombros (no chocan con los brazos)
+    # coronilla con volumen
+    for i in range(14):
+        phi = i / 14 * 2 * math.pi + 0.15
+        L.append([phi, 0.04, 1.12, 0.0, 0, 0, 3.0, 0.9, 0.85, 1.0, KIND_BOB])
+    # espalda: tres capas con vuelo
+    for layer, (n, lift, hang, flare, w) in enumerate(((13, 1.05, 11.5, 0.16, 3.0), (11, 0.6, 12.3, 0.1, 2.9), (9, 0.2, 10.5, 0.06, 2.7))):
+        for i in range(n):
+            phi = math.radians(108 + i * (144.0 / (n - 1))) + j(0.03)
+            L.append([phi, 0.15, math.pi / 2 + 0.12, hang + j(0.6), flare + j(0.04), 0.25 + j(0.1), w, 0.95, lift, 1.0, KIND_LONG])
+    # lados con volumen, hasta los hombros
     for s_ in (-1, 1):
-        for deg in (66, 80, 94, 106):
-            L.append([s_ * math.radians(deg), 0.2, math.pi / 2 + 0.05, 5.2 + j(0.4), 0.14, 0.3, 2.4, 0.9, 0.35, 1.0, KIND_BOB])
+        for deg in (64, 76, 88, 100):
+            L.append([s_ * math.radians(deg), 0.2, math.pi / 2 + 0.05, 5.6 + j(0.4), 0.26, 0.35, 2.6, 0.95, 0.75, 1.0, KIND_BOB])
+        for deg in (70, 94):
+            L.append([s_ * math.radians(deg), 0.25, math.pi / 2, 4.6, 0.35, 0.3, 2.4, 0.9, 1.1, 1.0, KIND_BOB])
     # mechones largos que enmarcan la cara
     for s_ in (-1, 1):
-        L.append([s_ * math.radians(46), 0.3, math.pi / 2 - 0.06, 8.6, 0.05, 0.25, 2.0, 0.85, 0.5, 1.0, KIND_LONG])
-        L.append([s_ * math.radians(55), 0.3, math.pi / 2 - 0.03, 7.6, 0.06, 0.3, 2.0, 0.85, 0.7, 1.0, KIND_LONG])
-    # flequillo suave con raya al medio
-    for deg, hang in ((-36, 2.0), (-26, 2.3), (-16, 2.2), (-6, 1.9), (6, 1.9), (16, 2.2), (26, 2.3), (36, 2.0)):
-        L.append([math.radians(deg), 0.3, 1.0, hang, 0.1, -0.1, 2.1, 0.75, 0.5, 1.0, KIND_SOFTBANG])
+        L.append([s_ * math.radians(45), 0.3, math.pi / 2 - 0.06, 8.8, 0.06, 0.25, 2.1, 0.9, 0.6, 1.0, KIND_LONG])
+        L.append([s_ * math.radians(54), 0.3, math.pi / 2 - 0.03, 7.8, 0.08, 0.3, 2.1, 0.9, 0.85, 1.0, KIND_LONG])
+    # flequillo de anime: mechones en punta, el del centro más largo cae entre los ojos
+    for deg, hang, w in ((-38, 2.0, 2.0), (-28, 2.5, 2.1), (-18, 2.1, 2.0), (-9, 2.6, 1.9), (0, 3.4, 1.5),
+                         (9, 2.6, 1.9), (18, 2.1, 2.0), (28, 2.5, 2.1), (38, 2.0, 2.0)):
+        L.append([math.radians(deg), 0.3, 1.0, hang, 0.1, -0.15, w, 0.8, 0.55, 1.0, KIND_SOFTBANG])
+    for deg in (-23, 23):
+        L.append([math.radians(deg), 0.25, 0.92, 1.7, 0.3, -0.3, 1.9, 0.75, 0.9, 1.0, KIND_SOFTBANG])
     return L
 
 

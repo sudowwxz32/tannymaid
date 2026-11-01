@@ -16,12 +16,12 @@ import net.minecraft.util.Mth;
 
 import java.util.Map;
 
-/** Cabello largo y liso de Yunn (malla de mechones lavanda), su cofia con corazón y las pestañas 3D. */
+/** Cabello largo rubio de Yunn (malla de mechones con volumen), su cofia con corazón y las pestañas 3D. */
 public class YunnHairLayer extends RenderLayer<YunnEntity, YunnModel> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(new ResourceLocation(TannyMaid.MODID, "yunn"), "cap");
     private static final ResourceLocation CAP_TEX = new ResourceLocation(TannyMaid.MODID, "textures/entity/yunn/cap.png");
     private static final ResourceLocation STRAND_TEX = new ResourceLocation(TannyMaid.MODID, "textures/entity/tanny/hair_strand.png");
-    public static final int HAIR_COLOR = 0xC49EDE;
+    public static final int HAIR_COLOR = 0xFFDC70;
 
     private final ModelPart root, head, lidR, lidL, lidBR, lidBL, lashR, lashL;
     private final TannyHairMesh mesh = new TannyHairMesh(YunnHairLocks.L, HAIR_COLOR);

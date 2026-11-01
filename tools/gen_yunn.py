@@ -8,19 +8,53 @@ import hair_mesh as H
 from PIL import Image
 
 OUT = os.path.join(G.ROOT, "src/main/resources/assets/tannymaid/textures/entity/yunn")
-HAIR_COLOR = (196, 158, 222)
+HAIR_COLOR = (255, 220, 112)
 
 
 def palette():
     G.SKIN, G.SKIN_SH, G.SKIN_HI, G.SKIN_DK = (250, 228, 218), (238, 208, 198), (255, 240, 232), (218, 180, 170)
-    G.HAIR, G.HAIR_HI, G.HAIR_DK = HAIR_COLOR, (216, 186, 236), (160, 122, 190)
+    G.HAIR, G.HAIR_HI, G.HAIR_DK = HAIR_COLOR, (252, 226, 140), (212, 170, 60)
     G.EYE_DK, G.EYE_MID, G.EYE_HI, G.EYE_RING = (34, 62, 150), (84, 146, 232), (176, 220, 255), (30, 52, 126)
     G.BLACK, G.BLACK_HI, G.BLACK_DK = (242, 156, 186), (252, 188, 210), (216, 124, 158)
     G.RED, G.RED_DK, G.RED_HI = (232, 82, 126), (180, 50, 92), (250, 140, 172)
     G.SHOE, G.SHOE_HI = (232, 120, 160), (252, 190, 212)
     G.PUPIL_W = 1.9
+    G.EYE_STYLE = "small"
+    G.BROW_RGB = (176, 128, 52)
+    G.body_paint, G.arm_paint, G.leg_paint = body_paint, arm_paint, leg_paint
     G.BLUSH_ON = True
     G.BLUSH = (246, 150, 168)
+
+
+def body_paint(f, x, y, w, h):
+    """Base bajo la ropa 3D: camiseta blanca y shorts rosados."""
+    if f == "front" and y < 4 and 0.36 * w <= x <= 0.64 * w:
+        return G.SKIN
+    if y >= 0.62 * h:
+        return G.mix(G.BLACK, G.BLACK_HI, (x % 10) / 20.0)
+    return G.mix(G.WHITE, G.WHITE_SH, (x % 12) / 24.0)
+
+
+def arm_paint(f, x, y, w, h):
+    t = y / h
+    if f == "top" or t < 0.3:
+        return G.WHITE
+    if f == "bottom" or t > 0.72:
+        return G.WHITE_SH if t > 0.9 else G.WHITE        # guante
+    return G.mix(G.SKIN_HI, G.SKIN, (t - 0.3) * 2)
+
+
+def leg_paint(f, x, y, w, h):
+    t = y / h
+    if f == "top" or t < 0.3:
+        return G.mix(G.BLACK, G.BLACK_HI, (x % 10) / 20.0)   # shorts
+    if f == "bottom":
+        return G.WHITE_SH
+    if t < 0.7:
+        return G.mix(G.SKIN_HI, G.SKIN, (t - 0.3) * 2)
+    if t < 0.8:
+        return G.WHITE                                     # calcetines
+    return G.SHOE
 
 
 def main():
@@ -29,7 +63,7 @@ def main():
     for expr, name in [("normal", "yunn"), ("blink", "yunn_blink"), ("happy", "yunn_happy"),
                        ("surprised", "yunn_surprised"), ("focused", "yunn_focused"), ("tired", "yunn_tired")]:
         G.skin(expr).save(os.path.join(OUT, name + ".png"))
-    op, _ = G.outfit_parts()
+    op, _ = G.yunn_outfit_parts()
     ow, oh = G.pack(op, 64)
     G.build_texture(op, ow, oh).save(os.path.join(OUT, "outfit.png"))
     yp, _ = G.yunn_cap_parts()
@@ -48,7 +82,7 @@ def preview(outdir):
             ((-1.9, 12, 0), (0, 16), (-2, 0, -2, 4, 12, 4)), ((1.9, 12, 0), (16, 48), (-2, 0, -2, 4, 12, 4))]
     for piv, (u, v), bx in base:
         quads += G.quads_for(sk, *bx, u, v, [(piv, (0, 0, 0))], 1)
-    op, _ = G.outfit_parts()
+    op, _ = G.yunn_outfit_parts()
     G.pack(op, 64)
     tf = G.chains(op, [("body", (0, 0, 0)), ("right_arm", (-5, 2.5, 0)), ("left_arm", (5, 2.5, 0)),
                        ("right_leg", (-1.9, 12, 0)), ("left_leg", (1.9, 12, 0))])

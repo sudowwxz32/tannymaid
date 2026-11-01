@@ -44,5 +44,6 @@ public final class ClientSetup {
         event.registerLayerDefinition(TannyHairLayer.LAYER, TannyGeneratedModels::createHair);
         event.registerLayerDefinition(TannyOutfitLayer.LAYER, TannyGeneratedModels::createOutfit);
         event.registerLayerDefinition(YunnHairLayer.LAYER, TannyGeneratedModels::createYunnCap);
+        event.registerLayerDefinition(YunnOutfitLayer.LAYER, TannyGeneratedModels::createYunnOutfit);
     }
 }

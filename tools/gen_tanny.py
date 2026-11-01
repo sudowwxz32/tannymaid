@@ -337,11 +337,89 @@ def yunn_cap_parts():
     P = []
     P.append(Part("cap", "head", (0, -9.0, -1.6), (-0.32, 0, 0), [Box(-3.4, -1.0, -1.2, 6.8, 2.2, 2.4, heart_cap)]))
     P.append(Part("cap_band", "head", (0, -8.6, -1.4), (-0.3, 0, 0), [Box(-4.9, -0.4, -0.6, 9.8, 0.8, 1.2, heart_cap)]))
-    P.append(Part("lid_r", "head", (-1.25, -4.62, -4.02), (0, 0, 0.19), [Box(-0.68, -0.21, -0.26, 1.36, 0.42, 0.34, lash3d)]))
-    P.append(Part("lidb_r", "head", (-2.55, -4.65, -4.02), (0, 0, -0.15), [Box(-0.68, -0.21, -0.26, 1.36, 0.42, 0.34, lash3d)]))
-    P.append(Part("lash_r", "head", (-3.62, -4.1, -4.04), (0, 0.2, -0.755), [Box(-0.6, -0.18, -0.24, 1.2, 0.36, 0.32, lash3d)]))
+    P.append(Part("lid_r", "head", (-1.35, -4.0, -4.02), (0, 0, 0.32), [Box(-0.63, -0.17, -0.24, 1.26, 0.34, 0.3, lash3d)]))
+    P.append(Part("lidb_r", "head", (-2.48, -4.22, -4.02), (0, 0, 0.05), [Box(-0.55, -0.17, -0.24, 1.1, 0.34, 0.3, lash3d)]))
+    P.append(Part("lash_r", "head", (-3.38, -4.43, -4.04), (0, 0.2, 0.44), [Box(-0.45, -0.15, -0.22, 0.9, 0.3, 0.3, lash3d)]))
     P += mirror([p for p in P if p.name.endswith("_r")])
     return P, [("head", (0, 0, 0))]
+
+
+def shirt_paint(f, x, y, w, h):
+    """Camiseta blanca con cuello y ribete rosados y un corazón al frente."""
+    if f == "front":
+        cx, cy = w / 2, h * 0.86
+        u, v = (x - cx) / (w * 0.07), (cy - y) / (w * 0.07)
+        if (u * u + v * v - 1) ** 3 - u * u * v ** 3 < 0:
+            return (236, 96, 140)
+    if y < 3 and f != "bottom":
+        return (240, 150, 182)                         # cuello
+    if y >= h - 3 and f not in ("top", "bottom"):
+        return (240, 150, 182)                         # ribete
+    t = (x % 12) / 12.0
+    return mix(WHITE, WHITE_SH, abs(t - 0.5) * 0.8)
+
+
+def bust_shirt(f, x, y, w, h):
+    """Pecho de la camiseta con un corazón pequeño a un lado (como un bordado)."""
+    if f == "front":
+        cx, cy = w * 0.72, h * 0.45
+        u, v = (x - cx) / (h * 0.3), (cy - y) / (h * 0.3)
+        if (u * u + v * v - 1) ** 3 - u * u * v ** 3 < 0:
+            return (236, 96, 140)
+    return mix(WHITE, WHITE_SH, (x % 12) / 24.0)
+
+
+def sleeve_paint(f, x, y, w, h):
+    if y >= h - 3 and f not in ("top", "bottom"):
+        return (240, 150, 182)
+    return mix(WHITE, WHITE_SH, (x % 10) / 20.0)
+
+
+def shorts_paint(f, x, y, w, h):
+    if f == "top":
+        return BLACK_DK
+    if y < 3 and f not in ("bottom",):
+        return WHITE_SH                                # cinturilla
+    if y >= h - 2 and f not in ("top", "bottom"):
+        return BLACK_DK                                # dobladillo
+    t = (x % 10) / 10.0
+    return mix(BLACK, BLACK_HI, abs(t - 0.5))
+
+
+def glove_paint(f, x, y, w, h):
+    if y < 4 and f not in ("top", "bottom"):
+        return (240, 150, 182)                         # puño rosado
+    if f == "bottom":
+        return WHITE_SH
+    return mix(WHITE, WHITE_SH, (y / max(1, h - 1)) * 0.5)
+
+
+def sneaker_paint(f, x, y, w, h):
+    if f == "bottom" or (f != "top" and y >= h - 2):
+        return WHITE_SH                                # suela
+    if f == "top":
+        return WHITE if (x // 3) % 2 else (240, 150, 182)
+    if y < 3:
+        return WHITE
+    return SHOE if (x // 4) % 3 else SHOE_HI
+
+
+def yunn_outfit_parts():
+    P = []
+    P.append(Part("shirt", "body", (0, 0, 0), (0, 0, 0), [Box(-4.3, -0.25, -2.3, 8.6, 7.7, 4.6, shirt_paint)]))
+    P.append(Part("bust", "body", (0, 2.9, -2.25), (-0.28, 0, 0), [Box(-3.4, 0, -0.85, 6.8, 2.9, 0.95, bust_shirt)]))
+    P.append(Part("shorts", "body", (0, 0, 0), (0, 0, 0), [Box(-4.35, 7.2, -2.35, 8.7, 4.9, 4.7, shorts_paint)]))
+    P.append(Part("sleeve_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-2.35, -2.35, -2.35, 3.7, 4.2, 4.7, sleeve_paint)]))
+    P.append(Part("glove_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-2.25, 6.6, -2.25, 3.5, 3.6, 4.5, glove_paint)]))
+    P.append(Part("short_leg_r", "right_leg", (0, 0, 0), (0, 0, 0), [Box(-2.3, -0.2, -2.3, 4.6, 3.6, 4.6, shorts_paint)]))
+    P.append(Part("shoe_r", "right_leg", (0, 0, 0), (0, 0, 0), [Box(-2.25, 9.5, -2.85, 4.5, 2.6, 5.05, sneaker_paint)]))
+    m = mirror([p for p in P if p.name.endswith("_r")])
+    for p in m:
+        p.parent = p.parent.replace("right", "left")
+    P += m
+    anchors = [("body", (0, 0, 0)), ("right_arm", (-5, 2.5, 0)), ("left_arm", (5, 2.5, 0)),
+               ("right_leg", (-1.9, 12, 0)), ("left_leg", (1.9, 12, 0))]
+    return P, anchors
 
 
 def strand_texture():
@@ -588,6 +666,8 @@ LINE = (52, 30, 24)          # pestañas / cejas café oscuro
 LASH_BLACK = (14, 10, 12)
 PUPIL_W = 0.7          # pupila rasgada (Tanny); Yunn la tiene redonda
 BLUSH_ON = False       # rubor suave (solo Yunn)
+BROW_RGB = (34, 22, 20)
+EYE_STYLE = "big"      # "big" (Tanny) o "small" (Yunn: ojos pequeños y rasgados hacia arriba)
 
 
 def face_image(expr):
@@ -610,7 +690,49 @@ def face_image(expr):
         (a, b), (c, e) = P([(x0, y0), (x1, y1)], mirror)
         return (min(a, c), min(b, e), max(a, c), max(b, e))
 
+    def small_eye(mirror):
+        """Ojo pequeño y rasgado (la comisura externa sube), con delineado negro y punta hacia arriba."""
+        g = 0.6 if expr == "surprised" else 0.0
+        lift = 0.9 if expr == "focused" else 0.0
+        almond = [(13.4, 17.6), (12.0, 16.0 - g + lift), (8.2, 15.6 - g + lift), (4.2, 15.3 - g + lift), (2.2, 14.9 - g + lift),
+                  (3.6, 18.2 + g), (8.2, 19.9 + g), (12.0, 19.2 + g)]
+        mask = Image.new("L", big.size, 0)
+        ImageDraw.Draw(mask).polygon(P(almond, mirror), fill=255)
+        layer = Image.new("RGBA", big.size, T)
+        ld = ImageDraw.Draw(layer)
+        ld.polygon(P(almond, mirror), fill=(252, 248, 244, 255))
+        cx, cy, r = 7.9, 17.7, 2.5 + g * 0.3
+        for k in range(30):
+            f = k / 29
+            col = mix(EYE_DK, EYE_MID, f * 1.7) if f < 0.55 else mix(EYE_MID, EYE_HI, (f - 0.55) * 2.2)
+            yy = cy - r + 2 * r * f
+            ld.rectangle(box(cx - r, yy, cx + r, yy + 2 * r / 29 + 0.06, mirror), fill=col + (255,))
+        ring = Image.new("L", big.size, 0)
+        ImageDraw.Draw(ring).ellipse(box(cx - r, cy - r, cx + r, cy + r, mirror), fill=255)
+        iris = Image.new("RGBA", big.size, T)
+        iris.paste(layer, (0, 0), ring)
+        base = Image.new("RGBA", big.size, T)
+        ImageDraw.Draw(base).polygon(P(almond, mirror), fill=(252, 248, 244, 255))
+        base.alpha_composite(iris)
+        bd = ImageDraw.Draw(base)
+        bd.ellipse(box(cx - r, cy - r, cx + r, cy + r, mirror), outline=EYE_RING + (255,), width=int(0.35 * K))
+        pcx = (N - cx) if mirror else cx
+        bd.ellipse(((pcx - 0.9) * K, (cy - 1.1) * K, (pcx + 0.9) * K, (cy + 1.1) * K), fill=(26, 12, 10, 255))
+        hx = pcx + (0.3 if not mirror else -1.3)
+        bd.rectangle((hx * K, (cy - 1.7) * K, (hx + 1.0) * K, (cy - 0.7) * K), fill=(255, 255, 255, 255))
+        clipped = Image.new("RGBA", big.size, T)
+        clipped.paste(base, (0, 0), mask)
+        big.alpha_composite(clipped)
+        lash = [(13.6, 17.0), (12.0, 15.1 - g + lift), (8.2, 14.5 - g + lift), (4.0, 14.3 - g + lift), (1.6, 13.5 - g + lift),
+                (0.4, 13.0 - g + lift), (2.2, 15.0 - g + lift), (4.0, 15.5 - g + lift), (8.2, 15.8 - g + lift),
+                (12.0, 16.2 - g + lift), (13.6, 17.9)]
+        d.polygon(P(lash, mirror), fill=LASH_BLACK + (255,))
+        d.line(P([(3.8, 18.4 + g), (8.2, 20.1 + g), (11.8, 19.4 + g)], mirror), fill=(70, 40, 34, 210), width=int(0.35 * K))
+
     def eye(mirror):
+        if EYE_STYLE == "small" and expr in ("normal", "surprised", "focused"):
+            small_eye(mirror)
+            return
         if expr in ("normal", "surprised", "focused"):
             top = 13.6 if expr != "focused" else 15.2
             bot = 23.0 if expr != "surprised" else 23.6
@@ -688,7 +810,7 @@ def face_image(expr):
             pts = [(3.0, 11.6), (8.0, 11.2), (13.0, 10.4), (13.0, 11.1), (8.0, 11.9), (3.0, 12.4)]
         else:
             pts = [(2.8, 11.8), (6.0, 10.6), (9.8, 10.3), (13.2, 10.9), (13.2, 11.7), (9.8, 11.1), (6.0, 11.4), (2.8, 12.5)]
-        d.polygon(P(pts, mirror), fill=(34, 22, 20, 255))
+        d.polygon(P(pts, mirror), fill=BROW_RGB + (255,))
 
     if BLUSH_ON:
         for cx in (7.5, 24.5):
@@ -810,6 +932,10 @@ def main():
     build_texture(yparts, yw, yh).save(os.path.join(TEX, "..", "yunn", "cap.png")) if os.path.isdir(os.path.join(TEX, "..", "yunn")) else None
     out += java_layer("createYunnCap", yparts, yanchors, yw, yh) + [""]
     out += java_bake("bakeYunnCap", yparts, yanchors) + [""]
+    zparts, zanchors = yunn_outfit_parts()
+    zw, zh = pack(zparts, 64)
+    out += java_layer("createYunnOutfit", zparts, zanchors, zw, zh) + [""]
+    out += java_bake("bakeYunnOutfit", zparts, zanchors) + [""]
     out += java_layer("createOutfit", oparts, oanchors, ow, oh) + [""]
     out += java_bake("bakeOutfit", oparts, oanchors) + ["}", ""]
     open(JAVA, "w").write("\n".join(out))

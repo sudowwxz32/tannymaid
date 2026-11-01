@@ -27,13 +27,13 @@ chmod +x gradlew
 La primera vez tarda varios minutos (descarga Minecraft y Forge). Al terminar, el mod está en:
 
 ```
-build/libs/tannymaid-forge-1.20.1-2.0.0.jar
+build/libs/tannymaid-forge-1.20.1-2.1.0.jar
 ```
 
 ## 2. Instalación
 
 Copia en la carpeta `mods` de tu instalación Forge 1.20.1:
-- `tannymaid-forge-1.20.1-2.0.0.jar`
+- `tannymaid-forge-1.20.1-2.1.0.jar`
 - `Cobblemon-forge-1.5.2+1.20.1.jar` y sus dependencias (Kotlin for Forge, Architectury API si tu versión lo pide)
 
 Para un servidor, el mod va tanto en el servidor como en los clientes.
@@ -124,6 +124,9 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 
 ## 7. Notas y límites conocidos
 
+- **Novedades 2.1.0.** Yunn renovada: ojos pequeños y rasgados hacia arriba (con pestañas 3D a juego),
+  cabello rubio largo con mucho volumen (tres capas), flequillo de anime en punta con un mechón entre
+  los ojos, camiseta blanca con corazón, shorts rosados, guantes y zapatillas en 3D.
 - **Novedades 2.0.0 — Yunn, la enfermera Pokémon** (diseño original). Contrato de Yunn: lingote de oro +
   rodaja de sandía reluciente. No puede morir (se debilita y se recupera). Cura a tu equipo Pokémon
   (vida, estados, PP), lo potencia (amistad, EVs y un IV al máximo), te da botiquines de Cobblemon,
@@ -209,7 +212,7 @@ sentada con ojos cerrados al debilitarse. Mide ~1.66 m.
 5. Ve a la pestaña **Actions**. Verás "Compilar TannyMaid (.jar)" ejecutándose (tarda ~5–10 min).
    Si no arranca solo, entra en él y pulsa **Run workflow**.
 6. Cuando tenga ✅ verde, entra en la ejecución y, abajo en **Artifacts**, descarga
-   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-2.0.0.jar`.
+   **TannyMaid-jar**. Es un ZIP que contiene `tannymaid-forge-1.20.1-2.1.0.jar`.
 7. Copia ese `.jar` a tu carpeta `mods`.
 
 Si sale ❌ rojo, abre el paso "Compilar el mod", copia el error y envíalo para corregirlo.
