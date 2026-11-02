@@ -54,8 +54,12 @@ public final class ClientFlight {
     public static void tick(Minecraft mc) {
         RandomSource rnd = mc.level.random;
         for (Player p : mc.level.players()) {
-            float[] t = TILT.computeIfAbsent(p.getId(), k -> new float[2]);
+            float[] t = TILT.computeIfAbsent(p.getId(), k -> new float[5]);
             t[1] = t[0];
+            t[4] = t[3];
+            // ritmo de giro (para inclinarse en las curvas)
+            float turn = Mth.wrapDegrees(p.yBodyRot - p.yBodyRotO);
+            t[3] += ((flying(p) ? Mth.clamp(turn * 2.2F, -38, 38) : 0) - t[3]) * 0.2F;
             double dx = p.getX() - p.xo, dy = p.getY() - p.yo, dz = p.getZ() - p.zo;
             double hs = Math.sqrt(dx * dx + dz * dz);
             float target = 0;
@@ -114,11 +118,17 @@ public final class ClientFlight {
         float tilt = tilt(p, e.getPartialTick());
         PoseStack pose = e.getPoseStack();
         pose.pushPose();
-        if (tilt > 0.01F && flying(p)) {
+        if (flying(p)) {
             float yaw = Mth.rotLerp(e.getPartialTick(), p.yBodyRotO, p.yBodyRot);
-            pose.translate(0, 0.9, 0);
+            float[] t = TILT.get(p.getId());
+            float bank = t == null ? 0 : Mth.lerp(e.getPartialTick(), t[4], t[3]);
+            float age = p.tickCount + e.getPartialTick();
+            // flotando: sube y baja suavemente
+            float hover = (1.0F - Mth.clamp(tilt * 2, 0, 1)) * Mth.sin(age * 0.1F) * 0.07F;
+            pose.translate(0, 0.9 + hover, 0);
             pose.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
             pose.mulPose(Axis.XP.rotationDegrees(-tilt * 80.0F));
+            pose.mulPose(Axis.ZP.rotationDegrees(-bank * (0.4F + tilt)));        // se inclina en las curvas
             pose.mulPose(Axis.YP.rotationDegrees(-(180.0F - yaw)));
             pose.translate(0, -0.9, 0);
         }
@@ -169,6 +179,33 @@ public final class ClientFlight {
             e.setYaw(e.getYaw() + (float) Math.sin(t * 2.3) * amount * 0.6F);
             e.setPitch(e.getPitch() + (float) Math.cos(t * 2.9) * amount * 0.6F);
             e.setRoll(e.getRoll() + (float) Math.sin(t * 3.7) * amount * 0.8F);
+        }
+        // la escena de fusión sacude todo
+        for (Player p : mc.level.players()) {
+            SaiyanState s = ClientStates.get(p.getId());
+            if (s.fusing > 0 && p.distanceTo(mc.player) < 48) {
+                float prog = 1.0F - s.fusing / (float) com.bdsz.data.FusionLogic.FUSING_TICKS;
+                amount = Math.max(amount, (float) (1.0 - p.distanceTo(mc.player) / 48.0) * (1.0F + prog * 3.0F));
+            }
+        }
+        if (amount > 0.01F && mc.level != null) {
+            double t2 = mc.level.getGameTime() + e.getPartialTick();
+            e.setYaw(e.getYaw() + (float) Math.sin(t2 * 3.1) * amount * 0.25F);
+            e.setRoll(e.getRoll() + (float) Math.cos(t2 * 2.7) * amount * 0.3F);
+        }
+        // volando: la cámara se mece un poco (flotando) y vibra con la velocidad
+        if (flying(mc.player)) {
+            double t3 = mc.level.getGameTime() + e.getPartialTick();
+            float tl0 = tilt(mc.player, (float) e.getPartialTick());
+            float calm = 1.0F - Mth.clamp(tl0 * 2, 0, 1);
+            double speed = mc.player.getDeltaMovement().length();
+            e.setPitch(e.getPitch() + (float) Math.sin(t3 * 0.07) * 0.6F * calm);
+            e.setRoll(e.getRoll() + (float) Math.sin(t3 * 0.045) * 0.9F * calm);
+            if (speed > 0.6) {
+                float v = (float) Math.min(1.0, (speed - 0.6) * 0.8);
+                e.setPitch(e.getPitch() + (float) Math.sin(t3 * 4.3) * 0.35F * v);
+                e.setYaw(e.getYaw() + (float) Math.cos(t3 * 3.9) * 0.3F * v);
+            }
         }
         // ligera inclinación al girar volando rápido
         if (flying(mc.player)) {

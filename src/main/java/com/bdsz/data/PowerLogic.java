@@ -33,6 +33,9 @@ public final class PowerLogic {
     private static final UUID AGILITY_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c04");
     private static final UUID STEP_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c05");
     private static final UUID REACH_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c06");
+    private static final UUID FUSE_REACH_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c11");
+    private static final UUID FUSE_BREACH_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c12");
+    private static final UUID FUSE_KB_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c13");
     private static final UUID BREACH_ID = UUID.fromString("b1d5a3c0-1e2f-4a6b-9c7d-0e1f2a3b4c07");
 
     public static final int BLAST_COST = 12;
@@ -732,6 +735,13 @@ public final class PowerLogic {
         setMod(p.getAttribute(net.minecraftforge.common.ForgeMod.STEP_HEIGHT_ADDITION.get()), STEP_ID, "bdsz_step", s.ozaru ? 2.5 : 0, AttributeModifier.Operation.ADDITION);
         setMod(p.getAttribute(net.minecraftforge.common.ForgeMod.ENTITY_REACH.get()), REACH_ID, "bdsz_reach", s.ozaru ? 5.0 : 0, AttributeModifier.Operation.ADDITION);
         setMod(p.getAttribute(net.minecraftforge.common.ForgeMod.BLOCK_REACH.get()), BREACH_ID, "bdsz_breach", s.ozaru ? 4.0 : 0, AttributeModifier.Operation.ADDITION);
+        // fusiones: brazos largos (enderman) y no te empujan (gólem / warden)
+        setMod(p.getAttribute(net.minecraftforge.common.ForgeMod.ENTITY_REACH.get()), FUSE_REACH_ID, "bdsz_fuse_reach",
+                s.fusion == Fusion.ENDERMAN.ordinal() ? 3.0 : 0, AttributeModifier.Operation.ADDITION);
+        setMod(p.getAttribute(net.minecraftforge.common.ForgeMod.BLOCK_REACH.get()), FUSE_BREACH_ID, "bdsz_fuse_breach",
+                s.fusion == Fusion.ENDERMAN.ordinal() ? 3.0 : 0, AttributeModifier.Operation.ADDITION);
+        setMod(p.getAttribute(Attributes.KNOCKBACK_RESISTANCE), FUSE_KB_ID, "bdsz_fuse_kb",
+                s.fusion == Fusion.GOLEM.ordinal() || s.fusion == Fusion.WARDEN.ordinal() ? 1.0 : 0, AttributeModifier.Operation.ADDITION);
         if (p.getHealth() > p.getMaxHealth()) p.setHealth(p.getMaxHealth());
         if (s.flight) p.getAbilities().setFlyingSpeed(s.flySpeed());
     }
@@ -882,6 +892,7 @@ public final class PowerLogic {
         int color = f == Form.ULTRA_EGO ? 0xA060FF : (s.activeKaioken() > 0 ? 0xFF5A5A : 0x5AC8FF);
         beam.setup(p, 6.0F * s.damageMultiplier(), width, color);
         p.level().addFreshEntity(beam);
+        recoil(p, 0.45);
         s.pose = SaiyanState.POSE_KAME_FIRE;
         s.poseTimer = KameBeamEntity.DURATION;
         s.attackCooldown = 40;
@@ -893,6 +904,13 @@ public final class PowerLogic {
     }
 
     /** G: Big Bang Attack. Una esfera enorme que explota en un área amplia. */
+    /** Retroceso al lanzar un poder: el cuerpo se va un poco hacia atrás. */
+    public static void recoil(ServerPlayer p, double k) {
+        Vec3 look = p.getLookAngle();
+        p.setDeltaMovement(p.getDeltaMovement().add(-look.x * k, p.onGround() ? 0.05 : -look.y * k * 0.4, -look.z * k));
+        p.hurtMarked = true;
+    }
+
     public static void bigBang(ServerPlayer p) {
         SaiyanState s = SaiyanData.get(p);
         if (!canAttack(p, s, BIG_BANG_COST, "el Big Bang Attack")) return;
@@ -902,6 +920,7 @@ public final class PowerLogic {
         s.poseTimer = 18;
         s.attackCooldown = 40;
         SaiyanData.set(p, s);
+        recoil(p, 0.35);
         Form f = s.activeForm();
         KiBlastEntity blast = new KiBlastEntity(ModRegistry.KI_BLAST.get(), p.level());
         blast.setOwner(p);

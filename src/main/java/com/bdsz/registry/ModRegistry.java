@@ -57,6 +57,9 @@ public final class ModRegistry {
             () -> new SenzuBeanItem(SENZU_CROP.get(), new Item.Properties().rarity(Rarity.RARE)
                     .food(new FoodProperties.Builder().nutrition(20).saturationMod(1.0F).alwaysEat().fast().build())));
 
+    public static final RegistryObject<Item> FUSION_EARRING = ITEMS.register("fusion_earring",
+            () -> new com.bdsz.item.FusionEarringItem(new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+
     public static final RegistryObject<Item> TRAINING_LIST_1 = ITEMS.register("training_list_1",
             () -> new TrainingListItem(2, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
     public static final RegistryObject<Item> TRAINING_LIST_2 = ITEMS.register("training_list_2",

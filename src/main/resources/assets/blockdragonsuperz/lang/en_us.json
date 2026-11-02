@@ -37,5 +37,7 @@
   "block.blockdragonsuperz.shield_generator": "Protective Generator",
   "itemGroup.blockdragonsuperz": "Block Dragon Super Z",
   "item.blockdragonsuperz.training_list_6": "Training List V (Special Block 2)",
-  "item.blockdragonsuperz.training_list_7": "Training List VI (Special Block 3)"
+  "item.blockdragonsuperz.training_list_7": "Training List VI (Special Block 3)",
+  "item.blockdragonsuperz.fusion_earring": "Fusion Earring",
+  "key.blockdragonsuperz.fusion": "Fusion ability"
 }

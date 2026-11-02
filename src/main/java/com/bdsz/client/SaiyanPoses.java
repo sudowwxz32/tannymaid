@@ -26,7 +26,17 @@ public final class SaiyanPoses {
         if (e instanceof Player pf && ClientStates.get(pf.getId()).saiyan && ClientStates.get(pf.getId()).gender == 2) feminine(m);
         if (!(e instanceof Player p)) return;
         SaiyanState s = ClientStates.get(p.getId());
-        if (!s.saiyan) return;
+        if (fusionPoses(m, s, age)) {
+            copy(m);
+            return;
+        }
+        if (!s.saiyan) {
+            if (s.fusion > 0 && m.attackTime > 0) {
+                punch(m, m.attackTime);
+                copy(m);
+            }
+            return;
+        }
         long since = ClientStates.ticksSinceTransform(p.getId());
         boolean powering = s.powering > 0 || since < 14;
         float shake = Mth.sin(age * 2.7F) * 0.035F;
@@ -45,8 +55,10 @@ public final class SaiyanPoses {
             m.leftLeg.zRot = -0.2F;
             m.leftLeg.xRot = -0.25F;
         } else if (s.pose == SaiyanState.POSE_KAME_FIRE) {
-            // ambos brazos al frente, palmas juntas
+            // ambos brazos al frente, palmas juntas; el cuerpo se echa hacia atrás por el retroceso
             m.body.yRot = 0.0F;
+            m.body.xRot = -0.22F + shake * 2;
+            m.head.xRot -= 0.1F;
             m.rightArm.xRot = -1.55F + m.head.xRot + shake;
             m.rightArm.yRot = -0.12F;
             m.rightArm.zRot = 0.0F;
@@ -56,7 +68,9 @@ public final class SaiyanPoses {
             m.rightLeg.xRot = 0.25F;
             m.leftLeg.xRot = -0.3F;
         } else if (s.pose == SaiyanState.POSE_BIG_BANG) {
-            // brazo derecho extendido con la palma abierta
+            // brazo derecho extendido con la palma abierta, el cuerpo gira y retrocede
+            m.body.yRot = 0.35F;
+            m.body.xRot = -0.15F + shake * 2;
             m.rightArm.xRot = -1.6F + m.head.xRot;
             m.rightArm.yRot = -0.05F;
             m.rightArm.zRot = 0.0F;
@@ -92,19 +106,30 @@ public final class SaiyanPoses {
             m.rightLeg.zRot = 0.22F;
             m.leftLeg.zRot = -0.22F;
         } else if (s.charging) {
-            // recarga de ki: postura firme, piernas abiertas, brazos tensos hacia abajo y afuera
-            m.body.xRot = 0.22F;
-            m.head.xRot = -0.25F + shake;
-            m.rightArm.xRot = 0.35F + shake;
-            m.rightArm.yRot = 0.0F;
-            m.rightArm.zRot = 0.55F;
-            m.leftArm.xRot = 0.35F - shake;
-            m.leftArm.yRot = 0.0F;
-            m.leftArm.zRot = -0.55F;
-            m.rightLeg.xRot = -0.15F;
-            m.leftLeg.xRot = -0.15F;
-            m.rightLeg.zRot = 0.3F;
-            m.leftLeg.zRot = -0.3F;
+            // recarga de ki: guardia baja y firme; cada pulso de energía el cuerpo se tensa, los brazos
+            // se abren con fuerza y la cabeza se levanta gritando, luego vuelve a concentrarse
+            float cycle = (age % 40.0F) / 40.0F;
+            float pulse = cycle < 0.25F ? Mth.sin(cycle / 0.25F * Mth.HALF_PI) : 1.0F - (cycle - 0.25F) / 0.75F;
+            pulse = pulse * pulse;
+            float tr = shake * (1.5F + pulse * 2.0F);
+            m.body.xRot = 0.28F - pulse * 0.32F;
+            m.body.yRot = Mth.sin(age * 0.07F) * 0.05F;
+            m.head.xRot = 0.15F - pulse * 0.75F + tr;
+            m.head.yRot = tr * 0.5F;
+            m.rightArm.xRot = 0.55F - pulse * 0.45F + tr;
+            m.rightArm.yRot = 0.15F;
+            m.rightArm.zRot = 0.35F + pulse * 0.75F;
+            m.leftArm.xRot = 0.55F - pulse * 0.45F - tr;
+            m.leftArm.yRot = -0.15F;
+            m.leftArm.zRot = -0.35F - pulse * 0.75F;
+            m.rightLeg.xRot = -0.2F;
+            m.leftLeg.xRot = -0.2F;
+            m.rightLeg.zRot = 0.36F + pulse * 0.06F;
+            m.leftLeg.zRot = -0.36F - pulse * 0.06F;
+            m.body.y = 1.0F - pulse * 0.8F;   // se agacha y se impulsa con cada pulso
+            m.head.y = m.body.y;
+            m.rightArm.y += m.body.y;
+            m.leftArm.y += m.body.y;
         } else if (s.flight && p.getAbilities().flying) {
             float tilt = ClientFlight.tilt(p, 1.0F);
             if (tilt > 0.25F) {
@@ -119,17 +144,74 @@ public final class SaiyanPoses {
                 m.leftLeg.xRot = Mth.lerp(k, m.leftLeg.xRot, -0.06F + Mth.sin(age * 0.35F + 1.5F) * 0.06F);
                 m.rightLeg.zRot = 0.03F;
                 m.leftLeg.zRot = -0.03F;
+                m.leftArm.zRot += Mth.sin(age * 0.3F) * 0.06F * k;      // el viento mueve el brazo libre
+                m.body.yRot = Mth.sin(age * 0.18F) * 0.05F * k;
             } else {
                 // suspendido en el aire: piernas colgando que se mecen, brazos relajados
                 m.rightLeg.xRot = 0.15F + Mth.sin(age * 0.12F) * 0.12F;
                 m.leftLeg.xRot = 0.25F + Mth.sin(age * 0.12F + 1.2F) * 0.12F;
                 m.rightArm.zRot = 0.18F + Mth.sin(age * 0.1F) * 0.05F;
                 m.leftArm.zRot = -0.18F - Mth.sin(age * 0.1F) * 0.05F;
+                m.rightArm.xRot += Mth.sin(age * 0.08F) * 0.08F;
+                m.leftArm.xRot += Mth.sin(age * 0.08F + 1.0F) * 0.08F;
+                m.body.xRot = 0.05F + Mth.sin(age * 0.1F) * 0.03F;
             }
+            if (m.attackTime > 0) punch(m, m.attackTime);
+        } else if (m.attackTime > 0) {
+            punch(m, m.attackTime);       // golpes con más movimiento
         } else {
             return;
         }
         copy(m);
+    }
+
+    /** Golpe con todo el cuerpo: giro de cadera, brazo que sale disparado, el otro atrás y un paso al frente. */
+    private static void punch(PlayerModel<?> m, float attack) {
+        float a = Mth.sin(attack * Mth.PI);
+        float twist = Mth.sin(Mth.sqrt(attack) * Mth.TWO_PI) * 0.55F;
+        m.body.yRot = twist;
+        m.body.xRot = 0.18F * a;
+        m.rightArm.xRot = -1.45F * a + m.head.xRot * a * 0.5F;
+        m.rightArm.yRot = twist - 0.25F * a;
+        m.leftArm.xRot = 0.65F * a;
+        m.leftArm.zRot = -0.25F * a;
+        m.rightLeg.xRot = -0.45F * a;
+        m.leftLeg.xRot = 0.35F * a;
+    }
+
+    /** Ponerse / quitarse el arete y la escena de la fusión. Devuelve true si aplicó una pose. */
+    private static boolean fusionPoses(PlayerModel<?> m, SaiyanState s, float age) {
+        if (s.fusing > 0) {
+            float prog = 1.0F - s.fusing / (float) com.bdsz.data.FusionLogic.FUSING_TICKS;
+            float tr = Mth.sin(age * 3.1F) * (0.04F + prog * 0.1F);
+            m.body.xRot = -0.25F - prog * 0.15F;
+            m.head.xRot = -0.6F - prog * 0.4F + tr;
+            m.head.yRot = tr;
+            m.rightArm.xRot = -0.2F + tr;
+            m.rightArm.yRot = 0;
+            m.rightArm.zRot = 1.2F + prog * 0.9F;
+            m.leftArm.xRot = -0.2F - tr;
+            m.leftArm.yRot = 0;
+            m.leftArm.zRot = -1.2F - prog * 0.9F;
+            m.rightLeg.zRot = 0.3F;
+            m.leftLeg.zRot = -0.3F;
+            m.rightLeg.xRot = 0;
+            m.leftLeg.xRot = 0;
+            return true;
+        }
+        if (s.earAnim != 0) {
+            int total = com.bdsz.data.FusionLogic.EAR_ANIM;
+            float t = 1.0F - Math.abs(s.earAnim) / (float) total;          // 0 → 1
+            float reach = t < 0.4F ? t / 0.4F : t < 0.7F ? 1.0F : 1.0F - (t - 0.7F) / 0.3F;
+            m.rightArm.xRot = Mth.lerp(reach, 0.0F, -2.55F);
+            m.rightArm.yRot = Mth.lerp(reach, 0.0F, -0.75F);
+            m.rightArm.zRot = Mth.lerp(reach, 0.0F, 0.15F);
+            m.head.zRot = -0.28F * reach;
+            m.head.yRot = -0.2F * reach;
+            if (s.earAnim < 0 && reach > 0.9F) m.rightArm.xRot += Mth.sin(age * 1.5F) * 0.05F;   // forcejea con el arete
+            return true;
+        }
+        return false;
     }
 
     /** Músculos: pecho y espalda más anchos, brazos y piernas más gruesos. */

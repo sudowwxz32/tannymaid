@@ -41,6 +41,8 @@ public final class ClientModEvents {
     public static final ModelLayerLocation BUST_ARMOR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "bust_armor"), "main");
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
+    public static final KeyMapping FUSION = new KeyMapping("key.blockdragonsuperz.fusion", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, CATEGORY);
+
     private ClientModEvents() {}
 
     @SubscribeEvent
@@ -56,11 +58,15 @@ public final class ClientModEvents {
         e.register(DRAGON_FIST);
         e.register(OZARU);
         e.register(QUICK);
+        e.register(FUSION);
     }
 
     @SubscribeEvent
     public static void layerDefs(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(HAIR, SaiyanHairLayer::createLayer);
+        e.registerLayerDefinition(FusionLayer.WIDE, FusionLayer::createWide);
+        e.registerLayerDefinition(FusionLayer.SLIM, FusionLayer::createSlim);
+        e.registerLayerDefinition(FusionLayer.EARRINGS, FusionLayer::createEarrings);
         e.registerLayerDefinition(BUST_SKIN, FemaleBodyLayer::createSkin);
         e.registerLayerDefinition(BUST_ARMOR, FemaleBodyLayer::createArmor);
         e.registerLayerDefinition(SSJ4_FUR, Ssj4FurLayer::createWide);
@@ -94,6 +100,7 @@ public final class ClientModEvents {
             if (e.getSkin(skin) instanceof PlayerRenderer renderer) {
                 renderer.addLayer(new FemaleBodyLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new Ssj4FurLayer(renderer, e.getEntityModels()));
+                renderer.addLayer(new FusionLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new SaiyanHairLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new TailLayer(renderer, e.getEntityModels()));
                 renderer.addLayer(new DragonSpiritLayer(renderer, e.getEntityModels()));

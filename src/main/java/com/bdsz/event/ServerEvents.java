@@ -172,6 +172,7 @@ public final class ServerEvents {
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent e) {
         if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
+        com.bdsz.data.FusionLogic.tick(p);
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) return;
         if (s.infiniteKi() && s.ki < s.maxKi()) {
@@ -195,6 +196,10 @@ public final class ServerEvents {
                 return;
             }
             SaiyanState s = SaiyanData.get(p);
+            if (s.fusion > 0 || s.fusing > 0) {
+                com.bdsz.data.FusionLogic.defuse(p, s, false);
+                s = SaiyanData.get(p);
+            }
             if (s.transformed || s.flight || s.charging || s.powering > 0 || s.ozaru) {
                 s.ozaru = false;
                 s.transformed = false;
@@ -264,5 +269,103 @@ public final class ServerEvents {
         if (e.getTarget() instanceof ServerPlayer target && e.getEntity() instanceof ServerPlayer viewer) {
             SaiyanData.syncTo(target, viewer);
         }
+    }
+
+    // ================================================================== fusiones
+
+    @SubscribeEvent
+    public static void serverTick(TickEvent.ServerTickEvent e) {
+        if (e.phase == TickEvent.Phase.END) com.bdsz.data.FusionLogic.serverTick(e.getServer());
+    }
+
+    /** Si tiras el arete con Q mientras llevas el otro puesto, también sirve para fusionarte. */
+    @SubscribeEvent
+    public static void toss(net.minecraftforge.event.entity.item.ItemTossEvent e) {
+        if (e.getPlayer() instanceof ServerPlayer p && e.getEntity().getItem().is(com.bdsz.registry.ModRegistry.FUSION_EARRING.get())) {
+            com.bdsz.data.FusionLogic.track(e.getEntity(), p);
+        }
+    }
+
+    /** Los mobs de tu misma fusión no te atacan; tus zombis aliados nunca te atacan a ti. */
+    @SubscribeEvent
+    public static void target(net.minecraftforge.event.entity.living.LivingChangeTargetEvent e) {
+        if (!(e.getNewTarget() instanceof ServerPlayer p)) return;
+        if (e.getEntity().getTags().contains("bdsz_ally") && e.getEntity().getPersistentData().hasUUID("BdszAllyOf")
+                && e.getEntity().getPersistentData().getUUID("BdszAllyOf").equals(p.getUUID())) {
+            e.setCanceled(true);
+            return;
+        }
+        SaiyanState s = SaiyanData.get(p);
+        if (s.fusion > 0 && com.bdsz.data.Fusion.of(e.getEntity()) == com.bdsz.data.Fusion.byId(s.fusion)) e.setCanceled(true);
+    }
+
+    /** Zombis aliados (Horda): buscan enemigos y desaparecen al minuto. */
+    @SubscribeEvent
+    public static void allyTick(net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent e) {
+        if (!(e.getEntity() instanceof net.minecraft.world.entity.Mob m) || m.level().isClientSide || !m.getTags().contains("bdsz_ally")) return;
+        if (m.tickCount > 1200) {
+            ((net.minecraft.server.level.ServerLevel) m.level()).sendParticles(ParticleTypes.SOUL, m.getX(), m.getY() + 1, m.getZ(), 15, 0.3, 0.5, 0.3, 0.02);
+            m.discard();
+            return;
+        }
+        if (m.tickCount % 20 == 0 && (m.getTarget() == null || m.getTarget() instanceof net.minecraft.world.entity.player.Player)) {
+            m.setTarget(null);
+            m.level().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, m.getBoundingBox().inflate(16),
+                            o -> o != m && o instanceof net.minecraft.world.entity.monster.Enemy && !o.getTags().contains("bdsz_ally"))
+                    .stream().min((a, b) -> Double.compare(a.distanceToSqr(m), b.distanceToSqr(m))).ifPresent(m::setTarget);
+        }
+    }
+
+    /** Creeper: inmune a explosiones. Golpes con habilidades de la fusión (zombi da hambre, gólem lanza por los aires). */
+    @SubscribeEvent
+    public static void fusionAttack(LivingAttackEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p && e.getSource().is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+            SaiyanState s = SaiyanData.get(p);
+            if (s.fusion == com.bdsz.data.Fusion.CREEPER.ordinal() || s.fusing > 0) e.setCanceled(true);
+        }
+        if (e.getEntity() instanceof ServerPlayer p && SaiyanData.get(p).fusing > 0) e.setCanceled(true);   // intocable mientras se fusiona
+    }
+
+    @SubscribeEvent
+    public static void fusionHit(LivingHurtEvent e) {
+        if (!(e.getSource().getEntity() instanceof ServerPlayer atk) || e.getSource().getDirectEntity() != atk) return;
+        SaiyanState s = SaiyanData.get(atk);
+        if (s.fusion == com.bdsz.data.Fusion.ZOMBIE.ordinal()) {
+            e.getEntity().addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.HUNGER, 200, 1));
+        } else if (s.fusion == com.bdsz.data.Fusion.GOLEM.ordinal()) {
+            e.getEntity().setDeltaMovement(e.getEntity().getDeltaMovement().add(0, 0.9, 0));
+            e.getEntity().hurtMarked = true;
+        }
+    }
+
+    /** Esqueleto: flechas más fuertes y sin gastar. */
+    @SubscribeEvent
+    public static void arrowJoin(net.minecraftforge.event.entity.EntityJoinLevelEvent e) {
+        if (e.getLevel().isClientSide || !(e.getEntity() instanceof net.minecraft.world.entity.projectile.AbstractArrow a)) return;
+        if (a.getOwner() instanceof ServerPlayer p && SaiyanData.get(p).fusion == com.bdsz.data.Fusion.SKELETON.ordinal()
+                && a.tickCount == 0 && !a.getPersistentData().getBoolean("BdszBoost")) {
+            a.getPersistentData().putBoolean("BdszBoost", true);
+            a.setBaseDamage(a.getBaseDamage() * 1.6);
+        }
+    }
+
+    @SubscribeEvent
+    public static void arrowLoose(net.minecraftforge.event.entity.player.ArrowLooseEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p && !p.getAbilities().instabuild && e.hasAmmo()
+                && SaiyanData.get(p).fusion == com.bdsz.data.Fusion.SKELETON.ordinal()) {
+            p.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ARROW));
+        }
+    }
+
+    /** Más movilidad al golpear: un pequeño impulso hacia el enemigo. */
+    @SubscribeEvent
+    public static void lunge(net.minecraftforge.event.entity.player.AttackEntityEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p) || p.isShiftKeyDown()) return;
+        SaiyanState s = SaiyanData.get(p);
+        if (!s.saiyan && s.fusion == 0) return;
+        net.minecraft.world.phys.Vec3 look = p.getLookAngle();
+        double k = s.powered() ? 0.42 : 0.28;
+        p.setDeltaMovement(p.getDeltaMovement().add(look.x * k, p.onGround() ? 0.08 : look.y * k * 0.5, look.z * k));
+        p.hurtMarked = true;
     }
 }

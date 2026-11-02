@@ -87,6 +87,10 @@ public final class ClientForgeEvents {
         while (ClientModEvents.OZARU.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc); else Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.OZARU, 0, 0));
         }
+        // X: habilidad de la fusión (también sin ser saiyajin)
+        while (ClientModEvents.FUSION.consumeClick()) {
+            Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.FUSION_ABILITY, 0, 0));
+        }
         // H: pulsar para empezar a recargar ki, pulsar otra vez para detener
         while (ClientModEvents.CHARGE.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc);

@@ -31,6 +31,14 @@ public class SaiyanState {
     public int hair = -1;       // peinado base elegido (-1 = el predeterminado de cada transformación)
     public boolean tail;        // cola de saiyajin (café)
     public int lineage;         // bloque de linaje elegido en partidas online (0 = ninguno)
+    // ---- fusiones con aretes
+    public boolean earring;     // lleva puesto un arete de fusión
+    public int earAnim;         // animación: >0 poniéndoselo, <0 quitándoselo (ticks restantes)
+    public int fusion;          // con quién está fusionado (Fusion.ordinal(), 0 = nadie)
+    public int fusionTicks;     // tiempo restante de la fusión
+    public int fusionMax;
+    public int fusing;          // ticks restantes de la escena de fusión
+    public int fusionCd;        // espera de la habilidad de fusión (tecla X)
 
     public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
@@ -114,6 +122,13 @@ public class SaiyanState {
         t.putBoolean("HasHair", true);
         t.putBoolean("Tail", tail);
         t.putInt("Lineage", lineage);
+        t.putBoolean("Earring", earring);
+        t.putInt("EarAnim", earAnim);
+        t.putInt("Fusion", fusion);
+        t.putInt("FusionTicks", fusionTicks);
+        t.putInt("FusionMax", fusionMax);
+        t.putInt("Fusing", fusing);
+        t.putInt("FusionCd", fusionCd);
         return t;
     }
 
@@ -146,6 +161,13 @@ public class SaiyanState {
         s.hair = t.getBoolean("HasHair") ? t.getInt("Hair") : -1;
         s.tail = t.getBoolean("Tail");
         s.lineage = t.getInt("Lineage");
+        s.earring = t.getBoolean("Earring");
+        s.earAnim = t.getInt("EarAnim");
+        s.fusion = t.getInt("Fusion");
+        s.fusionTicks = t.getInt("FusionTicks");
+        s.fusionMax = t.getInt("FusionMax");
+        s.fusing = t.getInt("Fusing");
+        s.fusionCd = t.getInt("FusionCd");
         return s;
     }
 
@@ -175,6 +197,13 @@ public class SaiyanState {
         b.writeVarInt(hair + 1);
         b.writeBoolean(tail);
         b.writeVarInt(lineage);
+        b.writeBoolean(earring);
+        b.writeVarInt(earAnim + 64);
+        b.writeVarInt(fusion);
+        b.writeVarInt(fusionTicks);
+        b.writeVarInt(fusionMax);
+        b.writeVarInt(fusing);
+        b.writeVarInt(fusionCd);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -204,6 +233,13 @@ public class SaiyanState {
         s.hair = b.readVarInt() - 1;
         s.tail = b.readBoolean();
         s.lineage = b.readVarInt();
+        s.earring = b.readBoolean();
+        s.earAnim = b.readVarInt() - 64;
+        s.fusion = b.readVarInt();
+        s.fusionTicks = b.readVarInt();
+        s.fusionMax = b.readVarInt();
+        s.fusing = b.readVarInt();
+        s.fusionCd = b.readVarInt();
         return s;
     }
 }

@@ -24,6 +24,18 @@ public class SaiyanHud implements IGuiOverlay {
         LocalPlayer p = mc.player;
         if (p == null || mc.options.hideGui || p.isSpectator() || mc.screen instanceof PowerScreen) return;
         SaiyanState s = ClientStates.get(p.getId());
+        if (s.fusion > 0 && s.fusing == 0) {
+            // fusión: nombre, tiempo restante y habilidad (arriba al centro)
+            com.bdsz.data.Fusion fu = com.bdsz.data.Fusion.byId(s.fusion);
+            int secs = s.fusionTicks / 20;
+            String txt = "§6✦ Fusión " + fu.display + "  §f" + secs / 60 + ":" + String.format("%02d", secs % 60)
+                    + (s.fusionCd > 0 ? "  §7X " + (s.fusionCd + 19) / 20 + "s" : "  §eX listo");
+            int tw = mc.font.width(txt);
+            int cx = g.guiWidth() / 2;
+            g.fill(cx - tw / 2 - 4, 3, cx + tw / 2 + 4, 15, 0x80000000);
+            g.fill(cx - tw / 2 - 4, 14, cx - tw / 2 - 4 + (int) ((tw + 8) * (s.fusionTicks / (float) Math.max(1, s.fusionMax))), 15, 0xFFFFC83A);
+            g.drawString(mc.font, txt, cx - tw / 2, 5, 0xFFFFFFFF, true);
+        }
         if (!s.saiyan) return;
         Font font = mc.font;
         Form f = s.activeForm();
