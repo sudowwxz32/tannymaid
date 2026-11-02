@@ -123,3 +123,8 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
 - **25 % de probabilidad de quedarte fusionado para siempre.** Para salir: `/desfusionar` o el **Elixir de
   Separación** (aliento de dragón, lágrima de ghast, manzana dorada y fragmento de amatista).
 - Las poses del Ultra Instinto Perfecto (encorvado) y Propio (sereno) ahora se ven mientras te transformas.
+
+## 8.1.1 — Arreglo de cierre del juego en las fusiones
+- El juego se cerraba ("Unregistered memory fetched: minecraft:attack_target") cuando estabas fusionado y había
+  cerca un mob de tu misma especie: se le preguntaba una memoria que solo tienen los mobs con "cerebro" (warden,
+  piglins). Ahora se revisa primero.

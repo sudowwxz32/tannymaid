@@ -432,9 +432,12 @@ public final class FusionLogic {
                 m.setTarget(null);
                 m.getNavigation().stop();
             }
-            m.getBrain().getMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET).ifPresent(t -> {
-                if (t == p) m.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET);
-            });
+            // solo los mobs con "cerebro" (warden, piglins...) tienen esta memoria; preguntar a los demás hace fallar el juego
+            if (m.getBrain().checkMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET,
+                    net.minecraft.world.entity.ai.memory.MemoryStatus.VALUE_PRESENT)
+                    && m.getBrain().getMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET).orElse(null) == p) {
+                m.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET);
+            }
             if (m instanceof net.minecraft.world.entity.monster.warden.Warden w) {
                 w.clearAnger(p);
                 w.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ROAR_TARGET);
