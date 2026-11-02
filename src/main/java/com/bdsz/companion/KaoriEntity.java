@@ -50,6 +50,7 @@ public class KaoriEntity extends PathfinderMob {
     private static final EntityDataAccessor<Integer> DATA_TALK = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DATA_COLLECT = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_FORM = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DATA_FLY = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_FORM_AT = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.INT);
     private static final UUID FORM_DMG = UUID.fromString("6b1c9a52-1f0e-4d5b-9c51-3a8e0f6c2a11");
     private static final UUID FORM_SPEED = UUID.fromString("6b1c9a52-1f0e-4d5b-9c51-3a8e0f6c2a12");
@@ -69,7 +70,7 @@ public class KaoriEntity extends PathfinderMob {
     private long lastCombatSpeech, lastHurtSpeech;
     // choza de la cápsula
     @Nullable BlockPos hutPos;
-    int hutDir;
+    int hutDir, hutType;
     String hutDim = "";
 
     public KaoriEntity(EntityType<? extends KaoriEntity> type, Level level) {
@@ -103,6 +104,7 @@ public class KaoriEntity extends PathfinderMob {
         entityData.define(DATA_COLLECT, true);
         entityData.define(DATA_FORM, 0);
         entityData.define(DATA_FORM_AT, -1000);
+        entityData.define(DATA_FLY, false);
     }
 
     @Override
@@ -147,6 +149,137 @@ public class KaoriEntity extends PathfinderMob {
     }
 
     public boolean isWeakened() { return entityData.get(DATA_WEAK); }
+
+    /** Vuela contigo cuando tú vuelas. */
+    public boolean isFlying() { return entityData.get(DATA_FLY); }
+
+    private int landedTicks;
+
+    private void flightTick() {
+        ServerPlayer o = getOwnerPlayer();
+        boolean fly = o != null && o.level() == level() && o.getAbilities().flying && getMode().follows() && !isWeakened()
+                && !isGathering() && distanceToSqr(o) < 64 * 64;
+        if (fly != isFlying()) {
+            entityData.set(DATA_FLY, fly);
+            setNoGravity(fly);
+            if (fly) {
+                setDeltaMovement(getDeltaMovement().add(0, 0.6, 0));
+                if (level() instanceof ServerLevel sl) sl.sendParticles(ParticleTypes.CLOUD, getX(), getY(), getZ(), 12, 0.4, 0.1, 0.4, 0.05);
+                if (getRandom().nextInt(3) == 0) say(null, pick("¡Espérame! Yo también sé volar, ¿sabes?", "¿Volamos? Perfecto.", "No me dejes atrás."));
+            } else landedTicks = 60;
+        }
+        if (landedTicks > 0) { landedTicks--; fallDistance = 0; }
+        if (!fly) return;
+        fallDistance = 0;
+        getNavigation().stop();
+        net.minecraft.world.phys.Vec3 goal;
+        LivingEntity t = getTarget();
+        if (t != null && t.isAlive() && t.distanceToSqr(o) < 20 * 20) {
+            goal = t.position().add(0, 0.3, 0);
+        } else {
+            // a tu lado, un poco atrás y a la derecha
+            net.minecraft.world.phys.Vec3 look = o.getLookAngle().multiply(1, 0, 1).normalize();
+            net.minecraft.world.phys.Vec3 right = new net.minecraft.world.phys.Vec3(-look.z, 0, look.x);
+            goal = o.position().add(look.scale(-2.0)).add(right.scale(1.6)).add(0, 0.4, 0);
+        }
+        net.minecraft.world.phys.Vec3 d = goal.subtract(position());
+        double dist = d.length();
+        if (dist > 40) { teleportTo(goal.x, goal.y, goal.z); return; }
+        double speed = Math.min(2.2, 0.35 + o.getDeltaMovement().length() * 1.3 + dist * 0.12);
+        net.minecraft.world.phys.Vec3 v = dist > 0.6 ? d.normalize().scale(Math.min(speed, dist)) : getDeltaMovement().scale(0.5);
+        setDeltaMovement(getDeltaMovement().scale(0.4).add(v.scale(0.6)));
+        hasImpulse = true;
+        net.minecraft.world.phys.Vec3 face = dist > 1.5 ? d : o.getLookAngle();
+        float yaw = (float) (Math.atan2(-face.x, face.z) * (180 / Math.PI));
+        setYRot(yaw);
+        yBodyRot = yaw;
+        yHeadRot = yaw;
+        if (tickCount % 3 == 0 && getDeltaMovement().lengthSqr() > 0.1 && level() instanceof ServerLevel sl) {
+            sl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(getForm() > 0 ? new org.joml.Vector3f(1F, 0.86F, 0.25F)
+                    : new org.joml.Vector3f(0.95F, 0.95F, 1F), 1.0F), getX(), getY() + 0.9, getZ(), 2, 0.2, 0.2, 0.2, 0);
+        }
+    }
+
+    // ------------------------------------------------------------------ tiempo juntos (desbloquea casas)
+
+    public static final long[] HOUSE_BOND = {0L, 24000L, 72000L, 144000L};
+
+    public static long bond(Player p) {
+        return KaoriActions.data(p).getLong("KaoriBond");
+    }
+
+    private void bondTick() {
+        ServerPlayer o = getOwnerPlayer();
+        if (o == null || o.level() != level() || distanceToSqr(o) > 32 * 32) return;
+        long before = bond(o), now = before + 20;
+        KaoriActions.data(o).putLong("KaoriBond", now);
+        for (int i = 1; i < HOUSE_BOND.length; i++) {
+            if (before < HOUSE_BOND[i] && now >= HOUSE_BOND[i]) {
+                say(o, "Oye... ya pasamos bastante tiempo juntos. Te diseñé una casa nueva: §e" + HutBuilder.NAMES[i]
+                        + "§f. Está en mi menú, en Casas. No te emociones.");
+                level().playSound(null, blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.8F, 1.2F);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ generador protector
+
+    /** El generador protector más cercano (dentro de r bloques). */
+    @Nullable
+    public com.bdsz.block.ShieldGeneratorBlockEntity nearestGenerator(int r) {
+        com.bdsz.block.ShieldGeneratorBlockEntity best = null;
+        double bd = Double.MAX_VALUE;
+        int cx = blockPosition().getX() >> 4, cz = blockPosition().getZ() >> 4, cr = (r >> 4) + 1;
+        for (int x = cx - cr; x <= cx + cr; x++) {
+            for (int z = cz - cr; z <= cz + cr; z++) {
+                if (!level().hasChunk(x, z)) continue;
+                for (net.minecraft.world.level.block.entity.BlockEntity be : level().getChunk(x, z).getBlockEntities().values()) {
+                    if (!(be instanceof com.bdsz.block.ShieldGeneratorBlockEntity g)) continue;
+                    double d = be.getBlockPos().distSqr(blockPosition());
+                    if (d < r * r && d < bd) { bd = d; best = g; }
+                }
+            }
+        }
+        return best;
+    }
+
+    /** Pone lingotes de cobre de su mochila en el generador. Devuelve cuántos usó. */
+    public int feedGenerator(com.bdsz.block.ShieldGeneratorBlockEntity g, int max) {
+        int have = 0;
+        for (int i = 0; i < bag.getContainerSize(); i++) if (bag.getItem(i).is(Items.COPPER_INGOT)) have += bag.getItem(i).getCount();
+        int used = g.addFuel(Math.min(have, max));
+        int left = used;
+        for (int i = 0; i < bag.getContainerSize() && left > 0; i++) {
+            ItemStack s = bag.getItem(i);
+            if (!s.is(Items.COPPER_INGOT)) continue;
+            int take = Math.min(left, s.getCount());
+            s.shrink(take);
+            left -= take;
+        }
+        if (used > 0) {
+            bag.setChanged();
+            swing(InteractionHand.MAIN_HAND);
+            getLookControl().setLookAt(g.getBlockPos().getX() + 0.5, g.getBlockPos().getY() + 0.5, g.getBlockPos().getZ() + 0.5);
+            if (level() instanceof ServerLevel sl) {
+                net.minecraft.world.phys.Vec3 c = g.getBlockPos().getCenter();
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, c.x, c.y + 0.6, c.z, 20, 0.3, 0.3, 0.3, 0.2);
+            }
+            level().playSound(null, g.getBlockPos(), SoundEvents.COPPER_PLACE, SoundSource.BLOCKS, 1.0F, 1.2F);
+        }
+        return used;
+    }
+
+    private void generatorTick() {
+        ServerPlayer o = getOwnerPlayer();
+        if (o == null || isWeakened()) return;
+        com.bdsz.block.ShieldGeneratorBlockEntity g = nearestGenerator(20);
+        if (g == null || !g.isOwner(o) || !g.on()) return;
+        // si queda poca energía, ella misma lo alimenta con su cobre
+        if (g.fuel() < 20 * 60 * 15) {
+            int n = feedGenerator(g, 4);
+            if (n > 0) say(o, "El generador se estaba quedando sin energía. Le puse " + n + " de cobre. Ya me lo agradecerás.");
+        }
+    }
 
     /** 0 base, 1 Super Saiyajin, 2 Super Saiyajin 2. */
     public int getForm() { return entityData.get(DATA_FORM); }
@@ -244,6 +377,9 @@ public class KaoriEntity extends PathfinderMob {
             heal(1.0F);                                    // regeneración natural (es fuerte)
         }
         if (getY() < level().getMinBuildHeight() + 2 || isInLava()) teleportToSafety();
+        flightTick();
+        if (tickCount % 20 == 0) bondTick();
+        if (tickCount % 200 == 0) generatorTick();
         if (tickCount % 100 == 0 && KaoriActions.isStale(this)) {
             // el dueño invocó otra Kaori: esta se despide y deja sus cosas
             for (int i = 0; i < bag.getContainerSize(); i++) spawnAtLocation(bag.removeItemNoUpdate(i));
@@ -386,6 +522,26 @@ public class KaoriEntity extends PathfinderMob {
         level().addFreshEntity(blast);
         swing(InteractionHand.MAIN_HAND, true);
         level().playSound(null, blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.NEUTRAL, 0.7F, 1.6F);
+    }
+
+    /** Onda de ki cargada: una esfera grande que explota (sin romper bloques) contra enemigos fuertes. */
+    public void kiWave(LivingEntity target) {
+        com.bdsz.entity.KiBlastEntity blast = new com.bdsz.entity.KiBlastEntity(ModRegistry.KI_BLAST.get(), level());
+        blast.setOwner(this);
+        net.minecraft.world.phys.Vec3 dir = target.getEyePosition().subtract(getEyePosition()).normalize();
+        blast.setPos(getX() + dir.x * 1.2, getEyeY() - 0.2, getZ() + dir.z * 1.2);
+        blast.setup(getForm() > 0 ? 0xFFF09A : 0xFF7A2C, 2.0F + getForm() * 0.4F, 18.0F * (1 + getForm()));
+        blast.setBigBang(3.0F + getForm());
+        blast.shoot(dir.x, dir.y, dir.z, 1.1F, 0.0F);
+        level().addFreshEntity(blast);
+        swing(InteractionHand.MAIN_HAND, true);
+        level().playSound(null, blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.NEUTRAL, 1.0F, 0.6F);
+        say(null, pick("¡Toma esto! ¡HAAA!", "¡Onda de ki!", "¡Desaparece!"));
+    }
+
+    @Override
+    public boolean causeFallDamage(float dist, float mult, DamageSource src) {
+        return !isFlying() && landedTicks <= 0 && super.causeFallDamage(dist, mult, src);
     }
 
     @Override public boolean removeWhenFarAway(double d) { return false; }
@@ -560,6 +716,7 @@ public class KaoriEntity extends PathfinderMob {
         if (hutPos != null) {
             tag.putLong("Hut", hutPos.asLong());
             tag.putInt("HutDir", hutDir);
+            tag.putInt("HutType", hutType);
             tag.putString("HutDim", hutDim);
         }
     }
@@ -577,6 +734,7 @@ public class KaoriEntity extends PathfinderMob {
         load(equip, tag.getList("Equip", 10));
         hutPos = tag.contains("Hut") ? BlockPos.of(tag.getLong("Hut")) : null;
         hutDir = tag.getInt("HutDir");
+        hutType = tag.getInt("HutType");
         hutDim = tag.getString("HutDim");
         applyEquipment();
     }

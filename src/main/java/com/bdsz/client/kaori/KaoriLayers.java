@@ -23,6 +23,19 @@ public final class KaoriLayers {
 
     public static final ModelLayerLocation OUTFIT = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "outfit");
     public static final ModelLayerLocation HEAD = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "head");
+    public static final ModelLayerLocation ARMOR_INNER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "armor_inner");
+    public static final ModelLayerLocation ARMOR_OUTER = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "armor_outer");
+
+    public static net.minecraft.client.model.geom.builders.LayerDefinition armorInner() {
+        return net.minecraft.client.model.geom.builders.LayerDefinition.create(
+                net.minecraft.client.model.HumanoidArmorModel.createBodyLayer(new net.minecraft.client.model.geom.builders.CubeDeformation(0.85F)), 64, 32);
+    }
+
+    public static net.minecraft.client.model.geom.builders.LayerDefinition armorOuter() {
+        return net.minecraft.client.model.geom.builders.LayerDefinition.create(
+                net.minecraft.client.model.HumanoidArmorModel.createBodyLayer(new net.minecraft.client.model.geom.builders.CubeDeformation(1.35F)), 64, 32);
+    }
+
     public static final int HAIR_COLOR = 0x26242C, SSJ_COLOR = 0xFFD84A, SSJ2_COLOR = 0xFFE66A;
 
     public static class Outfit extends RenderLayer<KaoriEntity, KaoriModel> {
@@ -58,8 +71,10 @@ public final class KaoriLayers {
                 String n = en.getKey();
                 if (n.contains("_arm") || n.contains("_leg") || n.equals("body")) continue;
                 boolean v = true;
-                if (chest && (n.startsWith("jacket") || n.startsWith("collar") || n.startsWith("sleeve") || n.startsWith("cuff") || n.startsWith("capsule_case"))) v = false;
-                if (legs && (n.startsWith("shorts") || n.startsWith("short_leg") || n.startsWith("cargo") || n.startsWith("belt") || n.startsWith("pouch") || n.startsWith("capsule_"))) v = false;
+                if (chest && (n.startsWith("jacket") || n.startsWith("collar") || n.startsWith("sleeve") || n.startsWith("cuff") || n.startsWith("capsule_case")
+                        || n.equals("bust") || n.startsWith("glove"))) v = false;
+                if (legs && (n.startsWith("shorts") || n.startsWith("short_leg") || n.startsWith("cargo") || n.startsWith("belt") || n.startsWith("pouch")
+                        || n.startsWith("capsule_") || n.startsWith("wrench"))) v = false;
                 if (feet && (n.startsWith("boot") || n.startsWith("toe"))) v = false;
                 en.getValue().visible = v;
             }

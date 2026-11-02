@@ -85,6 +85,32 @@ public class ShieldGeneratorBlockEntity extends BlockEntity {
         p.displayClientMessage(Component.literal("§bGenerador Protector " + status()), true);
     }
 
+    public int fuel() {
+        return fuel;
+    }
+
+    /** Encender o apagar desde fuera (Kaori). Devuelve false si no hay energía para encenderlo. */
+    public boolean power(boolean value) {
+        if (value && fuel <= 0) return false;
+        if (on() != value) setOn(value);
+        return true;
+    }
+
+    /**
+     * ¿El domo protege a esta víctima de este atacante? Cubre también el borde del domo (1.5 bloques extra), así
+     * nadie te lastima desde afuera aunque estés casi saliendo.
+     */
+    public static boolean shelters(Level level, Entity victim, Entity attacker) {
+        Set<BlockPos> set = ACTIVE.get(level.dimension());
+        if (set == null || attacker == null) return false;
+        Vec3 v = victim.position().add(0, victim.getBbHeight() / 2, 0);
+        for (BlockPos c : set) {
+            if (c.getCenter().distanceToSqr(v) > (RADIUS + 1.5) * (RADIUS + 1.5)) continue;
+            if (level.getBlockEntity(c) instanceof ShieldGeneratorBlockEntity be && be.on() && !be.blocked(victim) && be.blocked(attacker)) return true;
+        }
+        return false;
+    }
+
     private void setOn(boolean value) {
         if (level == null) return;
         level.setBlock(worldPosition, getBlockState().setValue(ShieldGeneratorBlock.ON, value), 3);
@@ -120,7 +146,10 @@ public class ShieldGeneratorBlockEntity extends BlockEntity {
         if (e instanceof Enemy) return true;
         if (e instanceof Projectile pr) {
             Entity o = pr.getOwner();
-            return o instanceof Enemy || (o instanceof Player op && owner != null && !op.getUUID().equals(owner));
+            if (o == null) return true;                     // flechas de dispensadores y proyectiles sin dueño
+            return o instanceof Enemy || o instanceof net.minecraft.world.entity.monster.warden.Warden
+                    || (o instanceof Player op && owner != null && !op.getUUID().equals(owner))
+                    || (o instanceof net.minecraft.world.entity.Mob m && m.getTarget() instanceof Player);
         }
         if (e instanceof Player p) {
             return owner != null && !p.getUUID().equals(owner) && !p.isCreative() && !p.isSpectator();
@@ -138,19 +167,24 @@ public class ShieldGeneratorBlockEntity extends BlockEntity {
             return;
         }
         if (be.fuel % 200 == 0) be.setChanged();
-        if (level.getGameTime() % 2 != 0) return;
         Vec3 c = pos.getCenter();
         double r = RADIUS;
+        // proyectiles enemigos: se revisan CADA tick y con su trayectoria, para que ninguno atraviese el domo
+        for (Entity e : sl.getEntities((Entity) null, new AABB(pos).inflate(r + 10), x -> x instanceof Projectile && be.blocked(x))) {
+            Vec3 a = e.position(), v = e.getDeltaMovement();
+            if (a.distanceTo(c) <= r + 2.0 || crosses(a, a.add(v.scale(2.0)), c, r + 2.0)) {
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, e.getX(), e.getY(), e.getZ(), 10, 0.2, 0.2, 0.2, 0.2);
+                sl.sendParticles(new DustParticleOptions(new Vector3f(0.4F, 0.9F, 1.0F), 1.2F), e.getX(), e.getY(), e.getZ(), 6, 0.2, 0.2, 0.2, 0);
+                e.discard();
+            }
+        }
+        if (level.getGameTime() % 2 != 0) return;
         for (Entity e : sl.getEntities((Entity) null, new AABB(pos).inflate(r + 2), be::blocked)) {
             Vec3 d = e.position().add(0, e.getBbHeight() / 2, 0).subtract(c);
             double dist = d.length();
             if (dist > r + 0.5) continue;
             Vec3 out = dist < 0.1 ? new Vec3(1, 0, 0) : d.scale(1.0 / dist);
-            if (e instanceof Projectile) {
-                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, e.getX(), e.getY(), e.getZ(), 10, 0.2, 0.2, 0.2, 0.2);
-                e.discard();
-                continue;
-            }
+            if (e instanceof Projectile) continue;      // ya se revisaron arriba
             // empuja al intruso fuera del domo
             if (dist < r - 1.5) {
                 Vec3 edge = c.add(out.x * (r + 1.5), 0, out.z * (r + 1.5));
@@ -165,6 +199,14 @@ public class ShieldGeneratorBlockEntity extends BlockEntity {
             }
         }
         if (level.getGameTime() % 80 == 0) sl.playSound(null, pos, SoundEvents.BEACON_AMBIENT, SoundSource.BLOCKS, 0.6F, 1.3F);
+    }
+
+    /** ¿El segmento a→b toca la esfera (centro c, radio r)? */
+    private static boolean crosses(Vec3 a, Vec3 b, Vec3 c, double r) {
+        Vec3 d = b.subtract(a);
+        double len2 = d.lengthSqr();
+        double t = len2 < 1e-6 ? 0 : Math.max(0, Math.min(1, c.subtract(a).dot(d) / len2));
+        return a.add(d.scale(t)).distanceToSqr(c) <= r * r;
     }
 
     @Override

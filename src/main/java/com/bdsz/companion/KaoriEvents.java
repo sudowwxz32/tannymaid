@@ -18,6 +18,12 @@ public final class KaoriEvents {
         }
     }
 
+    /** Kaori negocia por ti cuando hablas con un aldeano cerca de ella. */
+    @SubscribeEvent
+    public static void interact(net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract e) {
+        if (e.getEntity() instanceof ServerPlayer p) KaoriTrade.onInteract(p, e.getTarget());
+    }
+
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent e) {
         if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;

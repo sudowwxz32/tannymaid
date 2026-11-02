@@ -324,6 +324,18 @@ public final class ServerEvents {
             if (s.fusion == com.bdsz.data.Fusion.CREEPER.ordinal() || s.fusing > 0) e.setCanceled(true);
         }
         if (e.getEntity() instanceof ServerPlayer p && SaiyanData.get(p).fusing > 0) e.setCanceled(true);   // intocable mientras se fusiona
+        // dentro del domo protector (o en su borde) nada de afuera te lastima
+        if (e.getEntity() instanceof net.minecraft.world.entity.player.Player
+                && com.bdsz.block.ShieldGeneratorBlockEntity.shelters(e.getEntity().level(), e.getEntity(),
+                e.getSource().getDirectEntity() != null ? e.getSource().getDirectEntity() : e.getSource().getEntity())) {
+            e.setCanceled(true);
+            return;
+        }
+        // los de tu misma especie no te hacen daño (zombis, esqueletos y sus flechas, creepers, endermans, wardens, gólems)
+        if (e.getEntity() instanceof ServerPlayer p && e.getSource().getEntity() != null) {
+            SaiyanState s = SaiyanData.get(p);
+            if (s.fusion > 0 && com.bdsz.data.Fusion.of(e.getSource().getEntity()) == com.bdsz.data.Fusion.byId(s.fusion)) e.setCanceled(true);
+        }
     }
 
     @SubscribeEvent

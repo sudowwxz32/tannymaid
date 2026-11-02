@@ -32,7 +32,17 @@ public class KaoriModel extends PlayerModel<KaoriEntity> {
         head.y = (crouching ? 4.2F : 0.0F) + breath * 0.2F;
         body.xRot = (crouching ? 0.5F : 0.0F) + breath * 0.012F;
         float tilt = 0.0F;
-        if (e.getForm() > 0 && e.sinceTransform() < 30) {
+        if (e.isFlying()) {
+            float k = (float) Math.min(1.0, e.getDeltaMovement().horizontalDistance() / 0.6);
+            // volando: un puño al frente, el otro brazo pegado, piernas juntas; suspendida: piernas que cuelgan
+            rightArm.xRot = Mth.lerp(k, 0.15F, -2.95F);
+            rightArm.zRot = Mth.lerp(k, 0.2F, -0.05F);
+            leftArm.xRot = Mth.lerp(k, 0.15F, 0.25F) + Mth.sin(age * 0.3F) * 0.05F;
+            leftArm.zRot = -0.15F;
+            rightLeg.xRot = Mth.lerp(k, 0.2F + Mth.sin(age * 0.12F) * 0.12F, 0.06F);
+            leftLeg.xRot = Mth.lerp(k, 0.3F + Mth.sin(age * 0.12F + 1.2F) * 0.12F, -0.06F);
+            head.xRot = Mth.lerp(k, head.xRot, -1.1F);
+        } else if (e.getForm() > 0 && e.sinceTransform() < 30) {
             // grito al transformarse: puños abajo, pecho afuera, cabeza al cielo
             float tr = Mth.sin(age * 2.5F) * 0.04F;
             head.xRot = -0.6F + tr;

@@ -11,9 +11,13 @@ import java.util.function.Supplier;
 public class KaoriScreenPacket {
     public final int entityId, mode, seedsLeft, form;
     public final boolean collecting, hut, gathering;
-    public final long senzuIn, riceIn;
+    public final long senzuIn, riceIn, bond;
+    public final int hutType;
 
-    public KaoriScreenPacket(int entityId, int mode, boolean collecting, int seedsLeft, long senzuIn, long riceIn, boolean hut, boolean gathering, int form) {
+    public KaoriScreenPacket(int entityId, int mode, boolean collecting, int seedsLeft, long senzuIn, long riceIn, boolean hut, boolean gathering, int form,
+                             long bond, int hutType) {
+        this.bond = bond;
+        this.hutType = hutType;
         this.form = form;
         this.entityId = entityId;
         this.mode = mode;
@@ -35,11 +39,14 @@ public class KaoriScreenPacket {
         b.writeBoolean(p.hut);
         b.writeBoolean(p.gathering);
         b.writeVarInt(p.form);
+        b.writeVarLong(p.bond);
+        b.writeVarInt(p.hutType);
     }
 
     public static KaoriScreenPacket decode(FriendlyByteBuf b) {
         return new KaoriScreenPacket(b.readVarInt(), b.readVarInt(), b.readBoolean(), b.readVarInt(), b.readVarLong(), b.readVarLong(),
-                b.readBoolean(), b.readBoolean(), b.readVarInt());
+                b.readBoolean(), b.readBoolean(), b.readVarInt(),
+                b.readVarLong(), b.readVarInt());
     }
 
     public static void handle(KaoriScreenPacket p, Supplier<NetworkEvent.Context> ctx) {

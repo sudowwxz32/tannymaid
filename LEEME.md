@@ -75,3 +75,16 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
 - Ojos amarillos con cejas negras, pestaña superior gruesa con alita hacia afuera, brillo y sin nariz; pestañea, y
   cambia las cejas según la expresión (seria, sorprendida, cansada).
 - Chaqueta roja con mangas remangadas y engranaje dorado en la espalda.
+
+## 7.8.0 — Kaori vuela, casas, generador y comercio; fusiones y domo
+- **Kaori**: la armadura le queda bien (modelo más holgado y la ropa 3D se oculta debajo). Vuela contigo cuando
+  vuelas (pose de Superman, estela). Lanza ráfagas de ki y, contra enemigos fuertes, una onda de ki explosiva.
+- **Generador Protector**: Kaori lo alimenta con los lingotes de cobre de su mochila (sola cuando le queda poca
+  energía) y lo enciende o apaga desde su menú.
+- **Casas-cápsula** que se desbloquean pasando tiempo con ella: Choza; Casa segura de piedra (1 día de Minecraft);
+  Casa del Guerrero Z con generador y huerto de semillas (3 días); Base Cápsula con encantamientos (6 días).
+- **Comercio**: cerca de ella los aldeanos te hacen descuento. En su menú: Ofertas (lo mejor y lo que piden),
+  Comerciar (vende por ti y compra lo mejor con 30% de descuento) y Conseguir (va por lo que falta).
+- **Fusiones**: tu misma especie ya no te ataca ni te hace daño (zombis, esqueletos, creepers, endermans, wardens, gólems).
+- **Domo protector**: los proyectiles enemigos se revisan cada tick con su trayectoria (ninguno atraviesa) y nada de
+  afuera te lastima aunque estés en el borde del domo.

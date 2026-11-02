@@ -48,11 +48,19 @@ public class KaoriScreen extends Screen {
 
     @Override
     protected void init() {
+        // pestañas
+        addRenderableWidget(Button.builder(Component.literal((page == 0 ? "§6" : "") + "Principal"), b -> { page = 0; rebuildWidgets(); })
+                .bounds(left() + W - 172, top() + 2, 80, 14).build());
+        addRenderableWidget(Button.builder(Component.literal((page == 1 ? "§6" : "") + "Casas y comercio"), b -> { page = 1; rebuildWidgets(); })
+                .bounds(left() + W - 90, top() + 2, 86, 14).build());
+        add(left() + 8, top() + H - 26, 76, "Estado", KaoriActions.STATUS, 0, "Vida y modo actual");
+        if (page == 1) { initPage2(); return; }
         int x = left() + 96, y = top() + 32, bw = 74, g = 3;
         add(x, y, bw, "✿ Semillas", KaoriActions.SENZU, 0, "3 Semillas del Ermitaño. Al terminarlas, esperas 2 días de Minecraft");
         add(x + bw + g, y, bw, "Arroz ×20", KaoriActions.RICE, 0, "20 tazones de arroz (recuperan vida, ki y hambre). Una vez al día");
-        add(x + 2 * (bw + g), y, bw + 2, st.hut ? "⌂ Guardar choza" : "⌂ Cápsula", KaoriActions.HUT, 0,
-                st.hut ? "Guarda la choza en la cápsula (lo del cofre pasa a su mochila)" : "Lanza la cápsula: una choza amueblada (cama, cofre, horno, mesa)");
+        if (st.hut) add(x + 2 * (bw + g), y, bw + 2, "⌂ Guardar casa", KaoriActions.HUT, 0, "Guarda la casa en la cápsula (lo de los cofres pasa a su mochila)");
+        else addRenderableWidget(Button.builder(Component.literal("⌂ Casas"), b -> { page = 1; rebuildWidgets(); })
+                .bounds(x + 2 * (bw + g), y, bw + 2, 20).tooltip(Tooltip.create(Component.literal("Elige qué casa-cápsula lanzar"))).build());
 
         y += 44;
         craft = new EditBox(font, x, y, bw * 2 + g, 18, Component.literal("Fabricar"));
@@ -88,7 +96,6 @@ public class KaoriScreen extends Screen {
         add(x, y, bw, mark(KaoriMode.FARM) + "Agricultura", KaoriActions.FARM, 0, "Cosecha, siembra y ara junto al agua (dale semillas y una azada)");
         add(x + bw + g, y, bw, "Venir", KaoriActions.TP, 0, "Viene a tu lado");
         add(x + 2 * (bw + g), y, bw + 2, "Mochila", KaoriActions.INVENTORY, 0, "Su inventario, armadura y arma");
-        add(left() + 8, top() + H - 26, 76, "Estado", KaoriActions.STATUS, 0, "Vida y modo actual");
         // transformaciones
         int fx = left() + 96, fy = top() + H - 26;
         String[] fn = {"Base", "SSJ 1", "SSJ 2"};
@@ -97,6 +104,38 @@ public class KaoriScreen extends Screen {
         for (int i = 0; i < 3; i++) {
             add(fx + i * 77, fy, 74, (st.form == i ? "§6▶ §r" : "") + fn[i], KaoriActions.FORM, i, tips[i]);
         }
+    }
+
+    private static int page;
+    private static final String[] HOUSES = {"Choza", "Casa segura de piedra", "Casa del Guerrero Z", "Base Cápsula"};
+    private static final String[] HOUSE_TIPS = {"7×7: cama, cofre, horno, ahumador, barril y mesa de crafteo",
+            "9×9 de piedra: puerta de hierro con botones, 2 camas, yunque, alto horno, herrería, caldero y pociones",
+            "11×11: todo lo anterior + Generador Protector encendido, huerto de Semillas del Ermitaño y tazones de arroz",
+            "13×13: todo lo anterior + mesa de encantamientos con librerías, huerto de trigo, telar y afiladora"};
+    private static final long[] BOND = {0L, 24000L, 72000L, 144000L};
+
+    private void initPage2() {
+        int x = left() + 96, y = top() + 34, bw = 112, g = 4;
+        if (st.hut) {
+            add(x, y, bw * 2 + g, "⌂ Guardar " + HOUSES[Math.max(0, Math.min(3, st.hutType))], KaoriActions.HUT, 0,
+                    "Guarda la casa en la cápsula (lo de los cofres pasa a su mochila)");
+        } else {
+            for (int i = 0; i < 4; i++) {
+                boolean open = st.bond >= BOND[i];
+                String label = open ? "⌂ " + HOUSES[i] : "§8✖ " + HOUSES[i];
+                String tip = HOUSE_TIPS[i] + (open ? "" : " · §cSe desbloquea pasando más tiempo con Kaori: faltan " + clock(BOND[i] - st.bond));
+                add(x + (i % 2) * (bw + g), y + (i / 2) * 22, bw, label, KaoriActions.HUT, i, tip);
+            }
+        }
+        y += 66;
+        add(x, y, 74, "Alimentar", KaoriActions.SHIELD_FEED, 0, "Pone los lingotes de cobre de su mochila en el Generador Protector más cercano");
+        add(x + 77, y, 74, "Encender", KaoriActions.SHIELD_POWER, 1, "Enciende el domo protector");
+        add(x + 154, y, 74, "Apagar", KaoriActions.SHIELD_POWER, 0, "Apaga el domo protector");
+        y += 46;
+        add(x, y, 74, "Ofertas", KaoriActions.TRADE_INFO, 0, "Revisa a los aldeanos: las mejores ofertas y lo que ellos piden");
+        add(x + 77, y, 74, "Comerciar", KaoriActions.TRADE_AUTO, 0,
+                "Vende por ti lo que haya en su mochila y compra lo mejor con sus esmeraldas (30% de descuento)");
+        add(x + 154, y, 74, "Conseguir", KaoriActions.TRADE_GET, 0, "Sale a conseguir lo que piden los aldeanos (madera, carbón, piedra, cosechas, caza...)");
     }
 
     private String mark(KaoriMode m) {
@@ -147,6 +186,17 @@ public class KaoriScreen extends Screen {
             if (k.isWeakened()) g.drawCenteredString(font, "descansando", x + 48, y + 36, MUTED);
         }
         int sx = x + 96;
+        if (page == 1) {
+            label(g, "Casas-cápsula", sx, y + 22);
+            int unlocked = 0;
+            for (long b : BOND) if (st.bond >= b) unlocked++;
+            g.drawString(font, "§7Tiempo con Kaori: §f" + clock(st.bond) + " §7· casas: §e" + unlocked + "/4", sx, y + 82, 0xFFFFFFFF, false);
+            label(g, "Generador Protector (cobre)", sx, y + 92);
+            label(g, "Comercio con aldeanos", sx, y + 138);
+            g.drawString(font, "§7Cerca de ella, los aldeanos te dan descuentos.", sx, y + 172, 0xFFFFFFFF, false);
+            super.render(g, mx, my, partial);
+            return;
+        }
         label(g, "Regalos", sx, y + 21);
         // estado de las semillas y del arroz
         long senzu = Math.max(0, st.senzuIn - elapsed()), rice = Math.max(0, st.riceIn - elapsed());

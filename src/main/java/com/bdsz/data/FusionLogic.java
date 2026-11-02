@@ -385,6 +385,22 @@ public final class FusionLogic {
     }
 
     private static void effects(ServerPlayer p, Fusion f) {
+        // tu misma especie te reconoce como uno de los suyos: deja de atacarte y se calma
+        for (Mob m : p.level().getEntitiesOfClass(Mob.class, p.getBoundingBox().inflate(32), m -> Fusion.of(m) == f)) {
+            if (m.getTarget() == p) {
+                m.setTarget(null);
+                m.getNavigation().stop();
+            }
+            m.getBrain().getMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET).ifPresent(t -> {
+                if (t == p) m.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET);
+            });
+            if (m instanceof net.minecraft.world.entity.monster.warden.Warden w) {
+                w.clearAnger(p);
+                w.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ROAR_TARGET);
+            }
+            if (m instanceof net.minecraft.world.entity.monster.Creeper c && c.getTarget() == null) c.setSwellDir(-1);
+            if (m instanceof net.minecraft.world.entity.animal.IronGolem g) g.stopBeingAngry();
+        }
         switch (f) {
             case ZOMBIE -> {
                 eff(p, MobEffects.DAMAGE_BOOST, 1);

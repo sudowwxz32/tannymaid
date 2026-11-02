@@ -20,7 +20,8 @@ public final class KaoriActions {
     private KaoriActions() {}
 
     public static final int SENZU = 0, RICE = 1, HUT = 2, FOLLOW = 3, STAY = 4, TP = 5, DEFEND = 6, FARM = 7, COLLECT = 8,
-            SORT = 9, CRAFT = 10, GATHER = 11, STOP = 12, INVENTORY = 13, STATUS = 14, FORM = 15;
+            SORT = 9, CRAFT = 10, GATHER = 11, STOP = 12, INVENTORY = 13, STATUS = 14, FORM = 15,
+            SHIELD_FEED = 16, SHIELD_POWER = 17, TRADE_INFO = 18, TRADE_AUTO = 19, TRADE_GET = 20;
 
     public static final long SENZU_WAIT = 48000L;   // 2 días de Minecraft
     public static final long RICE_WAIT = 24000L;    // 1 día de Minecraft
@@ -87,7 +88,7 @@ public final class KaoriActions {
 
     public static void openMenu(ServerPlayer p, KaoriEntity k) {
         Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new KaoriScreenPacket(k.getId(), k.getMode().ordinal(), k.isCollecting(),
-                syncSeeds(p), senzuIn(p), riceIn(p), k.hutPos != null, k.isGathering(), k.getForm()));
+                syncSeeds(p), senzuIn(p), riceIn(p), k.hutPos != null, k.isGathering(), k.getForm(), KaoriEntity.bond(p), k.hutType));
     }
 
     public static void handle(ServerPlayer p, int entityId, int action, int arg, String text) {
@@ -100,7 +101,7 @@ public final class KaoriActions {
         switch (action) {
             case SENZU -> senzu(p, k);
             case RICE -> rice(p, k);
-            case HUT -> HutBuilder.toggle(p, k);
+            case HUT -> HutBuilder.toggle(p, k, arg);
             case FOLLOW -> { k.setMode(KaoriMode.FOLLOW); k.say(p, k.pick("Voy contigo. Intenta no perderte, ¿sí?", "Está bien, te sigo. Camina tú delante.")); }
             case STAY -> { k.setMode(KaoriMode.STAY); k.say(p, "Me quedo aquí. No tardes, ¿eh?"); }
             case TP -> { k.teleportToOwner(p); k.say(p, "¿Me llamabas? Aquí estoy."); }
@@ -129,6 +130,26 @@ public final class KaoriActions {
                 else k.say(p, "No estoy haciendo nada... todavía.");
             }
             case INVENTORY -> k.openInventory(p);
+            case SHIELD_FEED, SHIELD_POWER -> {
+                com.bdsz.block.ShieldGeneratorBlockEntity g = k.nearestGenerator(24);
+                if (g == null) { k.say(p, "No veo ningún Generador Protector cerca (24 bloques)."); break; }
+                if (!g.isOwner(p)) { k.say(p, "Ese generador no es tuyo. No pienso tocarlo."); break; }
+                k.getNavigation().moveTo(g.getBlockPos().getX() + 0.5, g.getBlockPos().getY(), g.getBlockPos().getZ() + 0.5, 1.1);
+                if (action == SHIELD_FEED) {
+                    int n = k.feedGenerator(g, 64);
+                    k.say(p, n > 0 ? "Le puse " + n + " lingotes de cobre al generador. " + g.status()
+                            : "No tengo lingotes de cobre en la mochila (o el generador ya está lleno). " + g.status());
+                } else {
+                    boolean on = arg == 1;
+                    if (on && g.fuel() <= 0 && k.feedGenerator(g, 2) == 0) { k.say(p, "No tiene energía y no tengo cobre. Dame lingotes de cobre."); break; }
+                    g.power(on);
+                    k.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                    k.say(p, (on ? "Domo encendido. Aquí no entra nadie. " : "Generador apagado. ") + g.status());
+                }
+            }
+            case TRADE_INFO -> KaoriTrade.report(p, k);
+            case TRADE_AUTO -> KaoriTrade.tradeForYou(p, k);
+            case TRADE_GET -> KaoriTrade.fetchMissing(p, k);
             case FORM -> {
                 int f = Math.max(0, Math.min(2, arg));
                 if (f == k.getForm()) { k.say(p, f == 0 ? "Ya estoy en mi estado base." : "Ya estoy transformada, ¿no lo ves?"); break; }

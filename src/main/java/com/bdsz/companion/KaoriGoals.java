@@ -66,7 +66,7 @@ public final class KaoriGoals {
 
         @Override
         public boolean canUse() {
-            if (!k.getMode().follows() || k.isWeakened() || k.isGathering()) return false;
+            if (!k.getMode().follows() || k.isWeakened() || k.isGathering() || k.isFlying()) return false;
             ServerPlayer o = k.getOwnerPlayer();
             if (o == null || o.isSpectator() || o.level() != k.level() || k.distanceToSqr(o) < start * start) return false;
             owner = o;
@@ -144,7 +144,7 @@ public final class KaoriGoals {
     /** Pelea fuerte: cuerpo a cuerpo con su arma o a puño limpio, ráfagas de ki a distancia y escudo. */
     public static class Combat extends Goal {
         private final KaoriEntity k;
-        private int repath, cd, blastCd;
+        private int repath, cd, blastCd, waveCd;
 
         public Combat(KaoriEntity k) {
             this.k = k;
@@ -185,9 +185,14 @@ public final class KaoriGoals {
                 if (sees && blastCd <= 0) { k.kiBlast(t); blastCd = 40; }
                 return;
             }
-            if (sees && dist > 7 * 7 && dist < 24 * 24 && blastCd <= 0) {
+            if (waveCd > 0) waveCd--;
+            if (sees && dist > 5 * 5 && dist < 26 * 26 && waveCd <= 0 && (t.getMaxHealth() >= 30 || t.getHealth() > 20)) {
+                k.kiWave(t);
+                waveCd = 160;
+                blastCd = 30;
+            } else if (sees && dist > 6 * 6 && dist < 24 * 24 && blastCd <= 0) {
                 k.kiBlast(t);
-                blastCd = 50;
+                blastCd = 40;
             }
             if (--repath <= 0) {
                 repath = dist > 16 * 16 ? 12 : 5;
