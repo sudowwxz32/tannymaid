@@ -88,3 +88,9 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
 - **Fusiones**: tu misma especie ya no te ataca ni te hace daño (zombis, esqueletos, creepers, endermans, wardens, gólems).
 - **Domo protector**: los proyectiles enemigos se revisan cada tick con su trayectoria (ninguno atraviesa) y nada de
   afuera te lastima aunque estés en el borde del domo.
+
+## 7.9.0 — Vuelo de Kaori arreglado y una sola Kaori
+- Vuela como el jugador: boca abajo con la cabeza al frente, el cuerpo sigue la dirección del vuelo (sube y baja
+  inclinándose), suspendida queda de pie con las piernas colgando. Ya no se asfixia ni se daña con bloques o paredes.
+- Solo puede haber una Kaori por jugador: la cápsula trae a la misma (con su mochila, equipo y casa) aunque esté
+  lejos, la copia vieja desaparece sola, y el huevo no crea otra si ya tienes una.

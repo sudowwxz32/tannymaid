@@ -205,22 +205,33 @@ public final class KaoriActions {
     // ------------------------------------------------------------------ cápsula para invocarla
 
     /** Usa la Cápsula de Kaori: la invoca (o la trae si ya la tienes). */
+    /** Tu Kaori si está cargada en algún mundo. */
+    @javax.annotation.Nullable
+    public static KaoriEntity findKaori(ServerPlayer p) {
+        CompoundTag d = data(p);
+        if (!d.hasUUID("KaoriUUID")) return null;
+        UUID id = d.getUUID("KaoriUUID");
+        for (ServerLevel l : p.server.getAllLevels()) {
+            if (l.getEntity(id) instanceof KaoriEntity k && k.isAlive()) return k;
+        }
+        return null;
+    }
+
     public static void summon(ServerPlayer p) {
         CompoundTag d = data(p);
         ServerLevel lv = p.serverLevel();
-        if (d.hasUUID("KaoriUUID")) {
-            UUID id = d.getUUID("KaoriUUID");
-            for (ServerLevel l : p.server.getAllLevels()) {
-                Entity e = l.getEntity(id);
-                if (e instanceof KaoriEntity k && k.isAlive()) {
-                    k.teleportToOwner(p);
-                    k.say(p, "¿Otra vez me llamas? Está bien, aquí estoy.");
-                    return;
-                }
-            }
+        KaoriEntity old = findKaori(p);
+        if (old != null) {
+            old.teleportToOwner(p);
+            old.say(p, "¿Otra vez me llamas? Está bien, aquí estoy. Y sí, solo hay una Kaori.");
+            return;
         }
         KaoriEntity k = ModRegistry.KAORI.get().create(lv);
         if (k == null) return;
+        // si la anterior estaba lejos (zona sin cargar) viene la MISMA Kaori: con su mochila, equipo y casa;
+        // la copia vieja desaparece sola al cargarse (solo puede haber una)
+        boolean back = d.contains("KaoriBackup");
+        if (back) k.readAdditionalSaveData(d.getCompound("KaoriBackup"));
         net.minecraft.world.phys.Vec3 look = p.getLookAngle();
         k.moveTo(p.getX() + look.x * 2, p.getY(), p.getZ() + look.z * 2, p.getYRot() + 180, 0);
         k.setOwner(p);
@@ -228,6 +239,10 @@ public final class KaoriActions {
         d.putUUID("KaoriUUID", k.getUUID());
         lv.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD, k.getX(), k.getY() + 1, k.getZ(), 40, 0.6, 0.8, 0.6, 0.05);
         lv.playSound(null, k.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.NEUTRAL, 1.0F, 1.4F);
+        if (back) {
+            k.say(p, "¡Aquí estoy! Vine volando desde donde me dejaste, con todas mis cosas.");
+            return;
+        }
         k.say(p, "¡Hola! Soy Kaori, mecánica, inventora y la chica más lista que vas a conocer. Mucho gusto. "
                 + "Clic derecho: mi menú · Shift + clic derecho: mi mochila.");
     }

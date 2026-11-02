@@ -380,12 +380,17 @@ public class KaoriEntity extends PathfinderMob {
         flightTick();
         if (tickCount % 20 == 0) bondTick();
         if (tickCount % 200 == 0) generatorTick();
-        if (tickCount % 100 == 0 && KaoriActions.isStale(this)) {
-            // el dueño invocó otra Kaori: esta se despide y deja sus cosas
-            for (int i = 0; i < bag.getContainerSize(); i++) spawnAtLocation(bag.removeItemNoUpdate(i));
-            for (int i = 0; i < equip.getContainerSize(); i++) spawnAtLocation(equip.removeItemNoUpdate(i));
+        if (tickCount % 20 == 0 && KaoriActions.isStale(this)) {
+            // solo puede haber una Kaori: la copia vieja desaparece (sus cosas ya viajaron con la nueva)
             if (level() instanceof ServerLevel sl) sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 1, getZ(), 30, 0.5, 0.8, 0.5, 0.05);
             discard();
+            return;
+        }
+        if (tickCount % 100 == 0) backup();
+        // si quedó atrapada dentro de un bloque, sale a tu lado
+        if (isInWall() && tickCount % 10 == 0) {
+            ServerPlayer o = getOwnerPlayer();
+            if (o != null && o.level() == level()) teleportNear(o); else teleportToSafety();
         }
     }
 
@@ -394,6 +399,9 @@ public class KaoriEntity extends PathfinderMob {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (level().isClientSide) return false;
+        // nunca se asfixia dentro de bloques ni se golpea volando
+        if (source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.FLY_INTO_WALL) || source.is(DamageTypes.CRAMMING)) return false;
+        if (isFlying() && source.is(DamageTypes.FALL)) return false;
         if (source.is(DamageTypes.FELL_OUT_OF_WORLD)) { teleportToSafety(); return false; }
         if (isWeakened()) return false;
         Entity attacker = source.getEntity();
@@ -556,6 +564,13 @@ public class KaoriEntity extends PathfinderMob {
         if (level().isClientSide) return InteractionResult.SUCCESS;
         ServerPlayer sp = (ServerPlayer) player;
         if (ownerUUID == null) {
+            // solo puedes tener una Kaori
+            if (KaoriActions.findKaori(sp) != null) {
+                sp.sendSystemMessage(Component.literal("§6[Kaori] §fYa tienes una Kaori. Solo hay una como yo, ¿sabes?"));
+                if (level() instanceof ServerLevel sl) sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 1, getZ(), 30, 0.5, 0.8, 0.5, 0.05);
+                discard();
+                return InteractionResult.CONSUME;
+            }
             setOwner(player);
             KaoriActions.data(sp).putUUID("KaoriUUID", getUUID());
         }
@@ -698,6 +713,23 @@ public class KaoriEntity extends PathfinderMob {
         if (WalkNodeEvaluator.getBlockPathTypeStatic(level(), pos.mutable()) != BlockPathTypes.WALKABLE) return false;
         BlockPos d = pos.subtract(blockPosition());
         return level().noCollision(this, getBoundingBox().move(d.getX(), d.getY(), d.getZ()));
+    }
+
+    /** Copia de seguridad en el jugador (mochila, equipo, casa, forma) para que la única Kaori nunca pierda sus cosas. */
+    public void backup() {
+        ServerPlayer o = getOwnerPlayer();
+        if (o == null || KaoriActions.isStale(this)) return;
+        CompoundTag t = new CompoundTag();
+        addAdditionalSaveData(t);
+        t.putString("Dim", level().dimension().location().toString());
+        t.putLong("Pos", blockPosition().asLong());
+        KaoriActions.data(o).put("KaoriBackup", t);
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!level().isClientSide && reason == RemovalReason.UNLOADED_TO_CHUNK) backup();
+        super.remove(reason);
     }
 
     // ------------------------------------------------------------------ guardado
