@@ -18,7 +18,7 @@ OUT = os.path.join(ROOT, "src/main/resources/assets/blockdragonsuperz/textures/e
 JAVA_DIR = os.path.join(ROOT, "src/main/java/com/bdsz/client/kaori")
 HAIR_COLOR = (30, 28, 34)
 
-OLIVE, OLIVE_HI, OLIVE_DK = (92, 108, 58), (118, 136, 76), (64, 76, 40)
+OLIVE, OLIVE_HI, OLIVE_DK = (184, 34, 38), (214, 58, 58), (128, 20, 26)   # chaqueta roja
 GREY, GREY_HI, GREY_DK = (92, 96, 104), (118, 122, 132), (66, 68, 76)
 BROWN, BROWN_HI, BROWN_DK = (112, 70, 40), (146, 96, 58), (78, 46, 26)
 LEATHER = (38, 30, 30)
@@ -26,15 +26,16 @@ BRASS = (214, 170, 72)
 
 
 # ------------------------------------------------------------------ cara estilo skin de Minecraft (píxeles)
-EYE_DARK, EYE_MID, EYE_LIGHT = (18, 86, 56), (38, 150, 92), (120, 214, 160)
-WHITE_EYE, WHITE_EYE_SH = (246, 248, 250), (206, 222, 230)
-LASH = (22, 18, 24)
+EYE_DARK, EYE_MID, EYE_LIGHT = (176, 110, 10), (240, 184, 30), (255, 232, 120)
+WHITE_EYE, WHITE_EYE_SH = (248, 248, 250), (214, 220, 230)
+LASH = (16, 12, 18)
+BROW = (24, 20, 26)
 MOUTH = (196, 104, 110)
 
 
 def pixel_face(expr):
-    """Cara de skin clásica de Minecraft (como la imagen de referencia): cada ojo es un bloque de 2×2 píxeles
-    de la skin: blanco por fuera e iris verde por dentro (oscuro arriba, claro abajo). Sin pestañas de anime."""
+    """Cara de skin clásica de Minecraft con detalle: cejas negras, pestaña superior gruesa con alita hacia afuera,
+    blanco por fuera e iris amarillo de tres tonos por dentro con brillo, pestaña inferior fina. Sin nariz."""
     N, K = 16, 4
     img = Image.new("RGBA", (N * K, N * K), (0, 0, 0, 0))
 
@@ -44,37 +45,47 @@ def pixel_face(expr):
                 for xx in range(x * K, x * K + K):
                     img.putpixel((xx, yy), c + (255,))
 
-    # sombra suave a los lados de la nariz (como en la referencia)
-    for y in range(8, 12):
-        px(7, y, G.SKIN_SH if y > 9 else G.SKIN)
-        px(8, y, G.SKIN_SH if y > 9 else G.SKIN)
     for side in (0, 1):
         m = (lambda x: x) if side == 0 else (lambda x: N - 1 - x)
         ox = 2                                   # columna externa del ojo
+        # cejas: finas, la punta de afuera un poco más baja (mirada segura)
+        brow_y = 4 if expr == "surprised" else 5
+        if expr == "focused":
+            px(m(ox), 5, BROW); px(m(ox + 1), 5, BROW); px(m(ox + 2), 6, BROW); px(m(ox + 3), 6, BROW)
+        elif expr == "tired":
+            px(m(ox), 6, BROW); px(m(ox + 1), 5, BROW); px(m(ox + 2), 5, BROW); px(m(ox + 3), 5, BROW)
+        else:
+            px(m(ox), brow_y + 1, BROW)
+            for x in (ox + 1, ox + 2, ox + 3):
+                px(m(x), brow_y, BROW)
         if expr in ("blink", "tired"):
+            # ojo cerrado: pestaña curva con alita
             for x in range(ox, ox + 4):
-                px(m(x), 10, LASH)
+                px(m(x), 9, LASH)
+            px(m(ox - 1), 8, LASH)
             if expr == "tired":
                 for x in range(ox + 1, ox + 3):
-                    px(m(x), 11, G.SKIN_SH)
+                    px(m(x), 10, G.SKIN_SH)
             continue
         if expr == "happy":
-            px(m(ox), 10, LASH); px(m(ox + 1), 9, LASH); px(m(ox + 2), 9, LASH); px(m(ox + 3), 10, LASH)
+            px(m(ox - 1), 9, LASH); px(m(ox), 9, LASH); px(m(ox + 1), 8, LASH); px(m(ox + 2), 8, LASH); px(m(ox + 3), 9, LASH)
             continue
         top = 8 if expr != "focused" else 9
-        bot = 11 if expr != "surprised" else 12
+        bot = 10 if expr != "surprised" else 11
+        # pestaña superior gruesa con alita hacia afuera
+        for x in range(ox, ox + 4):
+            px(m(x), top - 1, LASH)
+        px(m(ox - 1), top - 1, LASH)
+        px(m(ox - 1), top, LASH)
         for y in range(top, bot + 1):
             t = (y - top) / max(1, bot - top)
-            sh = t > 0.6
-            px(m(ox), y, WHITE_EYE_SH if sh else WHITE_EYE)          # blanco (afuera)
+            sh = y == bot
+            px(m(ox), y, WHITE_EYE_SH if sh else WHITE_EYE)            # blanco (afuera)
             px(m(ox + 1), y, WHITE_EYE_SH if sh else WHITE_EYE)
-            for x in (ox + 2, ox + 3):                                 # iris (adentro)
-                px(m(x), y, EYE_DARK if t < 0.4 else EYE_MID if t < 0.75 else EYE_LIGHT)
-        px(m(ox + 2), bot, EYE_LIGHT)                                  # brillo abajo
-        if expr == "focused":
-            for x in range(ox, ox + 4):
-                px(m(x), top - 1, G.HAIR_DK)                           # ceño
-    # boca pequeña
+            for x in (ox + 2, ox + 3):                                 # iris amarillo (adentro)
+                px(m(x), y, EYE_DARK if t < 0.34 else EYE_MID if t < 0.7 else EYE_LIGHT)
+        px(m(ox + 2), top, (255, 255, 255))                            # brillo
+    # boca pequeña (sin nariz)
     if expr == "happy":
         px(7, 13, MOUTH); px(8, 13, MOUTH); px(6, 12, MOUTH); px(9, 12, MOUTH)
     elif expr == "surprised":
@@ -155,7 +166,7 @@ def jacket_paint(f, x, y, w, h):
     if f == "back" and 0.3 * h < y < 0.55 * h:
         cx, cy = w / 2, 0.42 * h
         if math.hypot(x - cx, (y - cy) * 1.2) < w * 0.16 and math.hypot(x - cx, (y - cy) * 1.2) > w * 0.1:
-            return (232, 120, 60)                         # engranaje naranja en la espalda
+            return (250, 204, 60)                         # engranaje dorado en la espalda
     if y >= h - 3 and f != "top":
         return OLIVE_DK
     return G.mix(OLIVE, OLIVE_HI, abs(((x + y // 3) % 14) / 14.0 - 0.5))

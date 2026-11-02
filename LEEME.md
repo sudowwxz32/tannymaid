@@ -70,3 +70,8 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
   SSJ 2, grito de transformación, onda de choque; más daño, velocidad, armadura y vida; ráfagas de ki doradas).
   Al quedar sin vida vuelve a su estado base.
 - Semillas del Ermitaño: las que regala Kaori solo se comen; las de aldeas y cofres sí se pueden plantar.
+
+## 7.7.0 — Ojos de Kaori y chaqueta roja
+- Ojos amarillos con cejas negras, pestaña superior gruesa con alita hacia afuera, brillo y sin nariz; pestañea, y
+  cambia las cejas según la expresión (seria, sorprendida, cansada).
+- Chaqueta roja con mangas remangadas y engranaje dorado en la espalda.
