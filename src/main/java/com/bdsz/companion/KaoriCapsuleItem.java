@@ -31,7 +31,8 @@ public class KaoriCapsuleItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tip, TooltipFlag flag) {
-        tip.add(Component.literal("§7Clic derecho: invoca a Kaori o la trae a tu lado"));
+        tip.add(Component.literal("§6Receta: 3 bloques de hierro, 3 de cobre, 1 diamante y 1 Semilla del Ermitaño"));
+        tip.add(Component.literal("§7Al craftearla aparece Kaori · Clic derecho: la trae a tu lado"));
         tip.add(Component.literal("§7Clic derecho sobre ella: su menú · Shift: su mochila"));
     }
 

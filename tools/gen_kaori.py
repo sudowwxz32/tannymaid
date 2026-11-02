@@ -25,15 +25,73 @@ LEATHER = (38, 30, 30)
 BRASS = (214, 170, 72)
 
 
+# ------------------------------------------------------------------ cara estilo skin de Minecraft (píxeles)
+EYE_DARK, EYE_MID, EYE_LIGHT = (28, 40, 92), (52, 92, 170), (104, 156, 226)
+LASH = (22, 18, 24)
+MOUTH = (196, 104, 110)
+
+
+def pixel_face(expr):
+    """Cara de 16x16 píxeles (escalada a 64x64): ojos de skin de Minecraft con pestaña negra arriba,
+    blanco a un lado e iris azul de dos tonos con un brillo; cejas finas y boca pequeña."""
+    N, K = 16, 4
+    img = Image.new("RGBA", (N * K, N * K), (0, 0, 0, 0))
+
+    def px(x, y, c):
+        if 0 <= x < N and 0 <= y < N:
+            for yy in range(y * K, y * K + K):
+                for xx in range(x * K, x * K + K):
+                    img.putpixel((xx, yy), c + (255,))
+
+    for side in (0, 1):
+        m = (lambda x: x) if side == 0 else (lambda x: N - 1 - x)
+        bx = 2                                   # columna externa del ojo
+        # cejas
+        for x in (bx, bx + 1, bx + 2):
+            px(m(x), 6 if expr != "focused" else (6 if x == bx else 7), G.HAIR_DK)
+        if expr in ("blink", "tired"):
+            for x in range(bx, bx + 4):
+                px(m(x), 10, LASH)
+            if expr == "tired":
+                px(m(bx + 1), 11, G.SKIN_SH)
+            continue
+        if expr == "happy":
+            px(m(bx), 10, LASH); px(m(bx + 1), 9, LASH); px(m(bx + 2), 9, LASH); px(m(bx + 3), 10, LASH)
+            continue
+        top = 8 if expr != "focused" else 9
+        bot = 11 if expr != "surprised" else 12
+        for x in range(bx - (1 if expr == "surprised" else 0), bx + 4):
+            px(m(x), top, LASH)                   # pestaña
+        px(m(bx - 1), top + 1, LASH)              # alita de la pestaña
+        for y in range(top + 1, bot + 1):
+            px(m(bx), y, G.WHITE)                 # blanco del ojo (lado de afuera)
+            for x in (bx + 1, bx + 2):
+                t = (y - top - 1) / max(1, bot - top - 1)
+                px(m(x), y, EYE_DARK if t < 0.34 else EYE_MID if t < 0.7 else EYE_LIGHT)
+            px(m(bx + 3), y, G.WHITE if y > top + 1 else G.WHITE_SH)
+        px(m(bx + 2), top + 1, G.WHITE)          # brillo
+    # boca
+    if expr == "happy":
+        px(7, 13, MOUTH); px(8, 13, MOUTH); px(6, 12, MOUTH); px(9, 12, MOUTH)
+    elif expr == "surprised":
+        px(7, 13, (120, 50, 60)); px(8, 13, (120, 50, 60))
+    elif expr == "focused":
+        px(7, 13, MOUTH); px(8, 13, MOUTH); px(9, 13, MOUTH)
+    else:
+        px(7, 13, MOUTH); px(8, 13, MOUTH)
+    return img
+
+
 def palette():
     G.SKIN, G.SKIN_SH, G.SKIN_HI, G.SKIN_DK = (242, 208, 184), (226, 186, 162), (252, 224, 204), (198, 152, 128)
     G.HAIR, G.HAIR_HI, G.HAIR_DK = HAIR_COLOR, (160, 64, 98), (90, 26, 50)
-    G.EYE_DK, G.EYE_MID, G.EYE_HI, G.EYE_RING = (16, 90, 58), (40, 170, 104), (150, 236, 180), (12, 70, 44)
+    G.EYE_DK, G.EYE_MID, G.EYE_HI, G.EYE_RING = (22, 26, 44), (62, 78, 120), (110, 132, 180), (16, 20, 34)
     G.PUPIL_W = 1.6
-    G.EYE_STYLE = "big"
+    G.EYE_STYLE = "pixel"
     G.BROW_RGB = (84, 24, 44)
     G.BLUSH_ON = False
     G.body_paint, G.arm_paint, G.leg_paint = body_paint, arm_paint, leg_paint
+    G.face_image = pixel_face
 
 
 # ------------------------------------------------------------------ base de la skin (bajo la ropa 3D)
@@ -197,6 +255,11 @@ def lens_paint(f, x, y, w, h):
     return G.mix(BRASS, (150, 110, 40), y / max(1, h - 1))
 
 
+def wrench_paint(f, x, y, w, h):
+    """Llave inglesa de acero colgada del cinturón."""
+    return (176, 182, 192) if (x + y) % 4 else (214, 220, 228)
+
+
 def scrunchie_paint(f, x, y, w, h):
     return (232, 120, 60) if (x + y) % 3 else (250, 160, 96)
 
@@ -209,12 +272,10 @@ def head_parts():
     P.append(Part("lens_r", "goggles", (-1.75, 0, -0.6), (0, 0.12, 0), [Box(-1.35, -1.05, -0.75, 2.7, 2.1, 1.5, lens_paint)]))
     P.append(Part("goggle_bridge", "goggles", (0, 0, -0.5), (0, 0, 0), [Box(-0.5, -0.3, -0.3, 1.0, 0.6, 0.6, strap_paint)]))
     P.append(Part("goggle_strap", "goggles", (0, 0, 0.4), (0, 0, 0), [Box(-4.2, -0.35, -0.3, 8.4, 0.7, 0.6, strap_paint)]))
+    # aretes con forma de tuerca dorada (es mecánica)
+    P.append(Part("nut_r", "head", (-4.3, -2.4, -0.4), (0, 0, 0), [Box(-0.35, 0, -0.45, 0.7, 0.9, 0.9, lens_paint)]))
     # coletero de la coleta alta
     P.append(Part("scrunchie", "head", (0, -7.5, 4.15), (0.75, 0, 0), [Box(-1.5, -1.5, -0.9, 3.0, 3.0, 1.8, scrunchie_paint)]))
-    # pestañas 3D (iguales a las de ojos grandes)
-    P.append(Part("lid_r", "head", (-1.25, -4.62, -4.02), (0, 0, 0.19), [Box(-0.68, -0.21, -0.26, 1.36, 0.42, 0.34, G.lash3d)]))
-    P.append(Part("lidb_r", "head", (-2.55, -4.65, -4.02), (0, 0, -0.15), [Box(-0.68, -0.21, -0.26, 1.36, 0.42, 0.34, G.lash3d)]))
-    P.append(Part("lash_r", "head", (-3.62, -4.1, -4.04), (0, 0.2, -0.755), [Box(-0.6, -0.18, -0.24, 1.2, 0.36, 0.32, G.lash3d)]))
     m = G.mirror([p for p in P if p.name.endswith("_r")])
     P += m
     return P, [("head", (0, 0, 0))]
@@ -230,6 +291,8 @@ def outfit_parts():
     P.append(Part("belt", "body", (0, 0, 0), (0, 0, 0), [Box(-4.55, 7.15, -2.6, 9.1, 1.25, 5.2, belt_paint)]))
     P.append(Part("pouch_r", "body", (-3.55, 7.7, -2.55), (0, 0.2, 0), [Box(-1.0, 0, -1.1, 2.0, 2.3, 1.3, pouch_paint)]))
     P.append(Part("capsule_r", "body", (-4.6, 7.9, 0.6), (0, 0, 0.12), [Box(-0.45, -0.1, -0.6, 0.9, 1.9, 1.2, capsule_paint)]))
+    P.append(Part("wrench", "body", (4.75, 7.6, -0.4), (0, 0, -0.18), [Box(-0.3, 0, -0.35, 0.6, 3.6, 0.7, wrench_paint),
+                                                                       Box(-0.75, 3.4, -0.45, 1.5, 1.1, 0.9, wrench_paint)]))
     P.append(Part("capsule_case", "body", (0, 7.6, 2.55), (0, 0, 0), [Box(-1.6, 0, 0, 3.2, 2.2, 1.2, pouch_paint)]))
     P.append(Part("shorts", "body", (0, 0, 0), (0, 0, 0), [Box(-4.35, 7.7, -2.35, 8.7, 4.6, 4.7, shorts_paint)]))
     P.append(Part("sleeve_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-2.4, -2.45, -2.4, 3.8, 6.6, 4.8, sleeve_paint)]))

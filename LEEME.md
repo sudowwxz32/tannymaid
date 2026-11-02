@@ -56,3 +56,9 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
 - **Combate**: golpes fuertes con ki, ráfagas de ki a distancia, escudo; protege a su dueño. Tiene 30 de vida, no
   puede morir: se come una Semilla del Ermitaño de su mochila o descansa hasta recuperarse.
 - Arte: `python3 tools/gen_kaori.py` (texturas, ropa 3D y mechones).
+
+## 7.5.0 — Kaori mejorada
+- Kaori aparece al craftear su cápsula: **3 bloques de hierro, 3 bloques de cobre, 1 diamante y 1 Semilla del
+  Ermitaño** (sin forma). La cápsula sirve después para traerla a tu lado.
+- Cara nueva, distinta a la de Tanny: ojos pixel-art estilo Minecraft (azul oscuro, brillo cuadrado, pestaña recta),
+  sonrisa ladeada; sin pestañas 3D de anime. Aretes de tuerca dorada y llave inglesa en el cinturón.

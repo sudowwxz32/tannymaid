@@ -729,7 +729,26 @@ def face_image(expr):
         d.polygon(P(lash, mirror), fill=LASH_BLACK + (255,))
         d.line(P([(3.8, 18.4 + g), (8.2, 20.1 + g), (11.8, 19.4 + g)], mirror), fill=(70, 40, 34, 210), width=int(0.35 * K))
 
+    def pixel_eye(mirror):
+        """Ojo pixel-art estilo Minecraft (Kaori): bloque blanco, iris oscuro alto, brillo cuadrado y una línea de
+        pestaña recta y fina con la punta hacia afuera. Nítido, sin el ojo grande de anime."""
+        def R(x0, y0, x1, y1, c):
+            d.rectangle(box(x0, y0, x1, y1, mirror), fill=c + (255,))
+        up = -0.8 if expr == "surprised" else 0.0
+        low = 1.2 if expr == "focused" else 0.0
+        R(5.0, 15.0 + up + low, 12.0, 21.0, WHITE)                    # esclerótica
+        R(6.8, 15.0 + up + low, 11.2, 21.0, EYE_MID)                  # iris
+        R(7.8, 16.5 + up + low, 10.4, 20.0, EYE_DK)                   # pupila
+        R(6.8, 20.0, 11.2, 21.0, EYE_HI)                              # reflejo de abajo
+        R(7.2, 16.0 + up + low, 8.6, 17.6 + up + low, (255, 255, 255))   # brillo
+        R(4.0, 13.8 + up + low, 12.4, 15.0 + up + low, LASH_BLACK)    # pestaña superior recta
+        R(3.0, 13.2 + up + low, 4.6, 14.6 + up + low, LASH_BLACK)     # punta hacia afuera
+        R(5.0, 21.0, 12.0, 21.6, (150, 110, 100))                     # línea inferior suave
+
     def eye(mirror):
+        if EYE_STYLE == "pixel" and expr in ("normal", "surprised", "focused"):
+            pixel_eye(mirror)
+            return
         if EYE_STYLE == "small" and expr in ("normal", "surprised", "focused"):
             small_eye(mirror)
             return
@@ -821,7 +840,10 @@ def face_image(expr):
         brow(m)
         eye(m)
     # boca pequeña (sin nariz)
-    if expr in ("normal", "blink"):
+    if expr in ("normal", "blink") and EYE_STYLE == "pixel":
+        # sonrisa ladeada, segura de sí misma
+        d.line((14.0 * K, 27.4 * K, 16.0 * K, 27.6 * K, 18.0 * K, 27.0 * K, 18.8 * K, 26.4 * K), fill=(128, 62, 56, 255), width=int(0.6 * K))
+    elif expr in ("normal", "blink"):
         d.line((14.4 * K, 27.0 * K, 15.6 * K, 27.6 * K, 16.4 * K, 27.6 * K, 17.6 * K, 27.0 * K), fill=(128, 62, 56, 255), width=int(0.5 * K))
     elif expr == "happy":
         d.chord((13.6 * K, 26.0 * K, 18.4 * K, 29.8 * K), 0, 180, fill=(104, 36, 40, 255))

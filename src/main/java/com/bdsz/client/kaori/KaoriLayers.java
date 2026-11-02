@@ -69,7 +69,7 @@ public final class KaoriLayers {
 
     public static class Head extends RenderLayer<KaoriEntity, KaoriModel> {
         private static final ResourceLocation TEX = KaoriRenderer.tex("head"), STRAND = KaoriRenderer.tex("hair_strand");
-        private final ModelPart root, head, lidR, lidL, lidBR, lidBL, lashR, lashL, goggles, scrunchie;
+        private final ModelPart root, head, goggles, scrunchie;
         private final KaoriHairMesh mesh = new KaoriHairMesh(KaoriHairLocks.L, HAIR_COLOR);
 
         public Head(RenderLayerParent<KaoriEntity, KaoriModel> parent, EntityModelSet models) {
@@ -77,12 +77,6 @@ public final class KaoriLayers {
             root = models.bakeLayer(HEAD);
             Map<String, ModelPart> m = KaoriModels.bakeHead(root);
             head = m.get("head");
-            lidR = m.get("lid_r");
-            lidL = m.get("lid_l");
-            lidBR = m.get("lidb_r");
-            lidBL = m.get("lidb_l");
-            lashR = m.get("lash_r");
-            lashL = m.get("lash_l");
             goggles = m.get("goggles");
             scrunchie = m.get("scrunchie");
         }
@@ -105,15 +99,9 @@ public final class KaoriLayers {
                     light, overlay, swayX, swayZ, breeze * 0.5F + limbAmount * 0.1F, 0.0F, helmet);
             pose.popPose();
 
-            KaoriRenderer.Face f = KaoriRenderer.face(e);
-            boolean open = f == KaoriRenderer.Face.NORMAL || f == KaoriRenderer.Face.SURPRISED || f == KaoriRenderer.Face.FOCUSED;
-            boolean wings = open || f == KaoriRenderer.Face.BLINK;
-            lidR.visible = lidL.visible = lidBR.visible = lidBL.visible = open;
-            lashR.visible = lashL.visible = wings;
             goggles.visible = scrunchie.visible = !helmet;
             head.copyFrom(ph);
             root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(TEX)), light, overlay);
-            lidR.visible = lidL.visible = lidBR.visible = lidBL.visible = lashR.visible = lashL.visible = true;
             goggles.visible = scrunchie.visible = true;
         }
     }

@@ -19,14 +19,10 @@ public final class KaoriModels {
         PartDefinition p_lens_r = p_goggles.addOrReplaceChild("lens_r", CubeListBuilder.create().texOffs(11, 0).addBox(-1.35F, -1.05F, -0.75F, 2.7F, 2.1F, 1.5F), PartPose.offsetAndRotation(-1.75F, 0F, -0.6F, 0F, 0.12F, 0F));
         PartDefinition p_goggle_bridge = p_goggles.addOrReplaceChild("goggle_bridge", CubeListBuilder.create().texOffs(50, 0).addBox(-0.5F, -0.3F, -0.3F, 1F, 0.6F, 0.6F), PartPose.offsetAndRotation(0F, 0F, -0.5F, 0F, 0F, 0F));
         PartDefinition p_goggle_strap = p_goggles.addOrReplaceChild("goggle_strap", CubeListBuilder.create().texOffs(31, 0).addBox(-4.2F, -0.35F, -0.3F, 8.4F, 0.7F, 0.6F), PartPose.offsetAndRotation(0F, 0F, 0.4F, 0F, 0F, 0F));
+        PartDefinition p_nut_r = p_head.addOrReplaceChild("nut_r", CubeListBuilder.create().texOffs(55, 0).addBox(-0.35F, 0F, -0.45F, 0.7F, 0.9F, 0.9F), PartPose.offsetAndRotation(-4.3F, -2.4F, -0.4F, 0F, 0F, 0F));
         PartDefinition p_scrunchie = p_head.addOrReplaceChild("scrunchie", CubeListBuilder.create().texOffs(0, 0).addBox(-1.5F, -1.5F, -0.9F, 3F, 3F, 1.8F), PartPose.offsetAndRotation(0F, -7.5F, 4.15F, 0.75F, 0F, 0F));
-        PartDefinition p_lid_r = p_head.addOrReplaceChild("lid_r", CubeListBuilder.create().texOffs(55, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(-1.25F, -4.62F, -4.02F, 0F, 0F, 0.19F));
-        PartDefinition p_lidb_r = p_head.addOrReplaceChild("lidb_r", CubeListBuilder.create().texOffs(60, 0).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(-2.55F, -4.65F, -4.02F, 0F, 0F, -0.15F));
-        PartDefinition p_lash_r = p_head.addOrReplaceChild("lash_r", CubeListBuilder.create().texOffs(0, 6).addBox(-0.6F, -0.18F, -0.24F, 1.2F, 0.36F, 0.32F), PartPose.offsetAndRotation(-3.62F, -4.1F, -4.04F, 0F, 0.2F, -0.755F));
         PartDefinition p_lens_l = p_goggles.addOrReplaceChild("lens_l", CubeListBuilder.create().texOffs(21, 0).addBox(-1.35F, -1.05F, -0.75F, 2.7F, 2.1F, 1.5F), PartPose.offsetAndRotation(1.75F, 0F, -0.6F, 0F, -0.12F, 0F));
-        PartDefinition p_lid_l = p_head.addOrReplaceChild("lid_l", CubeListBuilder.create().texOffs(5, 6).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(1.25F, -4.62F, -4.02F, 0F, 0F, -0.19F));
-        PartDefinition p_lidb_l = p_head.addOrReplaceChild("lidb_l", CubeListBuilder.create().texOffs(10, 6).addBox(-0.68F, -0.21F, -0.26F, 1.36F, 0.42F, 0.34F), PartPose.offsetAndRotation(2.55F, -4.65F, -4.02F, 0F, 0F, 0.15F));
-        PartDefinition p_lash_l = p_head.addOrReplaceChild("lash_l", CubeListBuilder.create().texOffs(15, 6).addBox(-0.6F, -0.18F, -0.24F, 1.2F, 0.36F, 0.32F), PartPose.offsetAndRotation(3.62F, -4.1F, -4.04F, 0F, -0.2F, 0.755F));
+        PartDefinition p_nut_l = p_head.addOrReplaceChild("nut_l", CubeListBuilder.create().texOffs(60, 0).addBox(-0.35F, 0F, -0.45F, 0.7F, 0.9F, 0.9F), PartPose.offsetAndRotation(4.3F, -2.4F, -0.4F, 0F, 0F, 0F));
         return LayerDefinition.create(mesh, 64, 32);
     }
 
@@ -37,14 +33,10 @@ public final class KaoriModels {
         m.put("lens_r", m.get("goggles").getChild("lens_r"));
         m.put("goggle_bridge", m.get("goggles").getChild("goggle_bridge"));
         m.put("goggle_strap", m.get("goggles").getChild("goggle_strap"));
+        m.put("nut_r", m.get("head").getChild("nut_r"));
         m.put("scrunchie", m.get("head").getChild("scrunchie"));
-        m.put("lid_r", m.get("head").getChild("lid_r"));
-        m.put("lidb_r", m.get("head").getChild("lidb_r"));
-        m.put("lash_r", m.get("head").getChild("lash_r"));
         m.put("lens_l", m.get("goggles").getChild("lens_l"));
-        m.put("lid_l", m.get("head").getChild("lid_l"));
-        m.put("lidb_l", m.get("head").getChild("lidb_l"));
-        m.put("lash_l", m.get("head").getChild("lash_l"));
+        m.put("nut_l", m.get("head").getChild("nut_l"));
         return m;
     }
 
@@ -64,6 +56,7 @@ public final class KaoriModels {
         PartDefinition p_belt = p_body.addOrReplaceChild("belt", CubeListBuilder.create().texOffs(17, 51).addBox(-4.55F, 7.15F, -2.6F, 9.1F, 1.25F, 5.2F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
         PartDefinition p_pouch_r = p_body.addOrReplaceChild("pouch_r", CubeListBuilder.create().texOffs(27, 68).addBox(-1F, 0F, -1.1F, 2F, 2.3F, 1.3F), PartPose.offsetAndRotation(-3.55F, 7.7F, -2.55F, 0F, 0.2F, 0F));
         PartDefinition p_capsule_r = p_body.addOrReplaceChild("capsule_r", CubeListBuilder.create().texOffs(49, 68).addBox(-0.45F, -0.1F, -0.6F, 0.9F, 1.9F, 1.2F), PartPose.offsetAndRotation(-4.6F, 7.9F, 0.6F, 0F, 0F, 0.12F));
+        PartDefinition p_wrench = p_body.addOrReplaceChild("wrench", CubeListBuilder.create().texOffs(56, 60).addBox(-0.3F, 0F, -0.35F, 0.6F, 3.6F, 0.7F).texOffs(46, 73).addBox(-0.75F, 3.4F, -0.45F, 1.5F, 1.1F, 0.9F), PartPose.offsetAndRotation(4.75F, 7.6F, -0.4F, 0F, 0F, -0.18F));
         PartDefinition p_capsule_case = p_body.addOrReplaceChild("capsule_case", CubeListBuilder.create().texOffs(17, 68).addBox(-1.6F, 0F, 0F, 3.2F, 2.2F, 1.2F), PartPose.offsetAndRotation(0F, 7.6F, 2.55F, 0F, 0F, 0F));
         PartDefinition p_shorts = p_body.addOrReplaceChild("shorts", CubeListBuilder.create().texOffs(20, 29).addBox(-4.35F, 7.7F, -2.35F, 8.7F, 4.6F, 4.7F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
         PartDefinition p_sleeve_r = p_right_arm.addOrReplaceChild("sleeve_r", CubeListBuilder.create().texOffs(0, 16).addBox(-2.4F, -2.45F, -2.4F, 3.8F, 6.6F, 4.8F), PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 0F));
@@ -101,6 +94,7 @@ public final class KaoriModels {
         m.put("belt", m.get("body").getChild("belt"));
         m.put("pouch_r", m.get("body").getChild("pouch_r"));
         m.put("capsule_r", m.get("body").getChild("capsule_r"));
+        m.put("wrench", m.get("body").getChild("wrench"));
         m.put("capsule_case", m.get("body").getChild("capsule_case"));
         m.put("shorts", m.get("body").getChild("shorts"));
         m.put("sleeve_r", m.get("right_arm").getChild("sleeve_r"));
