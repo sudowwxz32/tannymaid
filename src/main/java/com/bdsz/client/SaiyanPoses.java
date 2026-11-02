@@ -26,7 +26,7 @@ public final class SaiyanPoses {
         if (e instanceof Player pf && ClientStates.get(pf.getId()).saiyan && ClientStates.get(pf.getId()).gender == 2) feminine(m);
         if (!(e instanceof Player p)) return;
         SaiyanState s = ClientStates.get(p.getId());
-        if (fusionPoses(m, s, age)) {
+        if (fusionPoses(m, s, age) || fusedPose(m, p, s, limbAmount, age)) {
             copy(m);
             return;
         }
@@ -212,6 +212,113 @@ public final class SaiyanPoses {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Fusionado: el arco de ki del esqueleto, la mecha del creeper y una pose de base distinta para cada
+     * fusión cuando estás quieto (brazos cruzados, brazos atrás, etc.).
+     */
+    private static boolean fusedPose(PlayerModel<?> m, Player p, SaiyanState s, float limbAmount, float age) {
+        if (s.fusion <= 0 || s.fusing > 0) return false;
+        com.bdsz.data.Fusion f = com.bdsz.data.Fusion.byId(s.fusion);
+        float breath = Mth.sin(age * 0.09F) * 0.03F;
+        if (s.fusionAnim > 0 && f == com.bdsz.data.Fusion.SKELETON) {
+            // tensa el arco de ki: brazo izquierdo extendido con el arco, el derecho tira de la cuerda
+            m.leftArm.xRot = -Mth.HALF_PI + m.head.xRot;
+            m.leftArm.yRot = 0.1F + m.head.yRot;
+            m.leftArm.zRot = 0.0F;
+            m.rightArm.xRot = -Mth.HALF_PI + m.head.xRot;
+            m.rightArm.yRot = -0.1F + m.head.yRot - 0.55F;
+            m.rightArm.zRot = 0.0F;
+            m.body.yRot = m.head.yRot * 0.4F;
+            m.leftLeg.xRot = -0.3F;
+            m.rightLeg.xRot = 0.25F;
+            return true;
+        }
+        if (s.fusionAnim > 0 && f == com.bdsz.data.Fusion.CREEPER) {
+            // a punto de explotar: tiembla cada vez más, se encoge y abre los brazos
+            float k = 1.0F - s.fusionAnim / 30.0F;
+            float tr = Mth.sin(age * 4.0F) * (0.04F + k * 0.12F);
+            m.body.xRot = 0.25F * (1 - k) + tr;
+            m.head.xRot = -0.3F * k + tr;
+            m.rightArm.xRot = -0.3F + tr;
+            m.rightArm.zRot = 0.4F + k * 0.9F;
+            m.leftArm.xRot = -0.3F - tr;
+            m.leftArm.zRot = -0.4F - k * 0.9F;
+            m.rightLeg.zRot = 0.2F + k * 0.15F;
+            m.leftLeg.zRot = -0.2F - k * 0.15F;
+            return true;
+        }
+        boolean idle = limbAmount < 0.06F && m.attackTime <= 0 && s.pose == 0 && !s.charging && s.powering <= 0
+                && !p.getAbilities().flying && !p.isCrouching() && !p.isUsingItem() && !p.isPassenger() && !p.isSwimming()
+                && !p.isFallFlying() && p.onGround() && s.earAnim == 0;
+        if (!idle) return false;
+        // la pose se va formando poco a poco cuando te quedas quieto
+        float k = Mth.clamp((p.tickCount - ClientStates.lastMove(p)) / 12.0F, 0.0F, 1.0F);
+        if (k <= 0) return false;
+        switch (f) {
+            case GOLEM -> {
+                // brazos cruzados, firme como un gólem
+                set(m.rightArm, k, -1.05F + breath, -0.72F, 0.05F);
+                set(m.leftArm, k, -0.92F + breath, 0.72F, -0.05F);
+                m.body.xRot = Mth.lerp(k, m.body.xRot, -0.04F);
+                m.head.xRot = Mth.lerp(k, m.head.xRot, m.head.xRot - 0.12F);
+                m.rightLeg.zRot = Mth.lerp(k, 0, 0.12F);
+                m.leftLeg.zRot = Mth.lerp(k, 0, -0.12F);
+            }
+            case WARDEN -> {
+                // brazos atrás de la espalda, pecho afuera, mirada desafiante
+                set(m.rightArm, k, 0.62F + breath, 0.55F, -0.18F);
+                set(m.leftArm, k, 0.62F + breath, -0.55F, 0.18F);
+                m.body.xRot = Mth.lerp(k, m.body.xRot, -0.1F);
+                m.head.xRot = Mth.lerp(k, m.head.xRot, m.head.xRot - 0.18F);
+                m.rightLeg.zRot = Mth.lerp(k, 0, 0.1F);
+                m.leftLeg.zRot = Mth.lerp(k, 0, -0.1F);
+            }
+            case ZOMBIE -> {
+                // brazos al frente como un zombi, balanceándose
+                set(m.rightArm, k, -1.45F + Mth.sin(age * 0.07F) * 0.06F, -0.08F, 0.05F + breath);
+                set(m.leftArm, k, -1.4F + Mth.sin(age * 0.07F + 1.3F) * 0.06F, 0.08F, -0.05F - breath);
+                m.head.zRot = Mth.lerp(k, 0, 0.12F);
+                m.body.xRot = Mth.lerp(k, m.body.xRot, 0.06F);
+            }
+            case SKELETON -> {
+                // mano en la cadera, el otro brazo relajado, cabeza ladeada
+                set(m.rightArm, k, 0.25F, -0.45F, 0.72F);
+                set(m.leftArm, k, 0.05F + breath, 0.0F, -0.1F - breath);
+                m.head.zRot = Mth.lerp(k, 0, -0.1F);
+                m.body.yRot = Mth.lerp(k, 0, 0.12F);
+                m.leftLeg.xRot = Mth.lerp(k, 0, -0.12F);
+                m.leftLeg.zRot = Mth.lerp(k, 0, -0.1F);
+            }
+            case ENDERMAN -> {
+                // brazos largos colgando, un poco encorvado, mirada fija
+                set(m.rightArm, k, 0.08F, 0.0F, 0.04F + breath * 0.5F);
+                set(m.leftArm, k, 0.08F, 0.0F, -0.04F - breath * 0.5F);
+                m.body.xRot = Mth.lerp(k, m.body.xRot, 0.14F);
+                m.head.xRot = Mth.lerp(k, m.head.xRot, m.head.xRot + 0.05F);
+                m.head.zRot = Mth.lerp(k, 0, Mth.sin(age * 0.05F) * 0.08F);
+            }
+            case CREEPER -> {
+                // agazapado, brazos pegados, listo para saltar
+                set(m.rightArm, k, 0.35F + breath, 0.0F, 0.08F);
+                set(m.leftArm, k, 0.35F + breath, 0.0F, -0.08F);
+                m.body.xRot = Mth.lerp(k, m.body.xRot, 0.2F);
+                m.head.xRot = Mth.lerp(k, m.head.xRot, m.head.xRot - 0.2F);
+                m.rightLeg.xRot = Mth.lerp(k, 0, -0.15F);
+                m.leftLeg.xRot = Mth.lerp(k, 0, 0.12F);
+                m.rightLeg.zRot = Mth.lerp(k, 0, 0.18F);
+                m.leftLeg.zRot = Mth.lerp(k, 0, -0.18F);
+            }
+            default -> { return false; }
+        }
+        return true;
+    }
+
+    private static void set(ModelPart part, float k, float x, float y, float z) {
+        part.xRot = Mth.lerp(k, part.xRot, x);
+        part.yRot = Mth.lerp(k, part.yRot, y);
+        part.zRot = Mth.lerp(k, part.zRot, z);
     }
 
     /** Músculos: pecho y espalda más anchos, brazos y piernas más gruesos. */

@@ -156,6 +156,11 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
                 gi.root.render(pose, buf.getBuffer(RenderType.eyes(tex("gi_" + name + "_glow"))), LightTexture.FULL_BRIGHT, overlay, pulse, pulse, pulse, 1);
             }
         }
+        if (f == Fusion.SKELETON && s.fusionAnim > 0 && s.fusing == 0) energyBow(pose, buf, parent, s, age);
+        if (f == Fusion.GOLEM && s.fusing == 0) {
+            float atk = p.getAttackAnim(partial);
+            if (atk > 0) golemArms(pose, buf, parent, atk, age);
+        }
         // aretes dorados: uno al ponértelo, los dos cuando estás fusionado
         int total = FusionLogic.EAR_ANIM;
         boolean right = s.fusion > 0 || s.fusing > 0 || (s.earring && s.earAnim >= 0 && s.earAnim <= total * 0.4F)
@@ -166,6 +171,94 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
             earR.visible = right;
             earL.visible = left;
             earRoot.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(EAR_TEX)), light, overlay);
+        }
+    }
+
+    /** Arco de ki amarillo creado con energía (en la mano izquierda) con su cuerda y la flecha de energía. */
+    private static void energyBow(PoseStack pose, MultiBufferSource buf, PlayerModel<?> m, SaiyanState s, float age) {
+        com.mojang.blaze3d.vertex.VertexConsumer vc = buf.getBuffer(RenderType.lightning());
+        pose.pushPose();
+        m.leftArm.translateAndRotate(pose);
+        pose.scale(1 / 16F, 1 / 16F, 1 / 16F);
+        PoseStack.Pose mat = pose.last();
+        float appear = net.minecraft.util.Mth.clamp((24 - s.fusionAnim) / 4.0F, 0, 1) * net.minecraft.util.Mth.clamp(s.fusionAnim / 4.0F, 0, 1);
+        float flick = 0.85F + 0.15F * net.minecraft.util.Mth.sin(age * 1.7F);
+        float a = appear * flick;
+        float hx = 1.0F, hy = 11.0F;
+        int seg = 22;
+        for (int i = 0; i <= seg; i++) {
+            float t = i / (float) seg * 2 - 1;
+            float y = hy - 4.0F * t * t;
+            float z = t * 10.0F;
+            box(vc, mat, hx, y, z, 0.55F, 1.0F, 0.95F, 0.55F, 0.9F * a);      // núcleo
+            box(vc, mat, hx, y, z, 1.2F, 1.0F, 0.8F, 0.15F, 0.35F * a);        // brillo
+        }
+        // cuerda tensada hasta la mano derecha y la flecha de energía
+        float px = -4.5F, py = 1.5F;
+        for (int side = -1; side <= 1; side += 2) {
+            float ty = hy - 4.0F, tz = side * 10.0F;
+            for (int i = 0; i <= 10; i++) {
+                float t = i / 10F;
+                box(vc, mat, hx + (px - hx) * t, ty + (py - ty) * t, tz * (1 - t), 0.22F, 1.0F, 1.0F, 0.8F, 0.8F * a);
+            }
+        }
+        for (int i = 0; i <= 14; i++) {
+            float t = i / 14F;
+            box(vc, mat, px + (hx - px) * t, py + (hy + 3 - py) * t, 0, 0.35F, 1.0F, 0.95F, 0.5F, 0.9F * a);
+        }
+        box(vc, mat, hx, hy + 3.5F, 0, 1.4F, 1.0F, 0.9F, 0.2F, 0.6F * a);
+        pose.popPose();
+    }
+
+    /** Puños de ki con forma de brazos de gólem de hierro al golpear. */
+    private static void golemArms(PoseStack pose, MultiBufferSource buf, PlayerModel<?> m, float atk, float age) {
+        com.mojang.blaze3d.vertex.VertexConsumer vc = buf.getBuffer(RenderType.lightning());
+        float a = 0.25F + 0.4F * net.minecraft.util.Mth.sin(atk * net.minecraft.util.Mth.PI);
+        float pulse = 1.0F + 0.06F * net.minecraft.util.Mth.sin(age * 1.3F);
+        for (int side = 0; side < 2; side++) {
+            ModelPart arm = side == 0 ? m.rightArm : m.leftArm;
+            float cx = side == 0 ? -1.0F : 1.0F;
+            pose.pushPose();
+            arm.translateAndRotate(pose);
+            pose.scale(1 / 16F, 1 / 16F, 1 / 16F);
+            PoseStack.Pose mat = pose.last();
+            // hombro, antebrazo enorme y puño de gólem
+            boxes(vc, mat, cx, 0.5F, 0, 6.5F * pulse, 6.0F, 6.5F * pulse, a);
+            boxes(vc, mat, cx, 8.0F, 0, 7.5F * pulse, 9.0F, 7.5F * pulse, a);
+            boxes(vc, mat, cx, 14.0F, 0, 8.5F * pulse, 4.5F, 8.5F * pulse, a * 1.2F);
+            // dedos marcados
+            for (int f = -1; f <= 1; f++) box(vc, mat, cx + f * 2.6F, 16.6F, -2.6F, 2.0F, 1.0F, 0.95F, 0.45F, a * 0.8F);
+            pose.popPose();
+        }
+    }
+
+    private static void boxes(com.mojang.blaze3d.vertex.VertexConsumer vc, PoseStack.Pose mat, float cx, float cy, float cz,
+                              float w, float h, float d, float a) {
+        boxS(vc, mat, cx, cy, cz, w, h, d, 1.0F, 0.9F, 0.3F, a * 0.55F);
+        boxS(vc, mat, cx, cy, cz, w + 1.2F, h + 1.2F, d + 1.2F, 1.0F, 0.75F, 0.1F, a * 0.25F);
+    }
+
+    private static void box(com.mojang.blaze3d.vertex.VertexConsumer vc, PoseStack.Pose mat, float x, float y, float z, float size,
+                            float r, float g, float b, float a) {
+        boxS(vc, mat, x, y, z, size, size, size, r, g, b, a);
+    }
+
+    /** Caja centrada (x, y, z) de tamaño w×h×d, dibujada por ambos lados. */
+    private static void boxS(com.mojang.blaze3d.vertex.VertexConsumer vc, PoseStack.Pose mat, float x, float y, float z,
+                             float w, float h, float d, float r, float g, float b, float a) {
+        if (a <= 0.01F) return;
+        float x0 = x - w / 2, x1 = x + w / 2, y0 = y - h / 2, y1 = y + h / 2, z0 = z - d / 2, z1 = z + d / 2;
+        float[][] q = {
+                {x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0},
+                {x0, y0, z1, x0, y1, z1, x1, y1, z1, x1, y0, z1},
+                {x0, y0, z0, x0, y1, z0, x0, y1, z1, x0, y0, z1},
+                {x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0},
+                {x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0},
+                {x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1}};
+        org.joml.Matrix4f m4 = mat.pose();
+        for (float[] f : q) {
+            for (int i = 0; i < 4; i++) vc.vertex(m4, f[i * 3], f[i * 3 + 1], f[i * 3 + 2]).color(r, g, b, a).endVertex();
+            for (int i = 3; i >= 0; i--) vc.vertex(m4, f[i * 3], f[i * 3 + 1], f[i * 3 + 2]).color(r, g, b, a).endVertex();
         }
     }
 

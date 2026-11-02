@@ -665,6 +665,7 @@ public final class PowerLogic {
     public static void toggleOzaru(ServerPlayer p) {
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) { msg(p, "§cNo eres saiyajin. Usa /raza saiyajin"); return; }
+        if (!s.ozaru && (s.fusion > 0 || s.fusing > 0)) { msg(p, "§cNo puedes usar el Modo Ozaru estando fusionado."); return; }
         ServerLevel lv = p.serverLevel();
         if (s.ozaru) {
             s.ozaru = false;
@@ -726,7 +727,7 @@ public final class PowerLogic {
     // ------------------------------------------------------------ atributos
 
     public static void applyAttributes(ServerPlayer p, SaiyanState s) {
-        boolean on = s.saiyan && s.powered();
+        boolean on = (s.saiyan || s.fusion > 0) && s.powered();
         setMod(p.getAttribute(Attributes.MOVEMENT_SPEED), SPEED_ID, "bdsz_speed", on ? s.speedBonus() : 0, AttributeModifier.Operation.MULTIPLY_BASE);
         setMod(p.getAttribute(Attributes.KNOCKBACK_RESISTANCE), KB_ID, "bdsz_kb", on ? Math.min(1.0, s.resistance()) : 0, AttributeModifier.Operation.ADDITION);
         setMod(p.getAttribute(Attributes.MAX_HEALTH), HEALTH_ID, "bdsz_health", on ? s.extraHealth() : 0, AttributeModifier.Operation.ADDITION);

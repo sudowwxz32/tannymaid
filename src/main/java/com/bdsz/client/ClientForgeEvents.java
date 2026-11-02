@@ -111,11 +111,41 @@ public final class ClientForgeEvents {
         mc.player.displayClientMessage(Component.literal("§cPrimero usa §e/raza saiyajin"), true);
     }
 
+    /** Aura de la fusión: chispas doradas con el color del mob y partículas propias de cada uno. */
+    private static void fusionAura(ClientLevel level, RandomSource rnd, Player p, SaiyanState s, boolean self) {
+        com.bdsz.data.Fusion f = com.bdsz.data.Fusion.byId(s.fusion);
+        int c = f.color;
+        Vector3f col = new Vector3f(((c >> 16) & 255) / 255F, ((c >> 8) & 255) / 255F, (c & 255) / 255F);
+        net.minecraft.core.particles.DustColorTransitionOptions dust =
+                new net.minecraft.core.particles.DustColorTransitionOptions(new Vector3f(1.0F, 0.85F, 0.25F), col, 0.9F);
+        int n = self ? 1 : 2;
+        if (s.fusionAffinity()) n++;
+        for (int i = 0; i < n; i++) {
+            double a = rnd.nextDouble() * Math.PI * 2, rad = 0.5 + rnd.nextDouble() * 0.25;
+            level.addParticle(dust, p.getX() + Math.cos(a) * rad, p.getY() + rnd.nextDouble() * (self ? 0.9 : 2.0),
+                    p.getZ() + Math.sin(a) * rad, 0, 0.05 + rnd.nextDouble() * 0.06, 0);
+        }
+        if (rnd.nextInt(self ? 6 : 3) != 0) return;
+        double x = p.getX() + (rnd.nextDouble() - 0.5) * 1.1, y = p.getY() + rnd.nextDouble() * 1.8, z = p.getZ() + (rnd.nextDouble() - 0.5) * 1.1;
+        switch (f) {
+            case ENDERMAN -> level.addParticle(ParticleTypes.PORTAL, x, y, z, (rnd.nextDouble() - 0.5) * 0.6, -rnd.nextDouble() * 0.4, (rnd.nextDouble() - 0.5) * 0.6);
+            case WARDEN -> level.addParticle(ParticleTypes.SCULK_SOUL, x, y, z, 0, 0.03, 0);
+            case CREEPER -> level.addParticle(ParticleTypes.HAPPY_VILLAGER, x, y, z, 0, 0.02, 0);
+            case ZOMBIE -> level.addParticle(ParticleTypes.MYCELIUM, x, y, z, 0, 0.0, 0);
+            case SKELETON -> level.addParticle(ParticleTypes.WHITE_ASH, x, y, z, 0, 0.0, 0);
+            case GOLEM -> level.addParticle(ParticleTypes.ELECTRIC_SPARK, x, y, z, 0, 0.05, 0);
+            default -> {}
+        }
+    }
+
     /** Aura de partículas: fuego de ki en las fases dramáticas, brillo sereno en Ultra Instinto. */
     private static void auras(Minecraft mc, ClientLevel level) {
         RandomSource rnd = level.random;
         for (Player p : level.players()) {
             SaiyanState s = ClientStates.get(p.getId());
+            if (s.fusion > 0 && s.fusing == 0 && !p.isInvisible() && p.distanceToSqr(mc.player) < 48 * 48) {
+                fusionAura(level, rnd, p, s, p == mc.player && mc.options.getCameraType().isFirstPerson());
+            }
             boolean forced = s.charging || s.powering > 0;
             if (!s.saiyan || s.ozaru || !(s.aura || forced) || p.isInvisible() || p.distanceToSqr(mc.player) > 64 * 64) continue;
             Form f = s.visibleForm();

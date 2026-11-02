@@ -39,6 +39,7 @@ public class SaiyanState {
     public int fusionMax;
     public int fusing;          // ticks restantes de la escena de fusión
     public int fusionCd;        // espera de la habilidad de fusión (tecla X)
+    public int fusionAnim;      // animación de la habilidad (arco de energía del esqueleto, mecha del creeper)
 
     public static final int POSE_KAME_CHARGE = 1, POSE_KAME_FIRE = 2, POSE_BIG_BANG = 3, POSE_DRAGON = 4;
 
@@ -58,9 +59,20 @@ public class SaiyanState {
     /** Fase que se ve en el aura (durante la carga ya se ve la fase destino). */
     public Form visibleForm() { return transformed || powering > 0 ? Form.byId(selected) : Form.BASE; }
     public int activeKaioken() { return transformed ? kaioken : 0; }
-    public boolean powered() { return ozaru || transformed && (selected != 0 || kaioken > 0); }
+    public boolean powered() { return ozaru || fusion > 0 || transformed && (selected != 0 || kaioken > 0); }
 
-    public float damageMultiplier() { return ozaru ? 12.0F : activeForm().damage * (1.0F + activeKaioken() / 20.0F); }
+    /** ¿La transformación actual tiene afinidad con la fusión? (más poder y el tiempo no baja más rápido) */
+    public boolean fusionAffinity() { return fusion > 0 && transformed && Fusion.byId(fusion).affinity(activeForm()); }
+
+    public float damageMultiplier() {
+        if (ozaru) return 12.0F;
+        float m = activeForm().damage * (1.0F + activeKaioken() / 20.0F);
+        if (fusion > 0) {
+            m *= 40.0F;                                   // fusionado: el poder se multiplica por 40
+            if (fusionAffinity()) m *= 1.5F;
+        }
+        return m;
+    }
     public float punchBonus() { return ozaru ? 400.0F : activeForm().punch + activeKaioken() * 0.5F; }
     public float resistance() { return ozaru ? 0.75F : Math.min(0.92F, activeForm().resist + activeKaioken() / 400.0F); }
     public float speedBonus() { return ozaru ? 0.35F : activeForm().speed + activeKaioken() / 800.0F; }
@@ -129,6 +141,7 @@ public class SaiyanState {
         t.putInt("FusionMax", fusionMax);
         t.putInt("Fusing", fusing);
         t.putInt("FusionCd", fusionCd);
+        t.putInt("FusionAnim", fusionAnim);
         return t;
     }
 
@@ -168,6 +181,7 @@ public class SaiyanState {
         s.fusionMax = t.getInt("FusionMax");
         s.fusing = t.getInt("Fusing");
         s.fusionCd = t.getInt("FusionCd");
+        s.fusionAnim = t.getInt("FusionAnim");
         return s;
     }
 
@@ -204,6 +218,7 @@ public class SaiyanState {
         b.writeVarInt(fusionMax);
         b.writeVarInt(fusing);
         b.writeVarInt(fusionCd);
+        b.writeVarInt(fusionAnim);
     }
 
     public static SaiyanState read(FriendlyByteBuf b) {
@@ -240,6 +255,7 @@ public class SaiyanState {
         s.fusionMax = b.readVarInt();
         s.fusing = b.readVarInt();
         s.fusionCd = b.readVarInt();
+        s.fusionAnim = b.readVarInt();
         return s;
     }
 }

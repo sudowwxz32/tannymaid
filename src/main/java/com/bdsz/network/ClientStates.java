@@ -26,6 +26,16 @@ public final class ClientStates {
         return d >= WAVE_FADE_TICKS ? 0.0F : 1.0F - d / WAVE_FADE_TICKS;
     }
     /** Reloj del cliente (ticks), lo avanza ClientForgeEvents. */
+    private static final Map<Integer, int[]> MOVED = new ConcurrentHashMap<>();
+
+    /** Último tick en que el jugador se movió o golpeó (para las poses de estar quieto). */
+    public static int lastMove(net.minecraft.world.entity.player.Player p) {
+        int[] r = MOVED.computeIfAbsent(p.getId(), k -> new int[]{p.tickCount});
+        if (Math.abs(p.getX() - p.xo) > 0.003 || Math.abs(p.getZ() - p.zo) > 0.003 || Math.abs(p.getY() - p.yo) > 0.01
+                || p.swinging || p.tickCount < r[0]) r[0] = p.tickCount;
+        return r[0];
+    }
+
     public static long clientTicks;
     private static final SaiyanState NONE = new SaiyanState();
 

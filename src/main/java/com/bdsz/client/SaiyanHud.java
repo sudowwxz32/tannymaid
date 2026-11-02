@@ -29,7 +29,8 @@ public class SaiyanHud implements IGuiOverlay {
             com.bdsz.data.Fusion fu = com.bdsz.data.Fusion.byId(s.fusion);
             int secs = s.fusionTicks / 20;
             String txt = "§6✦ Fusión " + fu.display + "  §f" + secs / 60 + ":" + String.format("%02d", secs % 60)
-                    + (s.fusionCd > 0 ? "  §7X " + (s.fusionCd + 19) / 20 + "s" : "  §eX listo");
+                    + (s.fusionCd > 0 ? "  §7X " + (s.fusionCd + 19) / 20 + "s" : "  §eX listo")
+                    + (s.fusionAffinity() ? "  §b★ Afinidad" : s.transformed ? "  §c⚡ x" + fusionDrain(s) : "");
             int tw = mc.font.width(txt);
             int cx = g.guiWidth() / 2;
             g.fill(cx - tw / 2 - 4, 3, cx + tw / 2 + 4, 15, 0x80000000);
@@ -151,5 +152,11 @@ public class SaiyanHud implements IGuiOverlay {
 
     static int withAlpha(int c, int a) {
         return (Math.max(0, Math.min(255, a)) << 24) | (c & 0xFFFFFF);
+    }
+
+    private static int fusionDrain(SaiyanState s) {
+        int d = 1;
+        if (s.transformed && s.activeForm() != com.bdsz.data.Form.BASE && !s.fusionAffinity()) d += 1 + s.activeForm().ordinal() / 5;
+        return d + s.activeKaioken() / 25;
     }
 }

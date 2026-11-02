@@ -60,7 +60,7 @@ public final class ServerEvents {
                 e.setAmount(PowerLogic.dragonFistHit(atk, e.getEntity(), e.getAmount()));
                 return;
             }
-            if (s.saiyan && s.powered()) {
+            if ((s.saiyan || s.fusion > 0) && s.powered()) {
                 e.setAmount(e.getAmount() * s.damageMultiplier() + s.punchBonus());
                 if (s.activeForm() == Form.ULTRA || s.activeForm() == Form.BLUE || s.activeForm() == Form.GOD) {
                     atk.serverLevel().sendParticles(ParticleTypes.SONIC_BOOM, e.getEntity().getX(), e.getEntity().getY(0.5), e.getEntity().getZ(), 1, 0, 0, 0, 0);
@@ -69,7 +69,7 @@ public final class ServerEvents {
         }
         if (e.getEntity() instanceof ServerPlayer vic) {
             SaiyanState s = SaiyanData.get(vic);
-            if (s.saiyan && s.powered()) e.setAmount(e.getAmount() * (1.0F - s.resistance()));
+            if ((s.saiyan || s.fusion > 0) && s.powered()) e.setAmount(e.getAmount() * (1.0F - s.resistance()));
         }
     }
 

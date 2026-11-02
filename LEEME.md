@@ -24,3 +24,18 @@ blancos y el pecho y los hombros del mob, con piezas 3D propias: costillas y col
 y enredaderas (gólem), zarcillos brillantes y alma en el pecho (warden), jirones de camisa (zombi), púas con
 punta morada (enderman) y capucha verde (creeper). La cara solo toma un toque del mob. Geometría y texturas:
 `python3 tools/gen_fusion_gi.py`.
+
+## 7.3.0 — Poder de fusión, habilidades y poses
+- **Poder ×40** fusionado en estado base (×1.5 extra si la transformación tiene afinidad con la fusión).
+  Sin Modo Ozaru mientras estás fusionado.
+- **Tiempo**: transformarte gasta más rápido el tiempo de fusión y el Kaioken aún más (el HUD muestra la
+  velocidad ⚡ o ★ Afinidad). Afinidades: Zombi (SSJ4, Legendario, Bestia), Esqueleto (Ultra, Dios, Blue),
+  Enderman (Ultra Ego, Rosé, Dios), Creeper (SSJ2, SSJ3, Bestia), Gólem (Blue, Blue Evolución, SSJ1),
+  Warden (Legendario II/III, Ultra Ego).
+- **Habilidades (X)**: Zombi: no necesitas comer. Creeper: sisea, parpadea y explota (sin dañarte). Esqueleto:
+  arco de ki amarillo con 5 flechas de energía. Gólem: al golpear, tus brazos se cubren de ki con forma de brazos
+  de gólem. Warden: rayo sónico, sientes las vibraciones (lo que se mueve brilla) y das Oscuridad a otros jugadores.
+- **Poses de base** al estar quieto: brazos cruzados (gólem), brazos atrás (warden), brazos al frente (zombi),
+  mano en la cadera (esqueleto), brazos colgando (enderman), agazapado (creeper). Aura de partículas de la fusión.
+- **Al separarte**: el mob vuelve a aparecer a tu lado; quedas agotado unos segundos (debilidad, lentitud),
+  sin ki y en estado base.

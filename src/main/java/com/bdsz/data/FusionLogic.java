@@ -111,6 +111,7 @@ public final class FusionLogic {
 
     /** Cada tick del servidor: ¿algún mob recogió un arete lanzado? */
     public static void serverTick(MinecraftServer server) {
+        tickKiArrows();
         Iterator<Map.Entry<ItemEntity, UUID>> itr = THROWN.entrySet().iterator();
         while (itr.hasNext()) {
             Map.Entry<ItemEntity, UUID> e = itr.next();
@@ -141,6 +142,9 @@ public final class FusionLogic {
         it.discard();
         ServerLevel lv = p.serverLevel();
         lv.playSound(null, mob.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 0.8F);
+        // se guarda el mob para que vuelva a aparecer cuando se separen
+        net.minecraft.nbt.CompoundTag saved = new net.minecraft.nbt.CompoundTag();
+        if (mob.saveAsPassenger(saved)) fusedData(p).put(MOB_KEY, saved);
         mob.setNoAi(true);
         mob.setInvulnerable(true);
         mob.setGlowingTag(true);
@@ -247,19 +251,70 @@ public final class FusionLogic {
         p.connection.send(new ClientboundSetTitleTextPacket(Component.literal("§6§l¡FUSIÓN COMPLETA!")));
         p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("§eGuerrero " + f.display + " · " + f.seconds / 60 + " min")));
         p.sendSystemMessage(Component.literal("§6✦ Fusión con " + f.display + ": §7" + f.ability));
+        p.sendSystemMessage(Component.literal("§e✦ Afinidad: §7" + f.affinityText() + " §8(consumen menos tiempo y dan más poder)"));
         p.setHealth(p.getMaxHealth());
         SaiyanData.set(p, s);
     }
 
     /** Se separan: se acaba el tiempo o el jugador muere. Los aretes se rompen. */
+    private static final String MOB_KEY = "BdszFusedMob";
+
+    private static net.minecraft.nbt.CompoundTag fusedData(ServerPlayer p) {
+        net.minecraft.nbt.CompoundTag root = p.getPersistentData();
+        if (!root.contains(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)) root.put(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG, new net.minecraft.nbt.CompoundTag());
+        return root.getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG);
+    }
+
+    /** El mob con el que te fusionaste vuelve a aparecer a tu lado. */
+    private static void releaseMob(ServerPlayer p) {
+        net.minecraft.nbt.CompoundTag data = fusedData(p);
+        if (!data.contains(MOB_KEY)) return;
+        net.minecraft.nbt.CompoundTag tag = data.getCompound(MOB_KEY);
+        data.remove(MOB_KEY);
+        ServerLevel lv = p.serverLevel();
+        Vec3 look = p.getLookAngle();
+        double x = p.getX() + look.x * 2.0, z = p.getZ() + look.z * 2.0;
+        net.minecraft.world.entity.Entity e = EntityType.loadEntityRecursive(tag, lv, en -> {
+            en.moveTo(x, p.getY(), z, en.getYRot(), en.getXRot());
+            return en;
+        });
+        if (e == null) return;
+        if (e instanceof Mob m) {
+            m.setNoAi(false);
+            m.setInvulnerable(false);
+            m.setGlowingTag(false);
+            m.setHealth(m.getMaxHealth());
+        }
+        lv.addFreshEntity(e);
+        lv.sendParticles(GOLD, e.getX(), e.getY() + 1, e.getZ(), 60, 0.5, 0.8, 0.5, 0);
+        lv.sendParticles(ParticleTypes.FLASH, e.getX(), e.getY() + 1, e.getZ(), 1, 0, 0, 0, 0);
+    }
+
     public static void defuse(ServerPlayer p, SaiyanState s, boolean quiet) {
         Fusion f = Fusion.byId(s.fusion);
+        boolean wasFused = s.fusion > 0;
         s.fusion = 0;
         s.fusionTicks = s.fusionMax = 0;
         s.earring = false;
         s.fusing = 0;
+        s.fusionAnim = 0;
+        CREEPER_FUSE.remove(p.getUUID());
+        // al separarse: vuelves al estado base, sin energía y cansado por unos segundos
+        s.transformed = false;
+        s.powering = 0;
+        s.charging = false;
+        s.ki = 0;
+        if (wasFused) {
+            p.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 240, 1));
+            p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 240, 1));
+            p.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 240, 1));
+            p.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 80, 0));
+            p.removeEffect(MobEffects.HEALTH_BOOST);
+        }
         PENDING.remove(p.getUUID());
         Mob m = PULLING.remove(p.getUUID());
+        if (m != null) fusedData(p).remove(MOB_KEY);   // el mob aún existe: no duplicarlo
+        releaseMob(p);
         if (m != null) {
             m.setNoAi(false);
             m.setInvulnerable(false);
@@ -269,7 +324,7 @@ public final class FusionLogic {
             ServerLevel lv = p.serverLevel();
             lv.sendParticles(GOLD, p.getX(), p.getY() + 1, p.getZ(), 120, 1.2, 1.2, 1.2, 0);
             lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 1.5F, 0.8F);
-            p.sendSystemMessage(Component.literal("§6✦ La fusión con " + f.display + " terminó. Los aretes se rompieron."));
+            p.sendSystemMessage(Component.literal("§6✦ La fusión con " + f.display + " terminó. Los aretes se rompieron. §7Estás agotado y sin energía..."));
         }
         SaiyanData.set(p, s);
     }
@@ -302,20 +357,27 @@ public final class FusionLogic {
         }
         if (s.fusion <= 0) return;
         if (s.fusionCd > 0) s.fusionCd--;
-        s.fusionTicks--;
+        int animWas = s.fusionAnim;
+        if (s.fusionAnim > 0) s.fusionAnim--;
+        tickCreeperFuse(p, s);
+        if (s.fusion <= 0) return;
+        // transformarse gasta más rápido el tiempo de la fusión; el Kaioken aún más
+        int drain = 1;
+        if (s.transformed && s.activeForm() != Form.BASE && !s.fusionAffinity()) drain += 1 + s.activeForm().ordinal() / 5;
+        drain += s.activeKaioken() / 25;
+        int before = s.fusionTicks;
+        s.fusionTicks -= drain;
         if (s.fusionTicks <= 0) {
             defuse(p, s, false);
             return;
         }
-        if (p.tickCount % 20 == 0) {
-            effects(p, Fusion.byId(s.fusion));
-            SaiyanData.setQuiet(p, s);
-            if (s.fusionTicks == 600 || s.fusionTicks == 200) msg(p, "§eLa fusión termina en " + s.fusionTicks / 20 + " s");
-        } else if (s.fusionCd > 0) {
-            SaiyanData.setQuiet(p, s);
-        } else {
-            SaiyanData.setQuiet(p, s);
+        if ((before > 600 && s.fusionTicks <= 600) || (before > 200 && s.fusionTicks <= 200)) {
+            msg(p, "§eLa fusión termina en " + s.fusionTicks / 20 + " s");
         }
+        if (p.tickCount % 20 == 0) effects(p, Fusion.byId(s.fusion));
+        SaiyanData.setQuiet(p, s);
+        // los demás jugadores ven el arco de ki / la mecha del creeper
+        if (s.fusionAnim > 0 && s.fusionAnim % 3 == 0 || s.fusionAnim == 0 && animWas > 0) SaiyanData.sync(p, s);
     }
 
     private static void eff(ServerPlayer p, net.minecraft.world.effect.MobEffect e, int amp) {
@@ -324,7 +386,13 @@ public final class FusionLogic {
 
     private static void effects(ServerPlayer p, Fusion f) {
         switch (f) {
-            case ZOMBIE -> { eff(p, MobEffects.DAMAGE_BOOST, 1); eff(p, MobEffects.REGENERATION, 0); p.removeEffect(MobEffects.HUNGER); }
+            case ZOMBIE -> {
+                eff(p, MobEffects.DAMAGE_BOOST, 1);
+                eff(p, MobEffects.REGENERATION, 0);
+                p.removeEffect(MobEffects.HUNGER);
+                p.getFoodData().setFoodLevel(20);            // no necesitas comer
+                p.getFoodData().setSaturation(5.0F);
+            }
             case SKELETON -> { eff(p, MobEffects.MOVEMENT_SPEED, 1); eff(p, MobEffects.JUMP, 0); eff(p, MobEffects.DAMAGE_BOOST, 0); }
             case ENDERMAN -> { eff(p, MobEffects.NIGHT_VISION, 0); eff(p, MobEffects.MOVEMENT_SPEED, 0); eff(p, MobEffects.DAMAGE_BOOST, 0); }
             case CREEPER -> { eff(p, MobEffects.MOVEMENT_SPEED, 0); eff(p, MobEffects.DAMAGE_BOOST, 0); }
@@ -337,6 +405,17 @@ public final class FusionLogic {
                 for (Mob m : p.level().getEntitiesOfClass(Mob.class, p.getBoundingBox().inflate(10), m -> m instanceof Enemy)) {
                     m.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
                     m.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 1));
+                }
+                // siente las vibraciones: todo lo que se mueve cerca brilla
+                for (LivingEntity le : p.level().getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(24),
+                        le -> le != p && le.getDeltaMovement().lengthSqr() > 0.0004)) {
+                    le.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, true, false));
+                }
+                // oscuridad a los demás jugadores cercanos (como el warden)
+                if (p.tickCount % 200 == 0) {
+                    for (ServerPlayer o : p.serverLevel().getEntitiesOfClass(ServerPlayer.class, p.getBoundingBox().inflate(20), o -> o != p)) {
+                        o.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 260, 0));
+                    }
                 }
             }
             default -> { }
@@ -376,19 +455,26 @@ public final class FusionLogic {
                 s.fusionCd = 900;
             }
             case SKELETON -> {
-                Vec3 target = rayTarget(p, 40);
-                for (int i = 0; i < 16; i++) {
+                // crea un arco de ki amarillo (como el Puño del Dragón) y dispara flechas de energía
+                s.fusionAnim = 24;
+                float dmg = 2.0F + s.damageMultiplier() * 0.25F;
+                for (int i = -2; i <= 2; i++) {
                     Arrow a = new Arrow(lv, p);
-                    a.setPos(target.x + p.getRandom().nextGaussian() * 2.5, target.y + 14 + p.getRandom().nextDouble() * 4,
-                            target.z + p.getRandom().nextGaussian() * 2.5);
-                    a.setDeltaMovement(0, -2.2, 0);
-                    a.setBaseDamage(5.0);
+                    a.setPos(eye.x + look.x * 0.8, eye.y - 0.15, eye.z + look.z * 0.8);
+                    float yaw = p.getYRot() + i * 4.0F;
+                    a.shootFromRotation(p, p.getXRot(), yaw, 0.0F, 3.6F, 0.2F);
+                    a.setNoGravity(true);
+                    a.setCritArrow(true);
+                    a.setGlowingTag(true);
+                    a.setBaseDamage(dmg);
                     a.pickup = net.minecraft.world.entity.projectile.AbstractArrow.Pickup.DISALLOWED;
+                    a.addTag("bdsz_ki_arrow");
                     lv.addFreshEntity(a);
+                    KI_ARROWS.add(a);
                 }
+                lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 1.8F);
                 lv.playSound(null, p.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.5F, 0.6F);
-                msg(p, "§f¡Lluvia de flechas!");
-                s.fusionCd = 300;
+                s.fusionCd = 40;
             }
             case ENDERMAN -> {
                 Vec3 t = rayTarget(p, 40);
@@ -400,10 +486,12 @@ public final class FusionLogic {
                 s.fusionCd = 80;
             }
             case CREEPER -> {
+                // como un creeper: sisea, se infla y parpadea... ¡y explota! (a ti no te hace daño)
                 lv.playSound(null, p.blockPosition(), SoundEvents.CREEPER_PRIMED, SoundSource.PLAYERS, 1.5F, 0.8F);
-                lv.explode(p, p.getX(), p.getY() + 0.5, p.getZ(), 4.5F, Level.ExplosionInteraction.MOB);
-                msg(p, "§a¡Ka-boom!");
-                s.fusionCd = 200;
+                CREEPER_FUSE.put(p.getUUID(), 30);
+                s.fusionAnim = 30;
+                msg(p, "§a¡Ssssss...!");
+                s.fusionCd = 220;
             }
             case GOLEM -> {
                 BlockPos g = p.blockPosition().below();
@@ -435,6 +523,48 @@ public final class FusionLogic {
             default -> { }
         }
         SaiyanData.setQuiet(p, s);
+    }
+
+    private static final Map<UUID, Integer> CREEPER_FUSE = new ConcurrentHashMap<>();
+    private static final java.util.Set<Arrow> KI_ARROWS = ConcurrentHashMap.newKeySet();
+    private static final DustParticleOptions KI_YELLOW = new DustParticleOptions(new Vector3f(1.0F, 0.9F, 0.25F), 1.4F);
+
+    private static void tickCreeperFuse(ServerPlayer p, SaiyanState s) {
+        Integer left = CREEPER_FUSE.get(p.getUUID());
+        if (left == null) return;
+        ServerLevel lv = p.serverLevel();
+        lv.sendParticles(ParticleTypes.SMOKE, p.getX(), p.getY() + 1.6, p.getZ(), 3, 0.2, 0.2, 0.2, 0.01);
+        if (left % 6 == 0) lv.sendParticles(ParticleTypes.FLASH, p.getX(), p.getY() + 1, p.getZ(), 1, 0, 0, 0, 0);
+        p.setDeltaMovement(p.getDeltaMovement().multiply(0.3, 1, 0.3));
+        if (left <= 1) {
+            CREEPER_FUSE.remove(p.getUUID());
+            float power = 6.0F * (s.fusionAffinity() ? 1.4F : 1.0F);
+            lv.explode(p, p.getX(), p.getY() + 0.5, p.getZ(), power, Level.ExplosionInteraction.MOB);
+            msg(p, "§a¡BOOOM!");
+        } else {
+            CREEPER_FUSE.put(p.getUUID(), left - 1);
+        }
+    }
+
+    /** Estela amarilla de las flechas de ki; desaparecen al chocar. */
+    public static void tickKiArrows() {
+        for (Iterator<Arrow> it = KI_ARROWS.iterator(); it.hasNext(); ) {
+            Arrow a = it.next();
+            if (!a.isAlive() || a.tickCount > 80) {
+                if (a.isAlive()) a.discard();
+                it.remove();
+                continue;
+            }
+            if (a.level() instanceof ServerLevel lv) {
+                lv.sendParticles(KI_YELLOW, a.getX(), a.getY(), a.getZ(), 3, 0.05, 0.05, 0.05, 0);
+                if (a.tickCount > 2 && a.position().distanceToSqr(a.xo, a.yo, a.zo) < 1.0E-4) {
+                    lv.sendParticles(ParticleTypes.FLASH, a.getX(), a.getY(), a.getZ(), 1, 0, 0, 0, 0);
+                    lv.sendParticles(KI_YELLOW, a.getX(), a.getY(), a.getZ(), 20, 0.3, 0.3, 0.3, 0);
+                    a.discard();
+                    it.remove();
+                }
+            }
+        }
     }
 
     private static Vec3 rayTarget(ServerPlayer p, double dist) {
