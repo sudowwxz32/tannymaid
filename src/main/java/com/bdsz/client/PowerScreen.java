@@ -23,7 +23,8 @@ public class PowerScreen extends Screen {
     /** Columnas de fases: izquierda bloques 1-3, derecha bloques 4 en adelante. */
     private static final Form[][] COLS = {
             {Form.BASE, Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.BLUE_EVO, Form.ULTRA},
-            {Form.SSJ4, Form.ULTRA_EGO, Form.BEAST, Form.ROSE, Form.LEGENDARY, Form.LEGEND1, Form.LEGEND2, Form.LEGEND3}};
+            {Form.SSJ4, Form.ULTRA_EGO, Form.BEAST, Form.ROSE, Form.LEGENDARY, Form.LEGEND1, Form.LEGEND2, Form.LEGEND3,
+                    Form.UI_SIGN, Form.UI_PERFECT, Form.UI_SELF}};
     private int form, kaioken;
     private int left, top, h;
     private String hint = "";
@@ -42,7 +43,7 @@ public class PowerScreen extends Screen {
         SaiyanState s = state();
         form = s.selected;
         kaioken = s.kaioken;
-        h = 24 + 9 * ROW + 4 * 9 + 8 + 20 + 26 + 16 + 14;
+        h = 24 + 11 * ROW + 4 * 9 + 8 + 20 + 26 + 16 + 14;
         left = (width - W) / 2;
         top = Math.max(4, (height - h) / 2);
     }
@@ -78,7 +79,7 @@ public class PowerScreen extends Screen {
                 if (f.tier() != lastTier) {
                     lastTier = f.tier();
                     String head = Form.blockName(f.tier()).toUpperCase(java.util.Locale.ROOT);
-                    small(g, head, x + 1, y + 1, f.tier() >= 6 ? 0xFFE070FF : 0xFF8A93A6);
+                    small(g, head, x + 1, y + 1, f.tier() == 8 ? 0xFFE8F0FF : f.tier() >= 6 ? 0xFFE070FF : 0xFF8A93A6);
                     y += 9;
                 }
                 drawForm(g, f, x, y, 138, mx, my, s);
@@ -87,7 +88,7 @@ public class PowerScreen extends Screen {
         }
 
         // ---- Kaioken
-        int ky = top + 24 + 9 * ROW + 4 * 9 + 8;
+        int ky = top + 24 + 11 * ROW + 4 * 9 + 8;
         g.drawString(font, "§c§lKaioken", left + 8, ky + 3, 0xFFFFFFFF, true);
         for (int i = 0; i <= 10; i++) {
             int kx = left + 62 + i * 21, lvl = i * 10;
@@ -164,6 +165,7 @@ public class PowerScreen extends Screen {
             case 5 -> "Lista de Entrenamiento IV (Bloque Especial)";
             case 6 -> "Lista de Entrenamiento V (Bloque Especial 2)";
             case 7 -> "Lista de Entrenamiento VI (Bloque Especial 3) + Dominio Total";
+            case 8 -> "Lista de Entrenamiento VII (Bloque Especial 4)";
             default -> "";
         };
     }
@@ -235,7 +237,7 @@ public class PowerScreen extends Screen {
                 y += ROW;
             }
         }
-        int ky = top + 24 + 9 * ROW + 4 * 9 + 8;
+        int ky = top + 24 + 11 * ROW + 4 * 9 + 8;
         for (int i = 0; i <= 10; i++) {
             if (in(mx, my, left + 62 + i * 21, ky, 19, 14)) { kaioken = i * 10; send(); click(); return true; }
         }

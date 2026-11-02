@@ -150,7 +150,7 @@ public class KaoriEntity extends PathfinderMob {
 
     public boolean isWeakened() { return entityData.get(DATA_WEAK); }
 
-    /** Vuela contigo cuando tú vuelas. */
+    /** Cuando tú vuelas, ella saca una pequeña nave de una cápsula y te acompaña sentada en ella (ella no vuela). */
     public boolean isFlying() { return entityData.get(DATA_FLY); }
 
     private int landedTicks;
@@ -163,10 +163,20 @@ public class KaoriEntity extends PathfinderMob {
             entityData.set(DATA_FLY, fly);
             setNoGravity(fly);
             if (fly) {
-                setDeltaMovement(getDeltaMovement().add(0, 0.6, 0));
-                if (level() instanceof ServerLevel sl) sl.sendParticles(ParticleTypes.CLOUD, getX(), getY(), getZ(), 12, 0.4, 0.1, 0.4, 0.05);
-                if (getRandom().nextInt(3) == 0) say(null, pick("¡Espérame! Yo también sé volar, ¿sabes?", "¿Volamos? Perfecto.", "No me dejes atrás."));
-            } else landedTicks = 60;
+                setDeltaMovement(getDeltaMovement().add(0, 0.5, 0));
+                if (level() instanceof ServerLevel sl) {
+                    sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 0.5, getZ(), 40, 0.8, 0.4, 0.8, 0.05);
+                    sl.playSound(null, blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.NEUTRAL, 1.0F, 1.5F);
+                }
+                if (getRandom().nextInt(2) == 0) say(null, pick("¡Cápsula, va! *POP* Mi nave personal. Diseño propio, obviamente.",
+                        "¿Volar? Yo no necesito volar: tengo una nave. Mucho más elegante.", "Súbete al ritmo, yo te sigo en mi nave."));
+            } else {
+                landedTicks = 60;
+                if (level() instanceof ServerLevel sl) {
+                    sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 0.5, getZ(), 30, 0.8, 0.4, 0.8, 0.05);
+                    sl.playSound(null, blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.NEUTRAL, 0.8F, 1.8F);
+                }
+            }
         }
         if (landedTicks > 0) { landedTicks--; fallDistance = 0; }
         if (!fly) return;
@@ -194,9 +204,12 @@ public class KaoriEntity extends PathfinderMob {
         setYRot(yaw);
         yBodyRot = yaw;
         yHeadRot = yaw;
-        if (tickCount % 3 == 0 && getDeltaMovement().lengthSqr() > 0.1 && level() instanceof ServerLevel sl) {
-            sl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(getForm() > 0 ? new org.joml.Vector3f(1F, 0.86F, 0.25F)
-                    : new org.joml.Vector3f(0.95F, 0.95F, 1F), 1.0F), getX(), getY() + 0.9, getZ(), 2, 0.2, 0.2, 0.2, 0);
+        // los motores de la nave
+        if (tickCount % 2 == 0 && level() instanceof ServerLevel sl) {
+            double yr = Math.toRadians(getYRot());
+            double bx = getX() + Math.sin(yr) * 0.9, bz = getZ() - Math.cos(yr) * 0.9;
+            sl.sendParticles(ParticleTypes.SMALL_FLAME, bx, getY() + 0.25, bz, 2, 0.2, 0.05, 0.2, 0.01);
+            if (getDeltaMovement().lengthSqr() > 0.1) sl.sendParticles(ParticleTypes.CLOUD, bx, getY() + 0.25, bz, 1, 0.1, 0.05, 0.1, 0.0);
         }
     }
 
@@ -288,14 +301,14 @@ public class KaoriEntity extends PathfinderMob {
     public int sinceTransform() { return tickCount - entityData.get(DATA_FORM_AT); }
 
     public void setForm(int form, boolean effects) {
-        form = Math.max(0, Math.min(2, form));
+        form = Math.max(0, Math.min(4, form));
         int old = getForm();
         entityData.set(DATA_FORM, form);
         entityData.set(DATA_FORM_AT, tickCount);
-        mod(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, FORM_DMG, form == 0 ? 0 : form == 1 ? 7.0 : 14.0);
-        mod(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, FORM_SPEED, form == 0 ? 0 : form == 1 ? 0.06 : 0.1);
-        mod(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, FORM_ARMOR, form == 0 ? 0 : form == 1 ? 6.0 : 10.0);
-        mod(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, FORM_HP, form == 0 ? 0 : form == 1 ? 10.0 : 20.0);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, FORM_DMG, new double[]{0, 7, 14, 24, 36}[form]);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, FORM_SPEED, new double[]{0, 0.06, 0.1, 0.12, 0.14}[form]);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, FORM_ARMOR, new double[]{0, 6, 10, 14, 18}[form]);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, FORM_HP, new double[]{0, 10, 20, 30, 40}[form]);
         if (getHealth() > getMaxHealth()) setHealth(getMaxHealth());
         if (!effects || !(level() instanceof ServerLevel sl)) return;
         if (form > old) {
@@ -304,7 +317,16 @@ public class KaoriEntity extends PathfinderMob {
             sl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(1.0F, 0.85F, 0.2F), 2.0F),
                     getX(), getY() + 1, getZ(), 120, 1.2, 1.2, 1.2, 0.1);
             sl.sendParticles(ParticleTypes.EXPLOSION, getX(), getY() + 0.2, getZ(), 6, 1.5, 0.1, 1.5, 0);
-            if (form == 2) sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 1, getZ(), 80, 0.8, 1.2, 0.8, 0.4);
+            if (form == 2 || form == 3) sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 1, getZ(), 80 + form * 30, 0.8, 1.2, 0.8, 0.4);
+            if (form == 3) {
+                sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, getX(), getY() + 0.2, getZ(), 1, 0, 0, 0, 0);
+                net.minecraft.world.entity.LightningBolt b = EntityType.LIGHTNING_BOLT.create(sl);
+                if (b != null) { b.moveTo(getX() + 3, getY(), getZ()); b.setVisualOnly(true); sl.addFreshEntity(b); }
+            }
+            if (form == 4) {
+                sl.sendParticles(ParticleTypes.FLAME, getX(), getY() + 1, getZ(), 60, 0.6, 1.0, 0.6, 0.05);
+                sl.sendParticles(ParticleTypes.END_ROD, getX(), getY() + 1, getZ(), 40, 0.5, 1.0, 0.5, 0.05);
+            }
             sl.playSound(null, blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.NEUTRAL, 0.6F, 1.6F);
             sl.playSound(null, blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.NEUTRAL, 1.2F, 0.7F);
             // la onda de choque empuja a los monstruos cercanos
@@ -362,9 +384,10 @@ public class KaoriEntity extends PathfinderMob {
         if (level().isClientSide) return;
         // aura de Super Saiyajin
         if (getForm() > 0 && tickCount % 2 == 0 && level() instanceof ServerLevel asl) {
-            asl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(1.0F, 0.86F, 0.25F), 1.3F),
+            asl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(getForm() == 4 ? new org.joml.Vector3f(1.0F, 0.3F, 0.25F)
+                            : new org.joml.Vector3f(1.0F, 0.86F, 0.25F), 1.3F + (getForm() == 3 ? 0.4F : 0F)),
                     getX(), getY() + 0.2 + getRandom().nextDouble() * 1.8, getZ(), 3, 0.35, 0.1, 0.35, 0.02);
-            if (getForm() == 2 && getRandom().nextInt(3) == 0)
+            if ((getForm() == 2 || getForm() == 3) && getRandom().nextInt(getForm() == 3 ? 2 : 3) == 0)
                 asl.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 1, getZ(), 2, 0.4, 0.8, 0.4, 0.2);
         }
         if (isWeakened()) {

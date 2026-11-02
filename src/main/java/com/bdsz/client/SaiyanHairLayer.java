@@ -106,7 +106,7 @@ public class SaiyanHairLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
 
         long since = ClientStates.ticksSinceTransform(player.getId());
         boolean intense = !base && (s.charging || s.powering > 0 || since < 25);
-        boolean calm = f == Form.ULTRA || base;
+        boolean calm = f == Form.ULTRA || f == Form.UI_PERFECT || f == Form.UI_SELF || base;
         float growth = s.powering > 0 ? 0.25F + 0.75F * (1.0F - (float) s.powering / Math.max(1, s.poweringTotal)) : 1.0F;
         float amp = calm ? (intense ? 0.05F : 0.02F) : intense ? 0.16F : 0.045F;
         float freq = calm ? 0.22F : intense ? 1.3F : 0.5F;

@@ -8,8 +8,9 @@ import java.util.EnumSet;
  */
 public enum Lineage {
     NONE("", 0xFFFFFF, EnumSet.noneOf(Form.class), ""),
-    G("Bloque G", 0xFF9A2A, EnumSet.of(Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.ULTRA),
-            "Del Super Saiyajin Falso al Ultra Instinto"),
+    G("Bloque G", 0xFF9A2A, EnumSet.of(Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.ULTRA,
+            Form.UI_SIGN, Form.UI_PERFECT, Form.UI_SELF),
+            "Del Super Saiyajin Falso a los tres Ultra Instintos"),
     V("Bloque V", 0x3A7BFF, EnumSet.of(Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.BLUE, Form.BLUE_EVO, Form.SSJ4, Form.ULTRA_EGO),
             "Del Falso al Blue, Blue Evolución, Fase 4 y Ultra Ego"),
     A("Bloque A", 0xD9B44A, EnumSet.of(Form.FALSE_SSJ, Form.SSJ1, Form.SSJ2, Form.SSJ3, Form.GOD, Form.SSJ4, Form.BEAST),

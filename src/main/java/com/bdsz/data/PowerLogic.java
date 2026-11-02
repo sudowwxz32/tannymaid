@@ -131,6 +131,16 @@ public final class PowerLogic {
 
     /** Ultra Instinto: silencio, calma y un brillo plateado que gira despacio. */
     private static void calmPowerUp(ServerPlayer p, SaiyanState s, ServerLevel lv, float progress) {
+        if (Form.byId(s.selected) == Form.UI_SELF) {
+            // Ultra Instinto Propio: luz blanca pura y serena, como un aura divina; sin ruido ni temblores
+            double hal = 0.55;
+            for (int i = 0; i < 16; i++) {
+                double a = i * Math.PI / 8 + s.powering * 0.05;
+                lv.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F), 0.7F), p.getX() + Math.cos(a) * hal,
+                        p.getY() + 2.25, p.getZ() + Math.sin(a) * hal, 1, 0, 0, 0, 0);          // halo sobre la cabeza
+            }
+            if (s.powering % 4 == 0) lv.sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 0.1, p.getZ(), 2, 0.6, 0.0, 0.6, 0.01);
+        }
         double a = s.powering * 0.35;
         for (int i = 0; i < 3; i++) {
             double ang = a + i * Math.PI * 2 / 3;
@@ -147,9 +157,45 @@ public final class PowerLogic {
         }
     }
 
+    /**
+     * Ultra Instinto Imperfecto: blanco, exagerado y dramático. Esfera de ki blanca que destella, rayos, ráfagas de
+     * aura y ki blanca y un ciclón blanco hasta el cielo (la esfera y el ciclón se dibujan en el cliente: UltraFx).
+     */
+    private static void ultraSignPowerUp(ServerPlayer p, SaiyanState s, ServerLevel lv, float progress, double x, double y, double z) {
+        DustParticleOptions white = new DustParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F), 2.4F);
+        // ráfagas de ki blanco que salen disparadas
+        for (int i = 0; i < 6 + (int) (progress * 18); i++) {
+            double a = lv.random.nextDouble() * Math.PI * 2, el = (lv.random.nextDouble() - 0.3) * 1.2;
+            lv.sendParticles(ParticleTypes.END_ROD, x, y + 1.0, z, 0, Math.cos(a) * Math.cos(el), Math.sin(el), Math.sin(a) * Math.cos(el),
+                    0.5 + progress * 0.8);
+        }
+        lv.sendParticles(white, x, y + 1.0, z, 10 + (int) (progress * 30), 0.6 + progress * 1.6, 1.0 + progress * 1.4, 0.6 + progress * 1.6, 0.0);
+        // espiral del ciclón blanco
+        for (int i = 0; i < 8; i++) {
+            double h = lv.random.nextDouble() * (6 + progress * 30), a = s.powering * 0.5 + h * 0.4 + i;
+            double r = 1.0 + h * 0.12;
+            lv.sendParticles(ParticleTypes.CLOUD, x + Math.cos(a) * r, y + h, z + Math.sin(a) * r, 0, -Math.sin(a), 0.3, Math.cos(a), 0.3);
+        }
+        if (s.powering % 5 == 0) lv.sendParticles(ParticleTypes.FLASH, x, y + 1, z, 1, 0, 0, 0, 0);
+        // rayos (solo visuales) que caen alrededor
+        if (progress > 0.2F && s.powering % 9 == 0) {
+            net.minecraft.world.entity.LightningBolt bolt = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(lv);
+            if (bolt != null) {
+                double a = lv.random.nextDouble() * Math.PI * 2, r = 3 + lv.random.nextDouble() * 6;
+                bolt.moveTo(x + Math.cos(a) * r, y, z + Math.sin(a) * r);
+                bolt.setVisualOnly(true);
+                lv.addFreshEntity(bolt);
+            }
+        }
+        if (s.powering % 7 == 0) lv.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 2.0F, 0.5F + progress);
+        if (s.powering % 11 == 0) lv.playSound(null, p.blockPosition(), SoundEvents.ELYTRA_FLYING, SoundSource.PLAYERS, 0.6F, 1.6F);
+    }
+
     private static void dramaticPowerUp(ServerPlayer p, SaiyanState s, ServerLevel lv, Form f, float progress, double x, double y, double z) {
         float drama = Math.max(0.3F, f.drama());
-        Vector3f col = f == Form.BASE ? new Vector3f(1.0F, 0.15F, 0.1F) : new Vector3f(f.ar(), f.ag(), f.ab());
+        if (f == Form.UI_SIGN) ultraSignPowerUp(p, s, lv, progress, x, y, z);
+        Vector3f col = f == Form.BASE ? new Vector3f(1.0F, 0.15F, 0.1F) : f == Form.UI_SIGN ? new Vector3f(1.0F, 1.0F, 1.0F)
+                : new Vector3f(f.ar(), f.ag(), f.ab());
         int oc = f == Form.BASE ? 0x7A0A06 : f.outerColor();
         Vector3f outer = new Vector3f(((oc >> 16) & 255) / 255F, ((oc >> 8) & 255) / 255F, (oc & 255) / 255F);
         DustParticleOptions dust = new DustParticleOptions(col, 1.5F + progress * 1.5F);
@@ -834,7 +880,7 @@ public final class PowerLogic {
             p.sendSystemMessage(Component.literal("§6§l¡Modo Ozaru desbloqueado! §r§7Pulsa §eO§7 para convertirte en un mono gigante (otra vez §eO§7 para volver)."));
             return true;
         }
-        if (targetTier == 7 || targetTier == 8) {
+        if (targetTier == 7 || targetTier == 8 || targetTier == 9) {
             // 7 = Lista del Bloque Especial 2 · 8 = Lista del Bloque Especial 3
             int newTier = targetTier - 1;
             if (s.tier >= newTier) { msg(p, "§7Ya desbloqueaste el " + Form.blockName(newTier) + "."); return false; }

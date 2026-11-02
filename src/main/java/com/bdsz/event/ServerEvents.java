@@ -91,14 +91,8 @@ public final class ServerEvents {
     /** Ultra Instinto: esquiva automáticamente parte de los ataques. */
     @SubscribeEvent
     public static void attack(LivingAttackEvent e) {
-        if (!(e.getEntity() instanceof ServerPlayer p) || e.getSource().getEntity() == null) return;
-        SaiyanState s = SaiyanData.get(p);
-        if (s.saiyan && s.activeForm() == Form.ULTRA && p.getRandom().nextFloat() < 0.35F) {
-            e.setCanceled(true);
-            p.serverLevel().sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 1, p.getZ(), 12, 0.4, 0.6, 0.4, 0.02);
-            p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_NODAMAGE, SoundSource.PLAYERS, 1.0F, 1.6F);
-            PowerLogic.msg(p, "§f§oEsquivado");
-        }
+        if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        if (com.bdsz.data.UltraDodge.onAttack(p, e.getSource())) e.setCanceled(true);
     }
 
     /** Último Entrenamiento y Dominio Total solo se pueden craftear con todo desbloqueado hasta Ultra Ego. */
@@ -173,6 +167,7 @@ public final class ServerEvents {
     public static void tick(TickEvent.PlayerTickEvent e) {
         if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
         com.bdsz.data.FusionLogic.tick(p);
+        com.bdsz.data.UltraDodge.tick(p);
         SaiyanState s = SaiyanData.get(p);
         if (!s.saiyan) return;
         if (s.infiniteKi() && s.ki < s.maxKi()) {

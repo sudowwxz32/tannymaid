@@ -27,11 +27,15 @@ public enum Form {
     LEGEND1("Legendario Fase 1", 0x1A1A22, 21.0F, 1500, 0.88F, 210, 0.82F, 7.5F, 5, 2400, 3.0F, 0.21F, 8, 0x3CFF4A, 1.75F),
     LEGEND2("Legendario Fase 2", 0xFFE040, 25.0F, 1800, 0.91F, 250, 0.92F, 8.0F, 5, 2800, 2.5F, 0.22F, 8, 0xFFE84A, 1.9F),
     LEGEND3("Legendario Fase 3", 0x4CFF4C, 34.0F, 2600, 0.95F, 320, 1.05F, 9.0F, 5, 3400, 0.0F, 0.25F, 10, 0x40FF40, 2.15F),
-    BLUE_EVO("Super Saiyajin Blue Evolución", 0x2F6BFF, 10.0F, 90, 0.72F, 85, 0.58F, 4.8F, 4, 1000, 4.5F, 0.16F, 11, 0x3A86FF, 1.45F);
+    BLUE_EVO("Super Saiyajin Blue Evolución", 0x2F6BFF, 10.0F, 90, 0.72F, 85, 0.58F, 4.8F, 4, 1000, 4.5F, 0.16F, 11, 0x3A86FF, 1.45F),
+    // ---- Bloque Especial 4: los tres Ultra Instintos (entre las fases más fuertes, junto a Ultra Ego y Rosé)
+    UI_SIGN("Ultra Instinto Imperfecto", 0x16161C, 18.0F, 1200, 0.86F, 150, 0.80F, 7.2F, 5, 2000, 2.5F, 0.21F, 3, 0xA8ADB8, 1.65F),
+    UI_PERFECT("Ultra Instinto Perfecto", 0xD9DEE8, 19.5F, 1350, 0.89F, 170, 0.88F, 7.8F, 5, 2300, 2.0F, 0.22F, 3, 0xC2E4FF, 1.3F),
+    UI_SELF("Ultra Instinto Propio", 0xF4F6FC, 20.5F, 1450, 0.91F, 190, 0.92F, 8.2F, 5, 2600, 2.0F, 0.23F, 3, 0xFFFFFF, 1.2F);
 
     /** Orden en que se muestran las fases en los menús. */
     public static final Form[] ORDERED = {BASE, FALSE_SSJ, SSJ1, SSJ2, SSJ3, GOD, BLUE, BLUE_EVO, ULTRA, SSJ4, ULTRA_EGO,
-            BEAST, ROSE, LEGENDARY, LEGEND1, LEGEND2, LEGEND3};
+            BEAST, ROSE, LEGENDARY, LEGEND1, LEGEND2, LEGEND3, UI_SIGN, UI_PERFECT, UI_SELF};
 
     public int order() {
         for (int i = 0; i < ORDERED.length; i++) if (ORDERED[i] == this) return i;
@@ -44,6 +48,7 @@ public enum Form {
             case 5 -> "Bloque Especial";
             case 6 -> "Bloque Especial 2";
             case 7 -> "Bloque Especial 3";
+            case 8 -> "Bloque Especial 4";
             default -> "Bloque " + tier;
         };
     }
@@ -61,6 +66,9 @@ public enum Form {
             case LEGEND2 -> 0.35F;
             case LEGEND3 -> 0.4F;
             case BEAST -> 0.6F;
+            case UI_SIGN -> 0.1F;                 // como el Dios, pero negro
+            case UI_PERFECT -> 0.2F;
+            case UI_SELF -> 0.15F;
         };
     }
 
@@ -79,6 +87,9 @@ public enum Form {
             case LEGEND2 -> 1.45F;
             case LEGEND3 -> 1.55F;
             case BEAST -> 1.7F;
+            case UI_SIGN -> 1.0F;
+            case UI_PERFECT -> 1.05F;
+            case UI_SELF -> 1.05F;
         };
     }
 
@@ -134,6 +145,7 @@ public enum Form {
             case SSJ4, ULTRA_EGO -> 5;
             case BEAST, LEGENDARY, ROSE -> 6;                 // 6 = Bloque Especial 2
             case LEGEND1, LEGEND2, LEGEND3 -> 7;               // 7 = Bloque Especial 3
+            case UI_SIGN, UI_PERFECT, UI_SELF -> 8;            // 8 = Bloque Especial 4
         };
     }
 
@@ -157,6 +169,9 @@ public enum Form {
             case LEGEND2 -> 1.3F;
             case LEGEND3 -> 1.48F;
             case BLUE_EVO -> 1.08F;
+            case UI_SIGN -> 1.04F;
+            case UI_PERFECT -> 1.06F;
+            case UI_SELF -> 1.05F;
         };
     }
 
@@ -185,6 +200,8 @@ public enum Form {
             case BLUE_EVO -> 0xE8F4FF;
             case LEGENDARY -> 0xA8FF70;
             case BLUE -> 0x9CE8FF;
+            case UI_SIGN -> 0xFFFFFF;
+            case UI_PERFECT -> 0xD8F0FF;
             default -> 0xC0E0FF;
         };
     }
@@ -192,7 +209,7 @@ public enum Form {
     /** Fases con rayos eléctricos en el aura. */
     public boolean lightningAura() {
         return this == SSJ2 || this == SSJ3 || this == ULTRA_EGO || this == BEAST || this == ROSE || this == LEGENDARY
-                || this == LEGEND1 || this == LEGEND2 || this == LEGEND3 || this == BLUE_EVO;
+                || this == LEGEND1 || this == LEGEND2 || this == LEGEND3 || this == BLUE_EVO || this == UI_SIGN;
     }
 
     /** Color de la capa exterior del aura (el Rosé tiene una segunda aura rosa oscura). */
@@ -207,6 +224,8 @@ public enum Form {
             case LEGENDARY -> 0x1E9A2A;
             case GOD -> 0xFF8A2A;
             case ULTRA_EGO -> 0x5A1AA8;
+            case UI_SIGN -> 0xF4F6FF;             // aura gris con el borde blanco
+            case UI_PERFECT -> 0xEAF6FF;
             default -> auraColor;
         };
     }
@@ -217,7 +236,21 @@ public enum Form {
     }
 
     /** Ultra Instinto es la única transformación tranquila y relajada. */
-    public boolean calm() { return this == ULTRA; }
+    public boolean calm() { return this == ULTRA || this == UI_SELF; }
+
+    /** Los tres Ultra Instintos del Bloque Especial 4 (y el original): el cuerpo esquiva solo. */
+    public boolean ultraInstinct() { return this == ULTRA || this == UI_SIGN || this == UI_PERFECT || this == UI_SELF; }
+
+    /** Probabilidad de esquivar automáticamente. */
+    public float dodgeChance() {
+        return switch (this) {
+            case ULTRA -> 0.35F;
+            case UI_SIGN -> 0.6F;
+            case UI_PERFECT -> 0.8F;
+            case UI_SELF -> 0.9F;
+            default -> 0.0F;
+        };
+    }
 
     /** Qué tan dramática es la transformación (0..1): aura de fuego, escombros, temblor. */
     public float drama() {
@@ -232,6 +265,9 @@ public enum Form {
             case LEGEND2, LEGEND3 -> 1.0F;
             case BLUE_EVO -> 0.8F;
             case LEGENDARY -> 1.0F;
+            case UI_SIGN -> 1.0F;                 // blanca, exagerada y dramática
+            case UI_PERFECT -> 0.3F;              // mucho más tranquila
+            case UI_SELF -> 0.0F;                 // pura calma
         };
     }
 

@@ -47,6 +47,7 @@ public final class BodyRenderEvents {
         if (e.getEntity() instanceof AbstractClientPlayer p) {
             EnergyCyclone.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
             FusionFx.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
+            UltraFx.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
             EnergyCyclone.pillar(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
             KiFlameAura.render(p, e.getPartialTick(), e.getPoseStack(), e.getMultiBufferSource());
         }

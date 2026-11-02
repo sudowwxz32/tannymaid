@@ -157,6 +157,29 @@ public final class SaiyanPoses {
                 m.body.xRot = 0.05F + Mth.sin(age * 0.1F) * 0.03F;
             }
             if (m.attackTime > 0) punch(m, m.attackTime);
+        } else if (s.transformed && s.activeForm() == com.bdsz.data.Form.UI_PERFECT && m.attackTime <= 0 && limbAmount < 0.3F) {
+            // Ultra Instinto Perfecto: un poco encorvado, como cansado; brazos sueltos que cuelgan hacia adelante
+            float br = Mth.sin(age * 0.06F) * 0.025F;
+            m.body.xRot = 0.24F + br;
+            m.head.xRot = m.head.xRot * 0.6F + 0.18F;
+            m.rightArm.xRot = -0.32F + br;
+            m.rightArm.zRot = 0.08F;
+            m.leftArm.xRot = -0.28F + br;
+            m.leftArm.zRot = -0.08F;
+            m.rightLeg.zRot = 0.06F;
+            m.leftLeg.zRot = -0.06F;
+        } else if (s.transformed && s.activeForm() == com.bdsz.data.Form.UI_SELF && m.attackTime <= 0 && limbAmount < 0.3F) {
+            // Ultra Instinto Propio: pose relajada, serena; una mano abierta frente al pecho, la otra suelta
+            float br = Mth.sin(age * 0.045F);
+            m.body.xRot = -0.02F;
+            m.head.xRot = m.head.xRot * 0.5F - 0.05F + br * 0.02F;
+            m.rightArm.xRot = -1.05F + br * 0.03F;
+            m.rightArm.yRot = -0.45F;
+            m.rightArm.zRot = 0.0F;
+            m.leftArm.xRot = 0.05F;
+            m.leftArm.zRot = -0.12F - br * 0.03F;
+            m.rightLeg.zRot = 0.04F;
+            m.leftLeg.zRot = -0.04F;
         } else if (m.attackTime > 0) {
             punch(m, m.attackTime);       // golpes con más movimiento
         } else {

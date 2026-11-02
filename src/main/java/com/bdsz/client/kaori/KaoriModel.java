@@ -25,7 +25,7 @@ public class KaoriModel extends PlayerModel<KaoriEntity> {
 
     @Override
     public void setupAnim(KaoriEntity e, float limbSwing, float amount, float age, float headYaw, float headPitch) {
-        riding = riding || e.isWeakened();
+        riding = riding || e.isWeakened() || e.isFlying();
         super.setupAnim(e, limbSwing, amount, age, headYaw, headPitch);
         // valores ASIGNADOS (el modelo no reinicia head.zRot / head.y / body.xRot cada fotograma)
         float breath = Mth.sin(age * 0.09F);
@@ -33,20 +33,13 @@ public class KaoriModel extends PlayerModel<KaoriEntity> {
         body.xRot = (crouching ? 0.5F : 0.0F) + breath * 0.012F;
         float tilt = 0.0F;
         if (e.isFlying()) {
-            float k = KaoriRenderer.flySpeed(e, 1.0F);
-            // volando: un puño al frente, el otro brazo pegado, piernas juntas; suspendida: piernas que cuelgan
-            rightArm.xRot = Mth.lerp(k, 0.15F, -2.95F);
-            rightArm.zRot = Mth.lerp(k, 0.2F, -0.05F);
-            leftArm.xRot = Mth.lerp(k, 0.15F, 0.25F) + Mth.sin(age * 0.3F) * 0.05F;
-            leftArm.zRot = -0.15F;
-            rightLeg.xRot = Mth.lerp(k, 0.2F + Mth.sin(age * 0.12F) * 0.12F, 0.06F);
-            leftLeg.xRot = Mth.lerp(k, 0.3F + Mth.sin(age * 0.12F + 1.2F) * 0.12F, -0.06F);
-            // con el cuerpo horizontal la cabeza mira al frente (no al cielo)
-            head.xRot = Mth.lerp(k, head.xRot, -1.25F);
-            head.yRot *= 1.0F - k * 0.7F;
-            body.xRot = 0.0F;
-            rightLeg.zRot = 0.03F;
-            leftLeg.zRot = -0.03F;
+            // sentada en su nave, con las manos en los controles
+            rightArm.xRot = -0.95F + Mth.sin(age * 0.2F) * 0.03F;
+            rightArm.yRot = -0.15F;
+            rightArm.zRot = 0.0F;
+            leftArm.xRot = -0.95F - Mth.sin(age * 0.2F) * 0.03F;
+            leftArm.yRot = 0.15F;
+            leftArm.zRot = 0.0F;
         } else if (e.getForm() > 0 && e.sinceTransform() < 30) {
             // grito al transformarse: puños abajo, pecho afuera, cabeza al cielo
             float tr = Mth.sin(age * 2.5F) * 0.04F;

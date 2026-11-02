@@ -98,11 +98,12 @@ public class KaoriScreen extends Screen {
         add(x + 2 * (bw + g), y, bw + 2, "Mochila", KaoriActions.INVENTORY, 0, "Su inventario, armadura y arma");
         // transformaciones
         int fx = left() + 96, fy = top() + H - 26;
-        String[] fn = {"Base", "SSJ 1", "SSJ 2"};
+        String[] fn = {"Base", "SSJ 1", "SSJ 2", "SSJ 3", "Dios"};
         String[] tips = {"Vuelve a su estado base", "Super Saiyajin: cabello dorado, más fuerza, velocidad, armadura y vida",
-                "Super Saiyajin 2: aún más poder, aura con rayos"};
-        for (int i = 0; i < 3; i++) {
-            add(fx + i * 77, fy, 74, (st.form == i ? "§6▶ §r" : "") + fn[i], KaoriActions.FORM, i, tips[i]);
+                "Super Saiyajin 2: aún más poder, aura con rayos", "Super Saiyajin 3: cabello largo, rayos y un estallido enorme",
+                "Super Saiyajin Dios: cabello rojo y aura divina, su forma más fuerte"};
+        for (int i = 0; i < 5; i++) {
+            add(fx + i * 46, fy, 44, (st.form == i ? "§6" : "") + fn[i], KaoriActions.FORM, i, tips[i]);
         }
     }
 

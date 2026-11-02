@@ -86,7 +86,8 @@ public final class KaoriLayers {
         private static final ResourceLocation TEX = KaoriRenderer.tex("head"), STRAND = KaoriRenderer.tex("hair_strand");
         private final ModelPart root, head, goggles, scrunchie;
         private final KaoriHairMesh mesh = new KaoriHairMesh(KaoriHairLocks.L, HAIR_COLOR);
-        private final KaoriHairMesh ssj = new KaoriHairMesh(KaoriHairLocks.L, SSJ_COLOR), ssj2 = new KaoriHairMesh(KaoriHairLocks.L, SSJ2_COLOR);
+        private final KaoriHairMesh ssj = new KaoriHairMesh(KaoriHairLocks.L, SSJ_COLOR), ssj2 = new KaoriHairMesh(KaoriHairLocks.L, SSJ2_COLOR),
+                ssj3 = new KaoriHairMesh(KaoriHairLocks.L, 0xFFCF2E), god = new KaoriHairMesh(KaoriHairLocks.L, 0xE0304C);
 
         public Head(RenderLayerParent<KaoriEntity, KaoriModel> parent, EntityModelSet models) {
             super(parent);
@@ -112,8 +113,18 @@ public final class KaoriLayers {
             pose.pushPose();
             ph.translateAndRotate(pose);
             int form = e.getForm();
-            KaoriHairMesh hair = form == 2 ? ssj2 : form == 1 ? ssj : mesh;
-            if (form > 0) {
+            KaoriHairMesh hair = switch (form) { case 1 -> ssj; case 2 -> ssj2; case 3 -> ssj3; case 4 -> god; default -> mesh; };
+            if (form == 3) {
+                // Fase 3: cabello mucho más largo y voluminoso (la coleta llega hasta la cintura)
+                pose.translate(0, -0.5F / 16F, 0);
+                pose.scale(1.12F, 1.6F, 1.18F);
+            }
+            if (form == 4) {
+                // Dios: cabello rojo, sereno, apenas se mueve
+                swayX = 0.05F + breeze * 0.5F;
+                swayZ = Mth.sin(age * 0.05F) * 0.02F;
+                light = net.minecraft.client.renderer.LightTexture.FULL_BRIGHT;
+            } else if (form > 0) {
                 // cabello dorado que brilla, se eleva un poco y ondea con el aura
                 swayX = -0.25F + Mth.sin(age * 0.6F) * 0.06F;
                 swayZ = Mth.sin(age * 0.45F) * 0.05F;
@@ -127,6 +138,63 @@ public final class KaoriLayers {
             head.copyFrom(ph);
             root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(TEX)), light, overlay);
             goggles.visible = scrunchie.visible = true;
+        }
+    }
+
+    /** Pequeña nave de cápsula en la que Kaori te acompaña cuando vuelas. */
+    public static final ModelLayerLocation SHIP = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "ship");
+
+    public static net.minecraft.client.model.geom.builders.LayerDefinition ship() {
+        net.minecraft.client.model.geom.builders.MeshDefinition mesh = new net.minecraft.client.model.geom.builders.MeshDefinition();
+        net.minecraft.client.model.geom.builders.PartDefinition root = mesh.getRoot();
+        net.minecraft.client.model.geom.builders.CubeListBuilder hull = net.minecraft.client.model.geom.builders.CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-7.0F, 12.5F, -11.0F, 14.0F, 5.0F, 20.0F)          // casco blanco
+                .texOffs(0, 0).addBox(-5.0F, 13.0F, -15.0F, 10.0F, 4.0F, 4.0F)           // proa
+                .texOffs(0, 0).addBox(-3.0F, 13.5F, -17.0F, 6.0F, 3.0F, 2.0F)
+                .texOffs(0, 32).addBox(-7.3F, 12.2F, -11.3F, 14.6F, 1.0F, 20.6F)         // franja naranja
+                .texOffs(0, 32).addBox(-14.0F, 15.0F, -2.0F, 7.0F, 1.2F, 9.0F)           // alas
+                .texOffs(0, 32).addBox(7.0F, 15.0F, -2.0F, 7.0F, 1.2F, 9.0F)
+                .texOffs(0, 64).addBox(-7.5F, 13.5F, 8.0F, 4.0F, 4.0F, 4.5F)             // motores
+                .texOffs(0, 64).addBox(3.5F, 13.5F, 8.0F, 4.0F, 4.0F, 4.5F)
+                .texOffs(0, 64).addBox(-6.0F, 17.5F, -8.0F, 12.0F, 1.5F, 14.0F)          // panza
+                .texOffs(0, 64).addBox(-14.5F, 14.0F, 4.0F, 1.0F, 3.0F, 3.0F)            // puntas de las alas
+                .texOffs(0, 64).addBox(13.5F, 14.0F, 4.0F, 1.0F, 3.0F, 3.0F);
+        root.addOrReplaceChild("hull", hull, net.minecraft.client.model.geom.PartPose.ZERO);
+        root.addOrReplaceChild("glass", net.minecraft.client.model.geom.builders.CubeListBuilder.create()
+                .texOffs(0, 96).addBox(-6.0F, 6.5F, -11.5F, 12.0F, 6.0F, 1.2F)           // parabrisas
+                .texOffs(0, 96).addBox(-6.2F, 9.0F, -10.5F, 1.0F, 3.5F, 5.0F)
+                .texOffs(0, 96).addBox(5.2F, 9.0F, -10.5F, 1.0F, 3.5F, 5.0F), net.minecraft.client.model.geom.PartPose.ZERO);
+        root.addOrReplaceChild("glow", net.minecraft.client.model.geom.builders.CubeListBuilder.create()
+                .texOffs(0, 32).addBox(-6.5F, 14.5F, 12.5F, 2.0F, 2.0F, 0.6F)            // fuego de los motores
+                .texOffs(0, 32).addBox(4.5F, 14.5F, 12.5F, 2.0F, 2.0F, 0.6F), net.minecraft.client.model.geom.PartPose.ZERO);
+        return net.minecraft.client.model.geom.builders.LayerDefinition.create(mesh, 128, 128);
+    }
+
+    public static class Ship extends RenderLayer<KaoriEntity, KaoriModel> {
+        private static final ResourceLocation TEX = KaoriRenderer.tex("ship");
+        private final ModelPart hull, glass, glow;
+
+        public Ship(RenderLayerParent<KaoriEntity, KaoriModel> parent, EntityModelSet models) {
+            super(parent);
+            ModelPart root = models.bakeLayer(SHIP);
+            hull = root.getChild("hull");
+            glass = root.getChild("glass");
+            glow = root.getChild("glow");
+        }
+
+        @Override
+        public void render(PoseStack pose, MultiBufferSource buf, int light, KaoriEntity e, float limbSwing, float limbAmount,
+                           float partial, float age, float headYaw, float headPitch) {
+            if (!e.isFlying() || e.isInvisible()) return;
+            int overlay = LivingEntityRenderer.getOverlayCoords(e, 0.0F);
+            pose.pushPose();
+            pose.translate(0, Mth.sin(age * 0.15F) * 0.03F, 0);                       // flota suavemente
+            pose.mulPose(com.mojang.math.Axis.ZP.rotation(Mth.sin(age * 0.07F) * 0.04F));
+            hull.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(TEX)), light, overlay);
+            glass.render(pose, buf.getBuffer(RenderType.entityTranslucent(TEX)), light, overlay);
+            float f = 0.75F + 0.25F * Mth.sin(age * 1.3F);
+            glow.render(pose, buf.getBuffer(RenderType.eyes(TEX)), net.minecraft.client.renderer.LightTexture.FULL_BRIGHT, overlay, f, f, f, 1.0F);
+            pose.popPose();
         }
     }
 }

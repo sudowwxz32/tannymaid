@@ -97,6 +97,8 @@ public final class ModRegistry {
             () -> new TrainingListItem(7, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
     public static final RegistryObject<Item> TRAINING_LIST_SPECIAL3 = ITEMS.register("training_list_7",
             () -> new TrainingListItem(8, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
+    public static final RegistryObject<Item> TRAINING_LIST_SPECIAL4 = ITEMS.register("training_list_8",
+            () -> new TrainingListItem(9, new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
 
     public static final RegistryObject<Item> TOTAL_MASTERY = ITEMS.register("training_list_5",
             () -> new TrainingListItem(6, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));

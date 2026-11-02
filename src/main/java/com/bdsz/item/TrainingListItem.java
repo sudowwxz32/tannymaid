@@ -62,6 +62,10 @@ public class TrainingListItem extends Item {
         } else if (tier == 8) {
             tip.add(Component.literal("§a§lBloque Especial 3: §r§eLegendario Fase 1, Fase 2 y Fase 3"));
             tip.add(Component.literal("§8Requiere el Bloque Especial 2 y el Dominio Total"));
+        } else if (tier == 9) {
+            tip.add(Component.literal("§f§lBloque Especial 4: §r§bUltra Instinto Imperfecto, Perfecto y Propio"));
+            tip.add(Component.literal("§7El cuerpo esquiva solo: golpes, proyectiles y explosiones"));
+            tip.add(Component.literal("§8Requiere el Bloque Especial 3"));
         } else if (tier == 6) {
             tip.add(Component.literal("§d§lDominio Total: §r§e" + forms));
             tip.add(Component.literal("§dDesbloquea el Modo Ozaru"));

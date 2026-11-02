@@ -82,6 +82,7 @@ public final class ClientModEvents {
         e.registerLayerDefinition(KI_BLAST, KiBlastRenderer::createLayer);
         e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.OUTFIT, com.bdsz.client.kaori.KaoriModels::createOutfit);
         e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.HEAD, com.bdsz.client.kaori.KaoriModels::createHead);
+        e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.SHIP, com.bdsz.client.kaori.KaoriLayers::ship);
         e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.ARMOR_INNER, com.bdsz.client.kaori.KaoriLayers::armorInner);
         e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.ARMOR_OUTER, com.bdsz.client.kaori.KaoriLayers::armorOuter);
     }

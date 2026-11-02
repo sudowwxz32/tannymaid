@@ -94,3 +94,18 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
   inclinándose), suspendida queda de pie con las piernas colgando. Ya no se asfixia ni se daña con bloques o paredes.
 - Solo puede haber una Kaori por jugador: la cápsula trae a la misma (con su mochila, equipo y casa) aunque esté
   lejos, la copia vieja desaparece sola, y el huevo no crea otra si ya tienes una.
+
+## 8.0.0 — Bloque Especial 4: los tres Ultra Instintos
+- **Lista de Entrenamiento VII** (mapa, estrella del Nether, 2 diamantes, 2 fragmentos de amatista, lingote de ki
+  azul y negro; requiere el Bloque Especial 3) desbloquea el **Bloque Especial 4**:
+  - **Ultra Instinto Imperfecto**: cabello negro estilo Dios, aura gris con rayos blancos; transformación blanca,
+    exagerada y dramática: esfera de ki blanca que destella, rayos, ráfagas de ki y un ciclón blanco hasta el cielo.
+  - **Ultra Instinto Perfecto**: cabello plateado, aura blanca-azul clara; transformación tranquila; cuerpo un poco
+    encorvado, como cansado.
+  - **Ultra Instinto Propio**: aura blanca pura y divina (halo), transformación pacífica; pose serena y relajada.
+- **El cuerpo se mueve solo**: esquivan golpes, flechas, bolas de fuego y explosiones (60 %, 80 % y 90 %); se
+  teletransportan al cielo, a otro punto del suelo o detrás del atacante (y contraatacan); ven venir proyectiles,
+  TNT y creepers y se apartan antes del impacto. Están entre las fases más fuertes (por encima de Gohan Bestia,
+  Rosé y Legendario Z).
+- **Kaori** ya no vuela: cuando vuelas saca una pequeña nave de una cápsula y te acompaña sentada en ella.
+  Dos fases nuevas: **Super Saiyajin 3** (cabello largo) y **Super Saiyajin Dios** (cabello rojo).

@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:map"
+    },
+    {
+      "item": "minecraft:nether_star"
+    },
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:amethyst_shard"
+    },
+    {
+      "item": "minecraft:amethyst_shard"
+    },
+    {
+      "item": "blockdragonsuperz:blue_ki_ingot"
+    },
+    {
+      "item": "blockdragonsuperz:black_ki_ingot"
+    }
+  ],
+  "result": {
+    "item": "blockdragonsuperz:training_list_8",
+    "count": 1
+  }
+}
