@@ -28,11 +28,55 @@ import net.minecraft.resources.ResourceLocation;
 public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     public static final ModelLayerLocation WIDE = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "fusion_wide"), "main");
     public static final ModelLayerLocation SLIM = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "fusion_slim"), "main");
+    public static final ModelLayerLocation GI_WIDE = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "fusion_gi_wide"), "main");
+    public static final ModelLayerLocation GI_SLIM = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "fusion_gi_slim"), "main");
     public static final ModelLayerLocation EARRINGS = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "fusion_earrings"), "main");
     private static final ResourceLocation EAR_TEX = tex("earring");
 
     private final PlayerModel<AbstractClientPlayer> wide, slim;
     private final ModelPart earRoot, earHead, earR, earL;
+    private final Gi giWide, giSlim;
+
+    /** Traje 3D de la fusión (pantalón de karate, obi, guantes, pecho del mob y sus piezas 3D). */
+    private static final class Gi {
+        final ModelPart root, head, body, rightArm, leftArm, rightLeg, leftLeg;
+        final java.util.Map<String, ModelPart> parts = new java.util.HashMap<>();
+
+        Gi(ModelPart root) {
+            this.root = root;
+            head = root.getChild("head");
+            body = root.getChild("body");
+            rightArm = root.getChild("right_arm");
+            leftArm = root.getChild("left_arm");
+            rightLeg = root.getChild("right_leg");
+            leftLeg = root.getChild("left_leg");
+            for (String[] pr : FusionGiModels.PARTS) parts.put(pr[1], root.getChild(pr[0]).getChild(pr[1]));
+        }
+
+        void pose(PlayerModel<?> m) {
+            ModelPart[][] pairs = {{m.head, head}, {m.body, body}, {m.rightArm, rightArm}, {m.leftArm, leftArm},
+                    {m.rightLeg, rightLeg}, {m.leftLeg, leftLeg}};
+            for (ModelPart[] pr : pairs) {
+                pr[1].copyFrom(pr[0]);
+                pr[1].xScale = pr[0].xScale;
+                pr[1].yScale = pr[0].yScale;
+                pr[1].zScale = pr[0].zScale;
+            }
+        }
+
+        void show(String mob, boolean chestArmor, boolean legArmor) {
+            for (java.util.Map.Entry<String, ModelPart> e : parts.entrySet()) {
+                String n = e.getKey();
+                boolean own = n.startsWith("zombie_") || n.startsWith("skeleton_") || n.startsWith("enderman_")
+                        || n.startsWith("creeper_") || n.startsWith("golem_") || n.startsWith("warden_");
+                boolean v = own ? n.startsWith(mob + "_") : true;
+                if (chestArmor && (n.equals("chest") || n.startsWith("shoulder_") || n.startsWith("skeleton_") || n.startsWith("golem_")
+                        || n.startsWith("zombie_") || n.startsWith("creeper_"))) v = false;
+                if (legArmor && (n.equals("hips") || n.startsWith("pant_") || n.startsWith("ankle_") || n.startsWith("obi"))) v = false;
+                e.getValue().visible = v;
+            }
+        }
+    }
 
     public FusionLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent, EntityModelSet models) {
         super(parent);
@@ -42,6 +86,8 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
         earHead = earRoot.getChild("head");
         earR = earHead.getChild("ear_r");
         earL = earHead.getChild("ear_l");
+        giWide = new Gi(models.bakeLayer(GI_WIDE));
+        giSlim = new Gi(models.bakeLayer(GI_SLIM));
     }
 
     private static ResourceLocation tex(String n) {
@@ -54,6 +100,14 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
 
     public static LayerDefinition createSlim() {
         return LayerDefinition.create(PlayerModel.createMesh(new CubeDeformation(0.28F), true), 64, 64);
+    }
+
+    public static LayerDefinition createGiWide() {
+        return FusionGiModels.createWide();
+    }
+
+    public static LayerDefinition createGiSlim() {
+        return FusionGiModels.createSlim();
     }
 
     public static LayerDefinition createEarrings() {
@@ -78,14 +132,28 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
         int overlay = LivingEntityRenderer.getOverlayCoords(p, 0.0F);
         Fusion f = Fusion.byId(s.fusion);
         if (f != Fusion.NONE && s.fusing == 0) {
-            PlayerModel<AbstractClientPlayer> m = "slim".equals(p.getModelName()) ? slim : wide;
+            boolean isSlim = "slim".equals(p.getModelName());
+            String name = f.name().toLowerCase(java.util.Locale.ROOT);
+            // la cara: solo un toque del mob (media cara, ojos), no una plantilla por todo el cuerpo
+            PlayerModel<AbstractClientPlayer> m = isSlim ? slim : wide;
             parent.copyPropertiesTo(m);
             copyScale(parent, m);
-            String name = f.name().toLowerCase(java.util.Locale.ROOT);
+            m.setAllVisible(false);
+            m.head.visible = true;
             m.renderToBuffer(pose, buf.getBuffer(RenderType.entityCutoutNoCull(tex(name))), light, overlay, 1, 1, 1, 1);
-            if (f == Fusion.ENDERMAN || f == Fusion.WARDEN || f == Fusion.GOLEM) {
-                float pulse = f == Fusion.WARDEN ? 0.7F + 0.3F * net.minecraft.util.Mth.sin(age * 0.15F) : 1.0F;
-                m.renderToBuffer(pose, buf.getBuffer(RenderType.eyes(tex(name + "_glow"))), LightTexture.FULL_BRIGHT, overlay, pulse, pulse, pulse, 1);
+            float pulse = f == Fusion.WARDEN ? 0.7F + 0.3F * net.minecraft.util.Mth.sin(age * 0.15F) : 1.0F;
+            if (f == Fusion.ENDERMAN || f == Fusion.GOLEM) {
+                m.renderToBuffer(pose, buf.getBuffer(RenderType.eyes(tex(name + "_glow"))), LightTexture.FULL_BRIGHT, overlay, 1, 1, 1, 1);
+            }
+            m.setAllVisible(true);
+            // traje 3D: pantalón de karate azul, obi azul, guantes blancos y el pecho del mob con sus piezas 3D
+            Gi gi = isSlim ? giSlim : giWide;
+            gi.pose(parent);
+            gi.show(name, !p.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).isEmpty(),
+                    !p.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS).isEmpty());
+            gi.root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(tex("gi_" + name))), light, overlay);
+            if (f == Fusion.WARDEN || f == Fusion.ENDERMAN) {
+                gi.root.render(pose, buf.getBuffer(RenderType.eyes(tex("gi_" + name + "_glow"))), LightTexture.FULL_BRIGHT, overlay, pulse, pulse, pulse, 1);
             }
         }
         // aretes dorados: uno al ponértelo, los dos cuando estás fusionado

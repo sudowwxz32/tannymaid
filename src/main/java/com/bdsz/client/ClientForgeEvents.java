@@ -91,6 +91,10 @@ public final class ClientForgeEvents {
         while (ClientModEvents.FUSION.consumeClick()) {
             Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.FUSION_ABILITY, 0, 0));
         }
+        // N: separarse de la fusión cuando quieras
+        while (ClientModEvents.DEFUSE.consumeClick()) {
+            Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.DEFUSE, 0, 0));
+        }
         // H: pulsar para empezar a recargar ki, pulsar otra vez para detener
         while (ClientModEvents.CHARGE.consumeClick()) {
             if (!mine.saiyan) notSaiyan(mc);

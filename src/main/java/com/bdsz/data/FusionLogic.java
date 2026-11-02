@@ -274,6 +274,19 @@ public final class FusionLogic {
         SaiyanData.set(p, s);
     }
 
+    /** Tecla N: separarse a voluntad (los aretes se rompen). */
+    public static void defuseByChoice(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (s.fusion <= 0 && s.fusing <= 0) {
+            msg(p, "§7No estás fusionado.");
+            return;
+        }
+        ServerLevel lv = p.serverLevel();
+        lv.sendParticles(ParticleTypes.FLASH, p.getX(), p.getY() + 1, p.getZ(), 1, 0, 0, 0, 0);
+        lv.playSound(null, p.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.2F, 0.8F);
+        defuse(p, s, false);
+    }
+
     // ------------------------------------------------------------------ cada tick del jugador
 
     public static void tick(ServerPlayer p) {

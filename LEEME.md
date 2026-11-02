@@ -16,3 +16,11 @@ Cabello 3D: `python3 tools/gen_hair.py`
 Movilidad: pose de recarga con pulsos de energía, golpes con giro de cadera e impulso hacia el enemigo,
 retroceso al lanzar Kamehameha / Big Bang, vuelo que se inclina en las curvas, flota subiendo y bajando y
 cámara que se mece un poco al volar.
+
+## 7.2.0 — Traje de fusión 3D
+Tecla **N**: separarte de la fusión cuando quieras (los aretes se rompen). Al fusionarte llevas un traje 3D:
+pantalón de karate saiyajin azul (zubon holgado con puño en el tobillo), obi azul con nudo y puntas, guantes
+blancos y el pecho y los hombros del mob, con piezas 3D propias: costillas y columna (esqueleto), placa de hierro
+y enredaderas (gólem), zarcillos brillantes y alma en el pecho (warden), jirones de camisa (zombi), púas con
+punta morada (enderman) y capucha verde (creeper). La cara solo toma un toque del mob. Geometría y texturas:
+`python3 tools/gen_fusion_gi.py`.

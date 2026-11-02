@@ -42,6 +42,7 @@ public final class ClientModEvents {
     public static final ModelLayerLocation HAIR = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "saiyan_hair"), "main");
 
     public static final KeyMapping FUSION = new KeyMapping("key.blockdragonsuperz.fusion", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, CATEGORY);
+    public static final KeyMapping DEFUSE = new KeyMapping("key.blockdragonsuperz.defuse", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, CATEGORY);
 
     private ClientModEvents() {}
 
@@ -59,6 +60,7 @@ public final class ClientModEvents {
         e.register(OZARU);
         e.register(QUICK);
         e.register(FUSION);
+        e.register(DEFUSE);
     }
 
     @SubscribeEvent
@@ -67,6 +69,8 @@ public final class ClientModEvents {
         e.registerLayerDefinition(FusionLayer.WIDE, FusionLayer::createWide);
         e.registerLayerDefinition(FusionLayer.SLIM, FusionLayer::createSlim);
         e.registerLayerDefinition(FusionLayer.EARRINGS, FusionLayer::createEarrings);
+        e.registerLayerDefinition(FusionLayer.GI_WIDE, FusionLayer::createGiWide);
+        e.registerLayerDefinition(FusionLayer.GI_SLIM, FusionLayer::createGiSlim);
         e.registerLayerDefinition(BUST_SKIN, FemaleBodyLayer::createSkin);
         e.registerLayerDefinition(BUST_ARMOR, FemaleBodyLayer::createArmor);
         e.registerLayerDefinition(SSJ4_FUR, Ssj4FurLayer::createWide);

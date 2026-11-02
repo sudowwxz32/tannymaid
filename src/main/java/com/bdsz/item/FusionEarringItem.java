@@ -38,6 +38,6 @@ public class FusionEarringItem extends Item {
         tip.add(Component.literal("§61) Clic derecho: ponte un arete"));
         tip.add(Component.literal("§62) Clic derecho otra vez: lanza el otro arete a un mob"));
         tip.add(Component.literal("§7Zombi, esqueleto, enderman, creeper, gólem de hierro o warden"));
-        tip.add(Component.literal("§7Shift + clic derecho: quitarte el arete · Tecla §eX§7: habilidad de la fusión"));
+        tip.add(Component.literal("§7Shift + clic derecho: quitarte el arete · Tecla §eX§7: habilidad · §eN§7: separarte"));
     }
 }
