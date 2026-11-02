@@ -32,7 +32,14 @@ public class KaoriModel extends PlayerModel<KaoriEntity> {
         head.y = (crouching ? 4.2F : 0.0F) + breath * 0.2F;
         body.xRot = (crouching ? 0.5F : 0.0F) + breath * 0.012F;
         float tilt = 0.0F;
-        if (e.isWeakened()) {
+        if (e.getForm() > 0 && e.sinceTransform() < 30) {
+            // grito al transformarse: puños abajo, pecho afuera, cabeza al cielo
+            float tr = Mth.sin(age * 2.5F) * 0.04F;
+            head.xRot = -0.6F + tr;
+            rightArm.xRot = 0.4F + tr; rightArm.zRot = 0.45F;
+            leftArm.xRot = 0.4F - tr; leftArm.zRot = -0.45F;
+            body.xRot = -0.15F;
+        } else if (e.isWeakened()) {
             head.xRot = 0.45F;
             tilt = 0.12F;
         } else if (e.isTalking()) {

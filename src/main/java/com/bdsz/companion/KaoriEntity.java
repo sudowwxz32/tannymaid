@@ -49,6 +49,12 @@ public class KaoriEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> DATA_WEAK = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_TALK = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DATA_COLLECT = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> DATA_FORM = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_FORM_AT = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.INT);
+    private static final UUID FORM_DMG = UUID.fromString("6b1c9a52-1f0e-4d5b-9c51-3a8e0f6c2a11");
+    private static final UUID FORM_SPEED = UUID.fromString("6b1c9a52-1f0e-4d5b-9c51-3a8e0f6c2a12");
+    private static final UUID FORM_ARMOR = UUID.fromString("6b1c9a52-1f0e-4d5b-9c51-3a8e0f6c2a13");
+    private static final UUID FORM_HP = UUID.fromString("6b1c9a52-1f0e-4d5b-9c51-3a8e0f6c2a14");
 
     public static final double BASE_HEALTH = 30.0D;
 
@@ -95,6 +101,8 @@ public class KaoriEntity extends PathfinderMob {
         entityData.define(DATA_WEAK, false);
         entityData.define(DATA_TALK, -1000);
         entityData.define(DATA_COLLECT, true);
+        entityData.define(DATA_FORM, 0);
+        entityData.define(DATA_FORM_AT, -1000);
     }
 
     @Override
@@ -140,6 +148,50 @@ public class KaoriEntity extends PathfinderMob {
 
     public boolean isWeakened() { return entityData.get(DATA_WEAK); }
 
+    /** 0 base, 1 Super Saiyajin, 2 Super Saiyajin 2. */
+    public int getForm() { return entityData.get(DATA_FORM); }
+
+    /** Ticks desde la última transformación (para el destello y el grito). */
+    public int sinceTransform() { return tickCount - entityData.get(DATA_FORM_AT); }
+
+    public void setForm(int form, boolean effects) {
+        form = Math.max(0, Math.min(2, form));
+        int old = getForm();
+        entityData.set(DATA_FORM, form);
+        entityData.set(DATA_FORM_AT, tickCount);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, FORM_DMG, form == 0 ? 0 : form == 1 ? 7.0 : 14.0);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, FORM_SPEED, form == 0 ? 0 : form == 1 ? 0.06 : 0.1);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, FORM_ARMOR, form == 0 ? 0 : form == 1 ? 6.0 : 10.0);
+        mod(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, FORM_HP, form == 0 ? 0 : form == 1 ? 10.0 : 20.0);
+        if (getHealth() > getMaxHealth()) setHealth(getMaxHealth());
+        if (!effects || !(level() instanceof ServerLevel sl)) return;
+        if (form > old) {
+            heal(getMaxHealth());
+            sl.sendParticles(ParticleTypes.FLASH, getX(), getY() + 1, getZ(), 2, 0, 0, 0, 0);
+            sl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(1.0F, 0.85F, 0.2F), 2.0F),
+                    getX(), getY() + 1, getZ(), 120, 1.2, 1.2, 1.2, 0.1);
+            sl.sendParticles(ParticleTypes.EXPLOSION, getX(), getY() + 0.2, getZ(), 6, 1.5, 0.1, 1.5, 0);
+            if (form == 2) sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 1, getZ(), 80, 0.8, 1.2, 0.8, 0.4);
+            sl.playSound(null, blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.NEUTRAL, 0.6F, 1.6F);
+            sl.playSound(null, blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.NEUTRAL, 1.2F, 0.7F);
+            // la onda de choque empuja a los monstruos cercanos
+            for (LivingEntity le : sl.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(4), le -> le instanceof Enemy)) {
+                le.knockback(1.2, getX() - le.getX(), getZ() - le.getZ());
+            }
+        } else if (form < old) {
+            sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 1, getZ(), 30, 0.5, 0.8, 0.5, 0.03);
+            sl.playSound(null, blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.NEUTRAL, 1.0F, 1.2F);
+        }
+    }
+
+    private void mod(net.minecraft.world.entity.ai.attributes.Attribute attr, UUID id, double v) {
+        net.minecraft.world.entity.ai.attributes.AttributeInstance in = getAttribute(attr);
+        if (in == null) return;
+        in.removeModifier(id);
+        if (v != 0) in.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(id, "kaori_form", v,
+                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+    }
+
     public boolean isCollecting() { return entityData.get(DATA_COLLECT); }
 
     public boolean isTalking() { return tickCount - entityData.get(DATA_TALK) < 50; }
@@ -175,6 +227,13 @@ public class KaoriEntity extends PathfinderMob {
     public void aiStep() {
         super.aiStep();
         if (level().isClientSide) return;
+        // aura de Super Saiyajin
+        if (getForm() > 0 && tickCount % 2 == 0 && level() instanceof ServerLevel asl) {
+            asl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(1.0F, 0.86F, 0.25F), 1.3F),
+                    getX(), getY() + 0.2 + getRandom().nextDouble() * 1.8, getZ(), 3, 0.35, 0.1, 0.35, 0.02);
+            if (getForm() == 2 && getRandom().nextInt(3) == 0)
+                asl.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 1, getZ(), 2, 0.4, 0.8, 0.4, 0.2);
+        }
         if (isWeakened()) {
             // descansa sentada y se recupera poco a poco
             if (tickCount % 10 == 0) heal(1.0F);
@@ -248,6 +307,7 @@ public class KaoriEntity extends PathfinderMob {
     public void becomeWeakened() {
         setHealth(1.0F);
         entityData.set(DATA_WEAK, true);
+        setForm(0, false);
         setTarget(null);
         setAggressive(false);
         getNavigation().stop();
@@ -321,7 +381,7 @@ public class KaoriEntity extends PathfinderMob {
         blast.setOwner(this);
         net.minecraft.world.phys.Vec3 dir = target.getEyePosition().subtract(getEyePosition()).normalize();
         blast.setPos(getX() + dir.x * 0.8, getEyeY() - 0.2, getZ() + dir.z * 0.8);
-        blast.setup(0xFF9A3C, 0.8F, 9.0F);
+        blast.setup(getForm() > 0 ? 0xFFE066 : 0xFF9A3C, 0.8F + getForm() * 0.3F, 9.0F * (1 + getForm()));
         blast.shoot(dir.x, dir.y, dir.z, 1.6F, 0.0F);
         level().addFreshEntity(blast);
         swing(InteractionHand.MAIN_HAND, true);
@@ -492,6 +552,7 @@ public class KaoriEntity extends PathfinderMob {
         if (ownerUUID != null) tag.putUUID("Owner", ownerUUID);
         tag.putInt("Mode", getMode().ordinal());
         tag.putBoolean("Weak", isWeakened());
+        tag.putInt("Form", getForm());
         tag.putBoolean("Collect", isCollecting());
         if (anchor != null) tag.putLong("Anchor", anchor.asLong());
         tag.put("Bag", save(bag));
@@ -510,6 +571,7 @@ public class KaoriEntity extends PathfinderMob {
         entityData.set(DATA_MODE, tag.getInt("Mode"));
         entityData.set(DATA_WEAK, tag.getBoolean("Weak"));
         entityData.set(DATA_COLLECT, !tag.contains("Collect") || tag.getBoolean("Collect"));
+        setForm(tag.getInt("Form"), false);
         anchor = tag.contains("Anchor") ? BlockPos.of(tag.getLong("Anchor")) : null;
         load(bag, tag.getList("Bag", 10));
         load(equip, tag.getList("Equip", 10));

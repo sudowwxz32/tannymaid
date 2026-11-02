@@ -16,7 +16,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src/main/resources/assets/blockdragonsuperz/textures/entity/kaori")
 JAVA_DIR = os.path.join(ROOT, "src/main/java/com/bdsz/client/kaori")
-HAIR_COLOR = (128, 42, 74)
+HAIR_COLOR = (30, 28, 34)
 
 OLIVE, OLIVE_HI, OLIVE_DK = (92, 108, 58), (118, 136, 76), (64, 76, 40)
 GREY, GREY_HI, GREY_DK = (92, 96, 104), (118, 122, 132), (66, 68, 76)
@@ -26,14 +26,15 @@ BRASS = (214, 170, 72)
 
 
 # ------------------------------------------------------------------ cara estilo skin de Minecraft (píxeles)
-EYE_DARK, EYE_MID, EYE_LIGHT = (28, 40, 92), (52, 92, 170), (104, 156, 226)
+EYE_DARK, EYE_MID, EYE_LIGHT = (18, 86, 56), (38, 150, 92), (120, 214, 160)
+WHITE_EYE, WHITE_EYE_SH = (246, 248, 250), (206, 222, 230)
 LASH = (22, 18, 24)
 MOUTH = (196, 104, 110)
 
 
 def pixel_face(expr):
-    """Cara de 16x16 píxeles (escalada a 64x64): ojos de skin de Minecraft con pestaña negra arriba,
-    blanco a un lado e iris azul de dos tonos con un brillo; cejas finas y boca pequeña."""
+    """Cara de skin clásica de Minecraft (como la imagen de referencia): cada ojo es un bloque de 2×2 píxeles
+    de la skin: blanco por fuera e iris verde por dentro (oscuro arriba, claro abajo). Sin pestañas de anime."""
     N, K = 16, 4
     img = Image.new("RGBA", (N * K, N * K), (0, 0, 0, 0))
 
@@ -43,34 +44,37 @@ def pixel_face(expr):
                 for xx in range(x * K, x * K + K):
                     img.putpixel((xx, yy), c + (255,))
 
+    # sombra suave a los lados de la nariz (como en la referencia)
+    for y in range(8, 12):
+        px(7, y, G.SKIN_SH if y > 9 else G.SKIN)
+        px(8, y, G.SKIN_SH if y > 9 else G.SKIN)
     for side in (0, 1):
         m = (lambda x: x) if side == 0 else (lambda x: N - 1 - x)
-        bx = 2                                   # columna externa del ojo
-        # cejas
-        for x in (bx, bx + 1, bx + 2):
-            px(m(x), 6 if expr != "focused" else (6 if x == bx else 7), G.HAIR_DK)
+        ox = 2                                   # columna externa del ojo
         if expr in ("blink", "tired"):
-            for x in range(bx, bx + 4):
+            for x in range(ox, ox + 4):
                 px(m(x), 10, LASH)
             if expr == "tired":
-                px(m(bx + 1), 11, G.SKIN_SH)
+                for x in range(ox + 1, ox + 3):
+                    px(m(x), 11, G.SKIN_SH)
             continue
         if expr == "happy":
-            px(m(bx), 10, LASH); px(m(bx + 1), 9, LASH); px(m(bx + 2), 9, LASH); px(m(bx + 3), 10, LASH)
+            px(m(ox), 10, LASH); px(m(ox + 1), 9, LASH); px(m(ox + 2), 9, LASH); px(m(ox + 3), 10, LASH)
             continue
         top = 8 if expr != "focused" else 9
         bot = 11 if expr != "surprised" else 12
-        for x in range(bx - (1 if expr == "surprised" else 0), bx + 4):
-            px(m(x), top, LASH)                   # pestaña
-        px(m(bx - 1), top + 1, LASH)              # alita de la pestaña
-        for y in range(top + 1, bot + 1):
-            px(m(bx), y, G.WHITE)                 # blanco del ojo (lado de afuera)
-            for x in (bx + 1, bx + 2):
-                t = (y - top - 1) / max(1, bot - top - 1)
-                px(m(x), y, EYE_DARK if t < 0.34 else EYE_MID if t < 0.7 else EYE_LIGHT)
-            px(m(bx + 3), y, G.WHITE if y > top + 1 else G.WHITE_SH)
-        px(m(bx + 2), top + 1, G.WHITE)          # brillo
-    # boca
+        for y in range(top, bot + 1):
+            t = (y - top) / max(1, bot - top)
+            sh = t > 0.6
+            px(m(ox), y, WHITE_EYE_SH if sh else WHITE_EYE)          # blanco (afuera)
+            px(m(ox + 1), y, WHITE_EYE_SH if sh else WHITE_EYE)
+            for x in (ox + 2, ox + 3):                                 # iris (adentro)
+                px(m(x), y, EYE_DARK if t < 0.4 else EYE_MID if t < 0.75 else EYE_LIGHT)
+        px(m(ox + 2), bot, EYE_LIGHT)                                  # brillo abajo
+        if expr == "focused":
+            for x in range(ox, ox + 4):
+                px(m(x), top - 1, G.HAIR_DK)                           # ceño
+    # boca pequeña
     if expr == "happy":
         px(7, 13, MOUTH); px(8, 13, MOUTH); px(6, 12, MOUTH); px(9, 12, MOUTH)
     elif expr == "surprised":
@@ -84,11 +88,11 @@ def pixel_face(expr):
 
 def palette():
     G.SKIN, G.SKIN_SH, G.SKIN_HI, G.SKIN_DK = (242, 208, 184), (226, 186, 162), (252, 224, 204), (198, 152, 128)
-    G.HAIR, G.HAIR_HI, G.HAIR_DK = HAIR_COLOR, (160, 64, 98), (90, 26, 50)
+    G.HAIR, G.HAIR_HI, G.HAIR_DK = HAIR_COLOR, (62, 60, 74), (14, 13, 18)
     G.EYE_DK, G.EYE_MID, G.EYE_HI, G.EYE_RING = (22, 26, 44), (62, 78, 120), (110, 132, 180), (16, 20, 34)
     G.PUPIL_W = 1.6
     G.EYE_STYLE = "pixel"
-    G.BROW_RGB = (84, 24, 44)
+    G.BROW_RGB = (20, 18, 24)
     G.BLUSH_ON = False
     G.body_paint, G.arm_paint, G.leg_paint = body_paint, arm_paint, leg_paint
     G.face_image = pixel_face

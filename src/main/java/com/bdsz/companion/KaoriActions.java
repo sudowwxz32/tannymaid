@@ -20,7 +20,7 @@ public final class KaoriActions {
     private KaoriActions() {}
 
     public static final int SENZU = 0, RICE = 1, HUT = 2, FOLLOW = 3, STAY = 4, TP = 5, DEFEND = 6, FARM = 7, COLLECT = 8,
-            SORT = 9, CRAFT = 10, GATHER = 11, STOP = 12, INVENTORY = 13, STATUS = 14;
+            SORT = 9, CRAFT = 10, GATHER = 11, STOP = 12, INVENTORY = 13, STATUS = 14, FORM = 15;
 
     public static final long SENZU_WAIT = 48000L;   // 2 días de Minecraft
     public static final long RICE_WAIT = 24000L;    // 1 día de Minecraft
@@ -87,7 +87,7 @@ public final class KaoriActions {
 
     public static void openMenu(ServerPlayer p, KaoriEntity k) {
         Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new KaoriScreenPacket(k.getId(), k.getMode().ordinal(), k.isCollecting(),
-                syncSeeds(p), senzuIn(p), riceIn(p), k.hutPos != null, k.isGathering()));
+                syncSeeds(p), senzuIn(p), riceIn(p), k.hutPos != null, k.isGathering(), k.getForm()));
     }
 
     public static void handle(ServerPlayer p, int entityId, int action, int arg, String text) {
@@ -129,6 +129,16 @@ public final class KaoriActions {
                 else k.say(p, "No estoy haciendo nada... todavía.");
             }
             case INVENTORY -> k.openInventory(p);
+            case FORM -> {
+                int f = Math.max(0, Math.min(2, arg));
+                if (f == k.getForm()) { k.say(p, f == 0 ? "Ya estoy en mi estado base." : "Ya estoy transformada, ¿no lo ves?"); break; }
+                k.setForm(f, true);
+                k.say(p, switch (f) {
+                    case 1 -> "¡HAAAAA! ...Super Saiyajin. Sí, el dorado me queda perfecto.";
+                    case 2 -> "¡¡HAAAAAAAA!! Super Saiyajin 2. Ahora sí, que tiemblen.";
+                    default -> "Vuelvo a mi estado base. Tampoco hay que presumir todo el tiempo.";
+                });
+            }
             case STATUS -> k.say(p, String.format("Vida %.0f/%.0f · Modo: %s · Recoger objetos: %s%s", k.getHealth(), k.getMaxHealth(),
                     k.getMode().display, k.isCollecting() ? "sí" : "no", k.isWeakened() ? " · descansando" : ""));
             default -> { }

@@ -20,7 +20,7 @@ import org.lwjgl.glfw.GLFW;
 
 /** Menú de Kaori: regalos (semillas, arroz, cápsula), ayuda (fabricar, ordenar, farmear) y órdenes. */
 public class KaoriScreen extends Screen {
-    private static final int W = 330, H = 236;
+    private static final int W = 330, H = 248;
     private static final int BG_TOP = 0xFF2B2F25, BG_BOT = 0xFF1D201A, EDGE = 0xFFE8783C, EDGE_DK = 0xFF8A3F1A,
             TEXT = 0xFFF2C38B, MUTED = 0xFFB9B39C;
     private static final String[] RES = {"Madera", "Piedra", "Carbón", "Hierro", "Tierra", "Arena"};
@@ -89,6 +89,14 @@ public class KaoriScreen extends Screen {
         add(x + bw + g, y, bw, "Venir", KaoriActions.TP, 0, "Viene a tu lado");
         add(x + 2 * (bw + g), y, bw + 2, "Mochila", KaoriActions.INVENTORY, 0, "Su inventario, armadura y arma");
         add(left() + 8, top() + H - 26, 76, "Estado", KaoriActions.STATUS, 0, "Vida y modo actual");
+        // transformaciones
+        int fx = left() + 96, fy = top() + H - 26;
+        String[] fn = {"Base", "SSJ 1", "SSJ 2"};
+        String[] tips = {"Vuelve a su estado base", "Super Saiyajin: cabello dorado, más fuerza, velocidad, armadura y vida",
+                "Super Saiyajin 2: aún más poder, aura con rayos"};
+        for (int i = 0; i < 3; i++) {
+            add(fx + i * 77, fy, 74, (st.form == i ? "§6▶ §r" : "") + fn[i], KaoriActions.FORM, i, tips[i]);
+        }
     }
 
     private String mark(KaoriMode m) {
@@ -149,6 +157,7 @@ public class KaoriScreen extends Screen {
         g.drawCenteredString(font, st.hut ? "§ecolocada" : "§7en la cápsula", sx + 37 + 154, y + 55, 0xFFFFFFFF);
         label(g, "Te ayuda: fabricar · farmear · ordenar", sx, y + 65);
         label(g, "Órdenes", sx, y + 159);
+        label(g, "Transformación", sx, y + H - 37);
         super.render(g, mx, my, partial);
     }
 

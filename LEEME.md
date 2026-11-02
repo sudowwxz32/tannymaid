@@ -62,3 +62,11 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
   Ermitaño** (sin forma). La cápsula sirve después para traerla a tu lado.
 - Cara nueva, distinta a la de Tanny: ojos pixel-art estilo Minecraft (azul oscuro, brillo cuadrado, pestaña recta),
   sonrisa ladeada; sin pestañas 3D de anime. Aretes de tuerca dorada y llave inglesa en el cinturón.
+
+## 7.6.0 — Kaori: cara de skin clásica y Super Saiyajin
+- Cabello negro y ojos verdes; cara estilo skin clásica de Minecraft (cada ojo: blanco por fuera e iris verde de
+  tres tonos por dentro), como la imagen de referencia.
+- Se transforma desde su menú: **Base, SSJ 1 y SSJ 2** (cabello dorado brillante que se eleva, aura dorada, rayos en
+  SSJ 2, grito de transformación, onda de choque; más daño, velocidad, armadura y vida; ráfagas de ki doradas).
+  Al quedar sin vida vuelve a su estado base.
+- Semillas del Ermitaño: las que regala Kaori solo se comen; las de aldeas y cofres sí se pueden plantar.

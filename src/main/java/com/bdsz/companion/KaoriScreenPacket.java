@@ -9,11 +9,12 @@ import java.util.function.Supplier;
 
 /** Servidor → cliente: abre el menú de Kaori con el estado de sus regalos. */
 public class KaoriScreenPacket {
-    public final int entityId, mode, seedsLeft;
+    public final int entityId, mode, seedsLeft, form;
     public final boolean collecting, hut, gathering;
     public final long senzuIn, riceIn;
 
-    public KaoriScreenPacket(int entityId, int mode, boolean collecting, int seedsLeft, long senzuIn, long riceIn, boolean hut, boolean gathering) {
+    public KaoriScreenPacket(int entityId, int mode, boolean collecting, int seedsLeft, long senzuIn, long riceIn, boolean hut, boolean gathering, int form) {
+        this.form = form;
         this.entityId = entityId;
         this.mode = mode;
         this.collecting = collecting;
@@ -33,11 +34,12 @@ public class KaoriScreenPacket {
         b.writeVarLong(p.riceIn);
         b.writeBoolean(p.hut);
         b.writeBoolean(p.gathering);
+        b.writeVarInt(p.form);
     }
 
     public static KaoriScreenPacket decode(FriendlyByteBuf b) {
         return new KaoriScreenPacket(b.readVarInt(), b.readVarInt(), b.readBoolean(), b.readVarInt(), b.readVarLong(), b.readVarLong(),
-                b.readBoolean(), b.readBoolean());
+                b.readBoolean(), b.readBoolean(), b.readVarInt());
     }
 
     public static void handle(KaoriScreenPacket p, Supplier<NetworkEvent.Context> ctx) {

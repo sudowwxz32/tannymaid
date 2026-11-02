@@ -23,7 +23,7 @@ public final class KaoriLayers {
 
     public static final ModelLayerLocation OUTFIT = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "outfit");
     public static final ModelLayerLocation HEAD = new ModelLayerLocation(new ResourceLocation(BlockDragonSuperZ.MODID, "kaori"), "head");
-    public static final int HAIR_COLOR = 0x802A4A;
+    public static final int HAIR_COLOR = 0x26242C, SSJ_COLOR = 0xFFD84A, SSJ2_COLOR = 0xFFE66A;
 
     public static class Outfit extends RenderLayer<KaoriEntity, KaoriModel> {
         private static final ResourceLocation TEX = KaoriRenderer.tex("outfit");
@@ -71,6 +71,7 @@ public final class KaoriLayers {
         private static final ResourceLocation TEX = KaoriRenderer.tex("head"), STRAND = KaoriRenderer.tex("hair_strand");
         private final ModelPart root, head, goggles, scrunchie;
         private final KaoriHairMesh mesh = new KaoriHairMesh(KaoriHairLocks.L, HAIR_COLOR);
+        private final KaoriHairMesh ssj = new KaoriHairMesh(KaoriHairLocks.L, SSJ_COLOR), ssj2 = new KaoriHairMesh(KaoriHairLocks.L, SSJ2_COLOR);
 
         public Head(RenderLayerParent<KaoriEntity, KaoriModel> parent, EntityModelSet models) {
             super(parent);
@@ -95,7 +96,15 @@ public final class KaoriLayers {
             float swayZ = Mth.sin(age * 0.05F) * 0.04F + walk * 0.12F - ph.zRot * 0.6F;
             pose.pushPose();
             ph.translateAndRotate(pose);
-            mesh.render(buf.getBuffer(RenderType.entityCutoutNoCull(STRAND)), pose.last().pose(), pose.last().normal(),
+            int form = e.getForm();
+            KaoriHairMesh hair = form == 2 ? ssj2 : form == 1 ? ssj : mesh;
+            if (form > 0) {
+                // cabello dorado que brilla, se eleva un poco y ondea con el aura
+                swayX = -0.25F + Mth.sin(age * 0.6F) * 0.06F;
+                swayZ = Mth.sin(age * 0.45F) * 0.05F;
+                light = net.minecraft.client.renderer.LightTexture.FULL_BRIGHT;
+            }
+            hair.render(buf.getBuffer(RenderType.entityCutoutNoCull(STRAND)), pose.last().pose(), pose.last().normal(),
                     light, overlay, swayX, swayZ, breeze * 0.5F + limbAmount * 0.1F, 0.0F, helmet);
             pose.popPose();
 
