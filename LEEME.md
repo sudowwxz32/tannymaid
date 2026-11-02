@@ -109,3 +109,8 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
   Rosé y Legendario Z).
 - **Kaori** ya no vuela: cuando vuelas saca una pequeña nave de una cápsula y te acompaña sentada en ella.
   Dos fases nuevas: **Super Saiyajin 3** (cabello largo) y **Super Saiyajin Dios** (cabello rojo).
+
+## 8.0.1 — Arreglo del Bloque Especial 4
+- El bloque desbloqueado se recortaba al 3 cada vez que se leían tus datos: los Ultra Instintos quedaban bloqueados
+  (te transformabas en la fase que ya tenías elegida, p. ej. Blue) y el bloque "se volvía a bloquear". Ya se guarda
+  bien. `/raza bloque` también acepta el nivel 8.

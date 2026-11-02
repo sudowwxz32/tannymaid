@@ -158,7 +158,7 @@ public class SaiyanState {
         s.timerMax = t.getInt("TimerMax");
         s.cooldown = t.getInt("Cooldown");
         s.totemReady = t.getBoolean("TotemReady");
-        s.tier = Math.max(1, Math.min(7, t.getInt("Tier")));
+        s.tier = Math.max(1, Math.min(8, t.getInt("Tier")));
         if (!t.getBoolean("TiersV2") && s.tier == 5 && t.getBoolean("Mastery")) s.tier = 6;   // ya tenía esas fases
         s.mastery = t.getBoolean("Mastery");
         s.pose = t.getInt("Pose");
