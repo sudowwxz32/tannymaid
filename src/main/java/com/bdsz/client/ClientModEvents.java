@@ -80,6 +80,8 @@ public final class ClientModEvents {
         e.registerLayerDefinition(TAIL_LAYER, TailLayer::createLayer);
         e.registerLayerDefinition(SPIRIT_LAYER, DragonSpiritLayer::createLayer);
         e.registerLayerDefinition(KI_BLAST, KiBlastRenderer::createLayer);
+        e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.OUTFIT, com.bdsz.client.kaori.KaoriModels::createOutfit);
+        e.registerLayerDefinition(com.bdsz.client.kaori.KaoriLayers.HEAD, com.bdsz.client.kaori.KaoriModels::createHead);
     }
 
     @SubscribeEvent
@@ -87,7 +89,14 @@ public final class ClientModEvents {
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KI_BLAST.get(), KiBlastRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAME_BEAM.get(), KameBeamRenderer::new);
         e.registerEntityRenderer(com.bdsz.registry.ModRegistry.DEBRIS.get(), DebrisRenderer::new);
+        e.registerEntityRenderer(com.bdsz.registry.ModRegistry.KAORI.get(), com.bdsz.client.kaori.KaoriRenderer::new);
         e.registerBlockEntityRenderer(com.bdsz.registry.ModRegistry.SHIELD_BE.get(), ShieldDomeRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void clientSetup(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent e) {
+        e.enqueueWork(() -> net.minecraft.client.gui.screens.MenuScreens.register(com.bdsz.registry.ModRegistry.KAORI_MENU.get(),
+                com.bdsz.client.kaori.KaoriInventoryScreen::new));
     }
 
     @SubscribeEvent

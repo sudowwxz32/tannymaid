@@ -20,6 +20,7 @@ public class BlockDragonSuperZ {
         ModRegistry.register(bus);
         bus.addListener(this::setup);
         bus.addListener(this::tabs);
+        bus.addListener(this::attributes);
     }
 
     private void tabs(BuildCreativeModeTabContentsEvent e) {
@@ -53,6 +54,10 @@ public class BlockDragonSuperZ {
             e.accept(ModRegistry.BATTLE_LEGGINGS.get());
             e.accept(ModRegistry.BATTLE_BOOTS.get());
         }
+    }
+
+    private void attributes(net.minecraftforge.event.entity.EntityAttributeCreationEvent e) {
+        e.put(ModRegistry.KAORI.get(), com.bdsz.companion.KaoriEntity.createAttributes().build());
     }
 
     private void setup(FMLCommonSetupEvent e) {

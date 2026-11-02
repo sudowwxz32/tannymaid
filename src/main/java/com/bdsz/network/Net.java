@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public final class Net {
-    private static final String VERSION = "3";
+    private static final String VERSION = "4";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BlockDragonSuperZ.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -24,5 +24,9 @@ public final class Net {
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(3, AppearancePacket.class, AppearancePacket::encode, AppearancePacket::decode, AppearancePacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(4, com.bdsz.companion.KaoriScreenPacket.class, com.bdsz.companion.KaoriScreenPacket::encode,
+                com.bdsz.companion.KaoriScreenPacket::decode, com.bdsz.companion.KaoriScreenPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(5, com.bdsz.companion.KaoriActionPacket.class, com.bdsz.companion.KaoriActionPacket::encode,
+                com.bdsz.companion.KaoriActionPacket::decode, com.bdsz.companion.KaoriActionPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 }

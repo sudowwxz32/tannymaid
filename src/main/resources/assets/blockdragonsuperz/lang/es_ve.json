@@ -40,5 +40,10 @@
   "item.blockdragonsuperz.training_list_7": "Lista de Entrenamiento VI (Bloque Especial 3)",
   "item.blockdragonsuperz.fusion_earring": "Arete de Fusión",
   "key.blockdragonsuperz.fusion": "Habilidad de fusión",
-  "key.blockdragonsuperz.defuse": "Separar la fusión"
+  "key.blockdragonsuperz.defuse": "Separar la fusión",
+  "item.blockdragonsuperz.rice_bowl": "Tazón de Arroz de Kaori",
+  "item.blockdragonsuperz.kaori_capsule": "Cápsula de Kaori",
+  "item.blockdragonsuperz.kaori_spawn_egg": "Huevo de Kaori",
+  "entity.blockdragonsuperz.kaori": "Kaori",
+  "container.blockdragonsuperz.kaori": "Mochila de Kaori"
 }

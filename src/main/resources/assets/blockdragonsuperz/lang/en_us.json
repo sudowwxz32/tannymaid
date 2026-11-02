@@ -40,5 +40,10 @@
   "item.blockdragonsuperz.training_list_7": "Training List VI (Special Block 3)",
   "item.blockdragonsuperz.fusion_earring": "Fusion Earring",
   "key.blockdragonsuperz.fusion": "Fusion ability",
-  "key.blockdragonsuperz.defuse": "Defuse"
+  "key.blockdragonsuperz.defuse": "Defuse",
+  "item.blockdragonsuperz.rice_bowl": "Kaori's Rice Bowl",
+  "item.blockdragonsuperz.kaori_capsule": "Kaori Capsule",
+  "item.blockdragonsuperz.kaori_spawn_egg": "Kaori Spawn Egg",
+  "entity.blockdragonsuperz.kaori": "Kaori",
+  "container.blockdragonsuperz.kaori": "Kaori's Backpack"
 }

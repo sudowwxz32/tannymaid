@@ -22,9 +22,20 @@ public class SenzuBeanItem extends ItemNameBlockItem {
 
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        boolean gift = com.bdsz.companion.KaoriActions.isGift(stack);
         ItemStack result = super.finishUsingItem(stack, level, entity);
-        if (!level.isClientSide && entity instanceof ServerPlayer p) PowerLogic.senzu(p);
+        if (!level.isClientSide && entity instanceof ServerPlayer p) {
+            PowerLogic.senzu(p);
+            if (gift) com.bdsz.companion.KaoriActions.onGiftEaten(p);
+        }
         return result;
+    }
+
+    @Override
+    public net.minecraft.world.InteractionResult useOn(net.minecraft.world.item.context.UseOnContext ctx) {
+        // las semillas regaladas por Kaori se comen, no se plantan
+        if (com.bdsz.companion.KaoriActions.isGift(ctx.getItemInHand())) return net.minecraft.world.InteractionResult.PASS;
+        return super.useOn(ctx);
     }
 
     @Override

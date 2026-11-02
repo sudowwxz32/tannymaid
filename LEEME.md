@@ -39,3 +39,20 @@ punta morada (enderman) y capucha verde (creeper). La cara solo toma un toque de
   mano en la cadera (esqueleto), brazos colgando (enderman), agazapado (creeper). Aura de partículas de la fusión.
 - **Al separarte**: el mob vuelve a aparecer a tu lado; quedas agotado unos segundos (debilidad, lentitud),
   sin ki y en estado base.
+
+## 7.4.0 — Kaori, la acompañante
+Kaori es una mecánica e inventora (diseño original): coleta alta color vino, ojos verdes que pestañean, gafas de
+mecánica, chaqueta oliva con mangas remangadas, top blanco, cinturón con estuches de cápsulas, shorts cargo y botas;
+toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte.
+- **Invocarla**: Cápsula de Kaori (hierro, oro, redstone y un reloj) o el huevo del creativo. Clic derecho: su menú;
+  Shift + clic derecho: su mochila (27 ranuras, armadura, arma y escudo).
+- **Regalos**: 3 Semillas del Ermitaño (al terminártelas hay que esperar 2 días de Minecraft) y 20 Tazones de Arroz
+  una vez al día (vida, regeneración, mitad del ki y 5 minutos sin hambre).
+- **Cápsula-choza**: lanza una cápsula y aparece una choza amueblada (cama, cofre, horno, ahumador, barril, mesa de
+  crafteo, faroles); se vuelve a guardar desde el menú.
+- **Ayuda**: fabrica con su mochila (palos, herramientas, antorchas, cofre, cama… o el nombre en inglés), farmea
+  madera, piedra, carbón, hierro, tierra y arena, ordena cofres, recoge objetos y hace agricultura (cosecha, siembra
+  y ara junto al agua).
+- **Combate**: golpes fuertes con ki, ráfagas de ki a distancia, escudo; protege a su dueño. Tiene 30 de vida, no
+  puede morir: se come una Semilla del Ermitaño de su mochila o descansa hasta recuperarse.
+- Arte: `python3 tools/gen_kaori.py` (texturas, ropa 3D y mechones).

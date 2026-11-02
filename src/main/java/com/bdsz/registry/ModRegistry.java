@@ -57,6 +57,26 @@ public final class ModRegistry {
             () -> new SenzuBeanItem(SENZU_CROP.get(), new Item.Properties().rarity(Rarity.RARE)
                     .food(new FoodProperties.Builder().nutrition(20).saturationMod(1.0F).alwaysEat().fast().build())));
 
+    public static final DeferredRegister<net.minecraft.world.inventory.MenuType<?>> MENUS =
+            DeferredRegister.create(ForgeRegistries.MENU_TYPES, BlockDragonSuperZ.MODID);
+
+    public static final RegistryObject<EntityType<com.bdsz.companion.KaoriEntity>> KAORI = ENTITIES.register("kaori",
+            () -> EntityType.Builder.<com.bdsz.companion.KaoriEntity>of(com.bdsz.companion.KaoriEntity::new, MobCategory.CREATURE)
+                    .sized(0.6F, 1.8F).clientTrackingRange(10).build("kaori"));
+
+    public static final RegistryObject<net.minecraft.world.inventory.MenuType<com.bdsz.companion.KaoriMenu>> KAORI_MENU =
+            MENUS.register("kaori", () -> net.minecraftforge.common.extensions.IForgeMenuType.create(com.bdsz.companion.KaoriMenu::new));
+
+    public static final RegistryObject<Item> RICE_BOWL = ITEMS.register("rice_bowl",
+            () -> new com.bdsz.companion.RiceBowlItem(new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(10).saturationMod(1.6F).build())));
+
+    public static final RegistryObject<Item> KAORI_CAPSULE = ITEMS.register("kaori_capsule",
+            () -> new com.bdsz.companion.KaoriCapsuleItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
+
+    public static final RegistryObject<Item> KAORI_SPAWN_EGG = ITEMS.register("kaori_spawn_egg",
+            () -> new net.minecraftforge.common.ForgeSpawnEggItem(KAORI, 0x5C6C3A, 0x802A4A, new Item.Properties()));
+
     public static final RegistryObject<Item> FUSION_EARRING = ITEMS.register("fusion_earring",
             () -> new com.bdsz.item.FusionEarringItem(new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
 
@@ -135,5 +155,6 @@ public final class ModRegistry {
         LOOT.register(bus);
         BLOCK_ENTITIES.register(bus);
         TABS.register(bus);
+        MENUS.register(bus);
     }
 }
