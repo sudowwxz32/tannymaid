@@ -349,7 +349,7 @@ public class KaoriEntity extends PathfinderMob {
         }
         ItemStack stack = player.getItemInHand(hand);
         if (stack.isEdible() && getHealth() < getMaxHealth()) {
-            FoodProperties food = stack.getFoodProperties(this);
+            net.minecraft.world.food.FoodProperties food = stack.getFoodProperties(this);
             heal(food == null ? 4 : food.getNutrition() * 1.5F);
             if (!player.getAbilities().instabuild) stack.shrink(1);
             level().playSound(null, blockPosition(), SoundEvents.GENERIC_EAT, SoundSource.NEUTRAL, 1.0F, 1.2F);
