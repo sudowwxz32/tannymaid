@@ -127,7 +127,8 @@ public final class FusionLogic {
             if (p == null || p.level() != it.level()) continue;
             SaiyanState s = SaiyanData.get(p);
             if (!s.earring || s.fusion > 0 || s.fusing > 0) continue;
-            for (Mob m : it.level().getEntitiesOfClass(Mob.class, it.getBoundingBox().inflate(1.4), m -> m.isAlive() && Fusion.of(m) != Fusion.NONE)) {
+            for (Mob m : it.level().getEntitiesOfClass(Mob.class, it.getBoundingBox().inflate(10.0),
+                    m -> m.isAlive() && Fusion.of(m) != Fusion.NONE && (Fusion.isDragon(m) || m.getBoundingBox().inflate(1.4).intersects(it.getBoundingBox())))) {
                 itr.remove();
                 start(p, s, m, it);
                 break;
@@ -233,6 +234,11 @@ public final class FusionLogic {
         if (left != null) left.discard();
         s.fusion = f.ordinal();
         s.fusionMax = s.fusionTicks = f.seconds * 20;
+        boolean forever = f == Fusion.DRAGON && p.getRandom().nextFloat() < PERMANENT_CHANCE;
+        if (forever) {
+            s.fusionMax = -1;                 // ¡para siempre!
+            s.fusionTicks = 1;
+        }
         s.fusing = 0;
         s.earring = true;
         double x = p.getX(), y = p.getY() + 1, z = p.getZ();
@@ -249,7 +255,15 @@ public final class FusionLogic {
         }
         p.connection.send(new ClientboundSetTitlesAnimationPacket(0, 60, 20));
         p.connection.send(new ClientboundSetTitleTextPacket(Component.literal("§6§l¡FUSIÓN COMPLETA!")));
-        p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("§eGuerrero " + f.display + " · " + f.seconds / 60 + " min")));
+        p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(forever ? "§5§lGuerrero Dragón · §d¡PARA SIEMPRE!"
+                : "§eGuerrero " + f.display + " · " + f.seconds / 60 + " min")));
+        if (f == Fusion.DRAGON) {
+            lv.playSound(null, p.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 3.0F, 0.8F);
+            lv.sendParticles(ParticleTypes.DRAGON_BREATH, x, y, z, 300, 3, 2, 3, 0.05);
+            if (forever) {
+                p.sendSystemMessage(Component.literal("§5§l¡La fusión con el dragón es PERMANENTE! §r§7Para separarte usa §e/desfusionar§7 o bebe un §dElixir de Separación§7."));
+            }
+        }
         p.sendSystemMessage(Component.literal("§6✦ Fusión con " + f.display + ": §7" + f.ability));
         p.sendSystemMessage(Component.literal("§e✦ Afinidad: §7" + f.affinityText() + " §8(consumen menos tiempo y dan más poder)"));
         p.setHealth(p.getMaxHealth());
@@ -330,16 +344,37 @@ public final class FusionLogic {
     }
 
     /** Tecla N: separarse a voluntad (los aretes se rompen). */
+    public static final float PERMANENT_CHANCE = 0.25F;
+
     public static void defuseByChoice(ServerPlayer p) {
         SaiyanState s = SaiyanData.get(p);
         if (s.fusion <= 0 && s.fusing <= 0) {
             msg(p, "§7No estás fusionado.");
             return;
         }
+        if (s.fusionPermanent()) {
+            msg(p, "§5La fusión con el dragón es permanente. §7Usa §e/desfusionar§7 o bebe un §dElixir de Separación§7.");
+            return;
+        }
         ServerLevel lv = p.serverLevel();
         lv.sendParticles(ParticleTypes.FLASH, p.getX(), p.getY() + 1, p.getZ(), 1, 0, 0, 0, 0);
         lv.playSound(null, p.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.2F, 0.8F);
         defuse(p, s, false);
+    }
+
+    /** Separación forzada (comando /desfusionar o Elixir de Separación): funciona incluso con la fusión permanente. */
+    public static boolean forceDefuse(ServerPlayer p) {
+        SaiyanState s = SaiyanData.get(p);
+        if (s.fusion <= 0 && s.fusing <= 0) {
+            msg(p, "§7No estás fusionado.");
+            return false;
+        }
+        ServerLevel lv = p.serverLevel();
+        lv.sendParticles(ParticleTypes.FLASH, p.getX(), p.getY() + 1, p.getZ(), 2, 0, 0, 0, 0);
+        lv.sendParticles(ParticleTypes.DRAGON_BREATH, p.getX(), p.getY() + 1, p.getZ(), 80, 0.8, 1.0, 0.8, 0.05);
+        lv.playSound(null, p.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.2F, 0.6F);
+        defuse(p, s, false);
+        return true;
     }
 
     // ------------------------------------------------------------------ cada tick del jugador
@@ -361,6 +396,12 @@ public final class FusionLogic {
         if (s.fusionAnim > 0) s.fusionAnim--;
         tickCreeperFuse(p, s);
         if (s.fusion <= 0) return;
+        if (s.fusionPermanent()) {
+            if (p.tickCount % 20 == 0) effects(p, Fusion.byId(s.fusion));
+            SaiyanData.setQuiet(p, s);
+            if (s.fusionAnim > 0 && s.fusionAnim % 3 == 0 || s.fusionAnim == 0 && animWas > 0) SaiyanData.sync(p, s);
+            return;
+        }
         // transformarse gasta más rápido el tiempo de la fusión; el Kaioken aún más
         int drain = 1;
         if (s.transformed && s.activeForm() != Form.BASE && !s.fusionAffinity()) drain += 1 + s.activeForm().ordinal() / 5;
@@ -413,6 +454,23 @@ public final class FusionLogic {
             case ENDERMAN -> { eff(p, MobEffects.NIGHT_VISION, 0); eff(p, MobEffects.MOVEMENT_SPEED, 0); eff(p, MobEffects.DAMAGE_BOOST, 0); }
             case CREEPER -> { eff(p, MobEffects.MOVEMENT_SPEED, 0); eff(p, MobEffects.DAMAGE_BOOST, 0); }
             case GOLEM -> { eff(p, MobEffects.DAMAGE_BOOST, 2); eff(p, MobEffects.DAMAGE_RESISTANCE, 1); }
+            case DRAGON -> {
+                eff(p, MobEffects.DAMAGE_BOOST, 4);
+                eff(p, MobEffects.DAMAGE_RESISTANCE, 3);
+                eff(p, MobEffects.HEALTH_BOOST, 9);
+                eff(p, MobEffects.REGENERATION, 2);
+                eff(p, MobEffects.FIRE_RESISTANCE, 0);
+                eff(p, MobEffects.MOVEMENT_SPEED, 1);
+                eff(p, MobEffects.NIGHT_VISION, 0);
+                if (p.isShiftKeyDown() && !p.onGround()) eff(p, MobEffects.SLOW_FALLING, 0);   // planea con las alas
+                p.serverLevel().sendParticles(ParticleTypes.DRAGON_BREATH, p.getX(), p.getY() + 1.2, p.getZ(), 6, 0.5, 0.6, 0.5, 0.01);
+                // engreído: se burla de sus enemigos
+                if (p.getRandom().nextInt(45) == 0) {
+                    String[] t = {"§5[Guerrero Dragón] §f¿Eso es todo? Ni siquiera me despeiné.", "§5[Guerrero Dragón] §fArrodíllense ante el dragón.",
+                            "§5[Guerrero Dragón] §fSoy la fusión más poderosa que existe. Admírenme.", "§5[Guerrero Dragón] §fJa. Insectos."};
+                    p.sendSystemMessage(Component.literal(t[p.getRandom().nextInt(t.length)]));
+                }
+            }
             case WARDEN -> {
                 eff(p, MobEffects.DAMAGE_BOOST, 3);
                 eff(p, MobEffects.DAMAGE_RESISTANCE, 2);
@@ -521,6 +579,25 @@ public final class FusionLogic {
                     e.hurtMarked = true;
                 }
                 s.fusionCd = 160;
+            }
+            case DRAGON -> {
+                // aliento de dragón: bola de fuego del End que deja una nube dañina
+                lv.playSound(null, p.blockPosition(), SoundEvents.ENDER_DRAGON_SHOOT, SoundSource.PLAYERS, 2.0F, 1.0F);
+                lv.playSound(null, p.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 1.0F, 1.3F);
+                for (int i = -1; i <= 1; i++) {
+                    net.minecraft.world.entity.projectile.DragonFireball fb = new net.minecraft.world.entity.projectile.DragonFireball(lv, p,
+                            look.x + i * 0.12, look.y, look.z + i * 0.12);
+                    fb.setPos(eye.x + look.x * 1.5, eye.y - 0.2, eye.z + look.z * 1.5);
+                    lv.addFreshEntity(fb);
+                }
+                for (int i = 1; i <= 16; i++) {
+                    Vec3 q = eye.add(look.scale(i));
+                    lv.sendParticles(ParticleTypes.DRAGON_BREATH, q.x, q.y, q.z, 8, 0.4, 0.4, 0.4, 0.02);
+                    for (LivingEntity e : lv.getEntitiesOfClass(LivingEntity.class, new net.minecraft.world.phys.AABB(q, q).inflate(1.5), e -> e != p)) {
+                        e.hurt(lv.damageSources().indirectMagic(p, p), 40.0F);
+                    }
+                }
+                s.fusionCd = 100;
             }
             case WARDEN -> {
                 lv.playSound(null, p.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 3.0F, 1.0F);

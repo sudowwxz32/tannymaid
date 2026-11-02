@@ -159,6 +159,16 @@ def chest(f, u, v, w, h):
         if f == "front" and (abs(u - 0.15) < 0.04 or abs(u - 0.85) < 0.04) and int(v * 6) % 2 == 0:
             return (120, 112, 100)                            # remaches
         return I if int(v * 8) % 3 else ID
+    if m == "dragon":
+        D, DD, DL = (26, 22, 32), (14, 12, 18), (52, 40, 64)
+        eye = f == "front" and 0.3 < u < 0.7 and 0.3 < v < 0.5 and (int(u * 20) + int(v * 20)) % 2 == 0
+        if GLOW:
+            if eye:
+                return (220, 90, 255, 255)                    # brillo morado del dragón en el pecho
+            return None
+        if (int(u * 12) + int(v * 10) * 2) % 5 == 0:
+            return DL                                         # escamas
+        return D if (int(u * 8) + int(v * 8)) % 3 else DD
     if m == "warden":
         W, WD = (16, 58, 64), (8, 34, 40)
         soul = f == "front" and 0.25 < u < 0.75 and 0.2 < v < 0.75
@@ -210,6 +220,25 @@ def ender_spike(f, u, v, w, h):
     return (22, 18, 26)
 
 
+def horn(f, u, v, w, h):
+    if GLOW:
+        return None
+    return (200, 196, 210) if v < 0.35 else (40, 36, 46)
+
+
+def wing(f, u, v, w, h):
+    """Ala de dragón: membrana negra-morada con huesos claros."""
+    if GLOW:
+        return (200, 80, 255, 255) if (f in ("front", "back") and int(u * 9) % 3 == 0 and v > 0.3 and int(v * 10) % 4 == 0) else None
+    if f in ("front", "back") and (int(u * 9) % 3 == 0 or v < 0.08):
+        return (70, 60, 84)                                   # huesos del ala
+    return (30, 22, 40) if (int(u * 12) + int(v * 10)) % 4 else (44, 30, 58)
+
+
+def dragon_spike(f, u, v, w, h):
+    return None if GLOW else ((60, 52, 72) if v > 0.5 else (24, 20, 30))
+
+
 def build(slim):
     aw = 3 if slim else 4                 # ancho del brazo
     ax = -2 if slim else -3               # borde del brazo derecho
@@ -250,6 +279,15 @@ def build(slim):
     for side, arm, x0 in (("r", "right_arm", ax), ("l", "left_arm", -1)):
         P.append(Part("enderman_spike_" + side, arm, (x0 + aw / 2, -2.4, 0), (0, 0, 0),
                       [Box(-0.5, -1.8, -0.5, 1.0, 1.9, 1.0, ender_spike)]))
+    # --- dragón: cuernos, alas, púas en la espalda y cola
+    for side, s_ in (("r", -1), ("l", 1)):
+        P.append(Part("dragon_horn_" + side, "head", (s_ * 2.6, -8.0, 1.2), (-0.65, 0, s_ * 0.25),
+                      [Box(-0.6, -3.4, -0.6, 1.2, 3.6, 1.2, horn)]))
+        P.append(Part("dragon_wing_" + side, "body", (s_ * 1.6, 1.2, 2.5), (0.2, s_ * 0.45, s_ * 0.35),
+                      [Box(-11.0 if s_ < 0 else 0.0, -6.0, 0.0, 11.0, 12.0, 0.4, wing)]))
+    for i in range(4):
+        P.append(Part("dragon_spike%d" % i, "body", (0, 0.8 + i * 2.0, 2.4), (0.35, 0, 0), [Box(-0.45, -0.45, 0, 0.9, 0.9, 1.5, dragon_spike)]))
+    P.append(Part("dragon_tail", "body", (0, 10.0, 2.2), (0.75, 0, 0), [Box(-1.1, 0, -1.1, 2.2, 8.0, 2.2, chest)]))
     # --- creeper: capucha verde a la espalda
     P.append(Part("creeper_hood", "body", (0, 0.2, 2.4), (0.3, 0, 0), [Box(-3.6, -0.8, 0, 7.2, 3.0, 1.6, chest)]))
     return P
@@ -293,7 +331,7 @@ def main():
     for a, b in zip(wide, slim):
         for x, y in zip(a.boxes, b.boxes):
             y.u, y.v = x.u, x.v
-    for mob in ("zombie", "skeleton", "enderman", "creeper", "golem", "warden"):
+    for mob in ("zombie", "skeleton", "enderman", "creeper", "golem", "warden", "dragon"):
         for glow in (False, True):
             MOB, GLOW = mob, glow
             R.seed(5)

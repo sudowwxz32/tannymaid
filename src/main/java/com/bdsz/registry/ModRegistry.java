@@ -77,6 +77,9 @@ public final class ModRegistry {
     public static final RegistryObject<Item> KAORI_SPAWN_EGG = ITEMS.register("kaori_spawn_egg",
             () -> new net.minecraftforge.common.ForgeSpawnEggItem(KAORI, 0x5C6C3A, 0x802A4A, new Item.Properties()));
 
+    public static final RegistryObject<Item> DEFUSION_ELIXIR = ITEMS.register("defusion_elixir",
+            () -> new com.bdsz.item.DefusionElixirItem(new Item.Properties().stacksTo(8).rarity(Rarity.EPIC)));
+
     public static final RegistryObject<Item> FUSION_EARRING = ITEMS.register("fusion_earring",
             () -> new com.bdsz.item.FusionEarringItem(new Item.Properties().stacksTo(16).rarity(Rarity.EPIC)));
 

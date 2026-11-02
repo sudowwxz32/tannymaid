@@ -62,13 +62,16 @@ public class SaiyanState {
     public boolean powered() { return ozaru || fusion > 0 || transformed && (selected != 0 || kaioken > 0); }
 
     /** ¿La transformación actual tiene afinidad con la fusión? (más poder y el tiempo no baja más rápido) */
+    /** Fusión permanente (solo con el dragón, por suerte... o mala suerte). */
+    public boolean fusionPermanent() { return fusion > 0 && fusionMax < 0; }
+
     public boolean fusionAffinity() { return fusion > 0 && transformed && Fusion.byId(fusion).affinity(activeForm()); }
 
     public float damageMultiplier() {
         if (ozaru) return 12.0F;
         float m = activeForm().damage * (1.0F + activeKaioken() / 20.0F);
         if (fusion > 0) {
-            m *= 40.0F;                                   // fusionado: el poder se multiplica por 40
+            m *= fusion == Fusion.DRAGON.ordinal() ? 80.0F : 40.0F;   // fusionado: x40 (dragón: x80, la más poderosa)
             if (fusionAffinity()) m *= 1.5F;
         }
         return m;

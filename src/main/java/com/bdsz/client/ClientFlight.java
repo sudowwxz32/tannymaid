@@ -134,6 +134,7 @@ public final class ClientFlight {
         }
         // Fase 4 / Ultra Ego: más alto y robusto
         SaiyanState s = ClientStates.get(p.getId());
+        if (s.fusion == com.bdsz.data.Fusion.DRAGON.ordinal() && s.fusing == 0) pose.scale(1.15F, 1.15F, 1.15F);   // Guerrero Dragón: más alto
         if (s.saiyan && (s.transformed || s.powering > 0)) {
             Form f = s.visibleForm();
             float h = f.height();

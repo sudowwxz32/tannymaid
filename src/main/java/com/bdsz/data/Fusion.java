@@ -22,7 +22,15 @@ public enum Fusion {
     GOLEM("Gólem de hierro", 7 * 60, 0xD8D8D8,
             "Fuerza y resistencia enormes, al golpear tus brazos se cubren de ki con forma de brazos de gólem y lanzan por los aires. §eX§7: Pisotón sísmico"),
     WARDEN("Warden", 5 * 60, 0x2FD4C8,
-            "Poder abismal: mucha vida, fuerza y resistencia, sientes las vibraciones (ves a todos brillar), oscuridad a tus enemigos. §eX§7: Rugido sónico");
+            "Poder abismal: mucha vida, fuerza y resistencia, sientes las vibraciones (ves a todos brillar), oscuridad a tus enemigos. §eX§7: Rugido sónico"),
+    DRAGON("Dragón del End", 15 * 60, 0xB050FF,
+            "§5LA FUSIÓN MÁS PODEROSA§7: poder x80, más alto y fornido, alas, cuernos y cola, inmune al fuego, regeneración y "
+                    + "resistencia enormes. §eX§7: Aliento de dragón. §c¡Puede quedarse para siempre!");
+
+    /** El dragón no puede "recoger" el arete: basta con lanzarlo cerca de él. */
+    public static boolean isDragon(Entity e) {
+        return e instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+    }
 
     public final String display;
     public final int seconds;
@@ -45,6 +53,7 @@ public enum Fusion {
             case CREEPER -> f == Form.SSJ2 || f == Form.SSJ3 || f == Form.BEAST;
             case GOLEM -> f == Form.BLUE || f == Form.BLUE_EVO || f == Form.SSJ1;
             case WARDEN -> f == Form.LEGEND2 || f == Form.LEGEND3 || f == Form.ULTRA_EGO;
+            case DRAGON -> f == Form.UI_SIGN || f == Form.UI_PERFECT || f == Form.UI_SELF || f == Form.LEGEND3 || f == Form.ULTRA_EGO;
             default -> false;
         };
     }
@@ -57,6 +66,7 @@ public enum Fusion {
             case CREEPER -> "Fase 2, Fase 3, Bestia";
             case GOLEM -> "Blue, Blue Evolución, Fase 1";
             case WARDEN -> "Legendario Fase 2 y 3, Ultra Ego";
+            case DRAGON -> "los tres Ultra Instintos, Legendario Fase 3, Ultra Ego";
             default -> "";
         };
     }
@@ -68,6 +78,7 @@ public enum Fusion {
 
     /** ¿Con qué fusión corresponde este mob? */
     public static Fusion of(Entity e) {
+        if (isDragon(e)) return DRAGON;
         if (e instanceof Warden) return WARDEN;
         if (e instanceof IronGolem) return GOLEM;
         if (e instanceof Creeper) return CREEPER;

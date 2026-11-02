@@ -114,3 +114,12 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
 - El bloque desbloqueado se recortaba al 3 cada vez que se leían tus datos: los Ultra Instintos quedaban bloqueados
   (te transformabas en la fase que ya tenías elegida, p. ej. Blue) y el bloque "se volvía a bloquear". Ya se guarda
   bien. `/raza bloque` también acepta el nivel 8.
+
+## 8.1.0 — Fusión con el Dragón del End
+- Lanza el arete cerca del **Dragón del End** (hasta 10 bloques) y te fusionas: la **fusión más poderosa** del mod
+  (poder x80), más alto y fornido, alas, cuernos, púas y cola 3D, ojos morados, engreído (pose con las manos en la
+  cintura y se burla de sus enemigos). Fuerza V, Resistencia IV, Regeneración III, inmune al fuego, planea con Shift.
+  **X**: Aliento de dragón. Afinidad: los tres Ultra Instintos, Legendario Fase 3 y Ultra Ego.
+- **25 % de probabilidad de quedarte fusionado para siempre.** Para salir: `/desfusionar` o el **Elixir de
+  Separación** (aliento de dragón, lágrima de ghast, manzana dorada y fragmento de amatista).
+- Las poses del Ultra Instinto Perfecto (encorvado) y Propio (sereno) ahora se ven mientras te transformas.

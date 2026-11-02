@@ -68,7 +68,7 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
             for (java.util.Map.Entry<String, ModelPart> e : parts.entrySet()) {
                 String n = e.getKey();
                 boolean own = n.startsWith("zombie_") || n.startsWith("skeleton_") || n.startsWith("enderman_")
-                        || n.startsWith("creeper_") || n.startsWith("golem_") || n.startsWith("warden_");
+                        || n.startsWith("creeper_") || n.startsWith("golem_") || n.startsWith("warden_") || n.startsWith("dragon_");
                 boolean v = own ? n.startsWith(mob + "_") : true;
                 if (chestArmor && (n.equals("chest") || n.startsWith("shoulder_") || n.startsWith("skeleton_") || n.startsWith("golem_")
                         || n.startsWith("zombie_") || n.startsWith("creeper_"))) v = false;
@@ -142,7 +142,7 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
             m.head.visible = true;
             m.renderToBuffer(pose, buf.getBuffer(RenderType.entityCutoutNoCull(tex(name))), light, overlay, 1, 1, 1, 1);
             float pulse = f == Fusion.WARDEN ? 0.7F + 0.3F * net.minecraft.util.Mth.sin(age * 0.15F) : 1.0F;
-            if (f == Fusion.ENDERMAN || f == Fusion.GOLEM) {
+            if (f == Fusion.ENDERMAN || f == Fusion.GOLEM || f == Fusion.DRAGON) {
                 m.renderToBuffer(pose, buf.getBuffer(RenderType.eyes(tex(name + "_glow"))), LightTexture.FULL_BRIGHT, overlay, 1, 1, 1, 1);
             }
             m.setAllVisible(true);
@@ -152,7 +152,7 @@ public class FusionLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<A
             gi.show(name, !p.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).isEmpty(),
                     !p.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS).isEmpty());
             gi.root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(tex("gi_" + name))), light, overlay);
-            if (f == Fusion.WARDEN || f == Fusion.ENDERMAN) {
+            if (f == Fusion.WARDEN || f == Fusion.ENDERMAN || f == Fusion.DRAGON) {
                 gi.root.render(pose, buf.getBuffer(RenderType.eyes(tex("gi_" + name + "_glow"))), LightTexture.FULL_BRIGHT, overlay, pulse, pulse, pulse, 1);
             }
         }

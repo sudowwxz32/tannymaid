@@ -207,6 +207,31 @@ def warden():
     return fn
 
 
+# ----------------------------------------------------------------- dragón
+def dragon():
+    D, DD = (26, 22, 32), (14, 12, 18)
+
+    def fn(p, f, x, y, w, h):
+        if p == "head":
+            if f == "front":
+                if y < 2.5 or x < 1 or x >= 7:
+                    return D if (int(x) + int(y)) % 3 else DD           # escamas alrededor de la cara
+                if 2.5 <= y < 3.5 and (1 <= x < 3 or 5 <= x < 7):
+                    return (120, 30, 160)                              # ojos (brillan aparte)
+                return None
+            return D if (int(x) + int(y)) % 3 else DD
+        if p in ("rarm", "larm") and y >= 5:
+            return D if (int(x * 2) + int(y)) % 4 else DD              # garras oscuras
+        return None
+    return fn
+
+
+def glow_dragon(p, f, x, y, w, h):
+    if p == "head" and f == "front" and 2.5 <= y < 3.5 and (1 <= x < 3 or 5 <= x < 7):
+        return (230, 110, 255, 255)
+    return None
+
+
 # ----------------------------------------------------------------- capas brillantes
 def glow_enderman(p, f, x, y, w, h):
     if p == "head" and f == "front" and 2.5 <= y < 3.5 and (1 <= x < 3.5 or 4.5 <= x < 7):
@@ -235,12 +260,12 @@ def glow_creeper(p, f, x, y, w, h):
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (("zombie", zombie()), ("skeleton", skeleton()), ("enderman", enderman()),
-                     ("creeper", creeper()), ("golem", golem()), ("warden", warden())):
+                     ("creeper", creeper()), ("golem", golem()), ("warden", warden()), ("dragon", dragon())):
         img = Image.new("RGBA", (64 * S, 64 * S), T)
         all_parts(img, fn)
         # la capa izquierda usa las regiones de la derecha reflejadas
         img.save(os.path.join(OUT, name + ".png"))
-    for name, fn in (("enderman", glow_enderman), ("warden", glow_warden), ("golem", glow_golem),
+    for name, fn in (("enderman", glow_enderman), ("warden", glow_warden), ("golem", glow_golem), ("dragon", glow_dragon),
                      ("zombie", glow_creeper), ("skeleton", glow_creeper), ("creeper", glow_creeper)):
         img = Image.new("RGBA", (64 * S, 64 * S), T)
         all_parts(img, fn)

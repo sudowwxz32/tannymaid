@@ -48,6 +48,7 @@ public final class ServerEvents {
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent e) {
         RazaCommand.register(e.getDispatcher());
+        com.bdsz.command.DefuseCommand.register(e.getDispatcher());
     }
 
     /** Fuerza: tus golpes hacen más daño. Resistencia: recibes menos. */

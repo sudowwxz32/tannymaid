@@ -22,6 +22,9 @@ public final class SaiyanPoses {
                 muscle = 1.0F + (st.visibleForm().muscle() - 1.0F) * grow;
             }
         }
+        if (e instanceof Player pd && ClientStates.get(pd.getId()).fusion == com.bdsz.data.Fusion.DRAGON.ordinal()) {
+            muscle = Math.max(muscle, 1.12F);                  // Guerrero Dragón: un poco más fornido
+        }
         setMuscle(m, muscle);
         if (e instanceof Player pf && ClientStates.get(pf.getId()).saiyan && ClientStates.get(pf.getId()).gender == 2) feminine(m);
         if (!(e instanceof Player p)) return;
@@ -88,6 +91,29 @@ public final class SaiyanPoses {
             m.rightLeg.zRot = 0.25F;
             m.leftLeg.zRot = -0.25F;
             m.head.xRot -= 0.2F;
+        } else if (powering && com.bdsz.data.Form.byId(s.selected) == com.bdsz.data.Form.UI_PERFECT) {
+            // al transformarse en Ultra Instinto Perfecto: un poco encorvado, como cansado; brazos sueltos que cuelgan hacia adelante
+            float br = Mth.sin(age * 0.06F) * 0.025F;
+            m.body.xRot = 0.24F + br;
+            m.head.xRot = m.head.xRot * 0.6F + 0.18F;
+            m.rightArm.xRot = -0.32F + br;
+            m.rightArm.zRot = 0.08F;
+            m.leftArm.xRot = -0.28F + br;
+            m.leftArm.zRot = -0.08F;
+            m.rightLeg.zRot = 0.06F;
+            m.leftLeg.zRot = -0.06F;
+        } else if (powering && com.bdsz.data.Form.byId(s.selected) == com.bdsz.data.Form.UI_SELF) {
+            // al transformarse en Ultra Instinto Propio: pose relajada, serena; una mano abierta frente al pecho, la otra suelta
+            float br = Mth.sin(age * 0.045F);
+            m.body.xRot = -0.02F;
+            m.head.xRot = m.head.xRot * 0.5F - 0.05F + br * 0.02F;
+            m.rightArm.xRot = -1.05F + br * 0.03F;
+            m.rightArm.yRot = -0.45F;
+            m.rightArm.zRot = 0.0F;
+            m.leftArm.xRot = 0.05F;
+            m.leftArm.zRot = -0.12F - br * 0.03F;
+            m.rightLeg.zRot = 0.04F;
+            m.leftLeg.zRot = -0.04F;
         } else if (powering) {
             // grito de transformación: puños a la cintura, codos atrás, pecho al frente, cabeza al cielo
             float progress = s.poweringTotal > 0 && s.powering > 0 ? 1.0F - (float) s.powering / s.poweringTotal : 1.0F;
@@ -157,29 +183,6 @@ public final class SaiyanPoses {
                 m.body.xRot = 0.05F + Mth.sin(age * 0.1F) * 0.03F;
             }
             if (m.attackTime > 0) punch(m, m.attackTime);
-        } else if (s.transformed && s.activeForm() == com.bdsz.data.Form.UI_PERFECT && m.attackTime <= 0 && limbAmount < 0.3F) {
-            // Ultra Instinto Perfecto: un poco encorvado, como cansado; brazos sueltos que cuelgan hacia adelante
-            float br = Mth.sin(age * 0.06F) * 0.025F;
-            m.body.xRot = 0.24F + br;
-            m.head.xRot = m.head.xRot * 0.6F + 0.18F;
-            m.rightArm.xRot = -0.32F + br;
-            m.rightArm.zRot = 0.08F;
-            m.leftArm.xRot = -0.28F + br;
-            m.leftArm.zRot = -0.08F;
-            m.rightLeg.zRot = 0.06F;
-            m.leftLeg.zRot = -0.06F;
-        } else if (s.transformed && s.activeForm() == com.bdsz.data.Form.UI_SELF && m.attackTime <= 0 && limbAmount < 0.3F) {
-            // Ultra Instinto Propio: pose relajada, serena; una mano abierta frente al pecho, la otra suelta
-            float br = Mth.sin(age * 0.045F);
-            m.body.xRot = -0.02F;
-            m.head.xRot = m.head.xRot * 0.5F - 0.05F + br * 0.02F;
-            m.rightArm.xRot = -1.05F + br * 0.03F;
-            m.rightArm.yRot = -0.45F;
-            m.rightArm.zRot = 0.0F;
-            m.leftArm.xRot = 0.05F;
-            m.leftArm.zRot = -0.12F - br * 0.03F;
-            m.rightLeg.zRot = 0.04F;
-            m.leftLeg.zRot = -0.04F;
         } else if (m.attackTime > 0) {
             punch(m, m.attackTime);       // golpes con más movimiento
         } else {
@@ -280,6 +283,15 @@ public final class SaiyanPoses {
         float k = Mth.clamp((p.tickCount - ClientStates.lastMove(p)) / 12.0F, 0.0F, 1.0F);
         if (k <= 0) return false;
         switch (f) {
+            case DRAGON -> {
+                // engreído: manos en la cintura, pecho afuera y la barbilla en alto
+                set(m.rightArm, k, 0.15F + breath, 0.0F, 0.75F);
+                set(m.leftArm, k, 0.15F + breath, 0.0F, -0.75F);
+                m.body.xRot = Mth.lerp(k, m.body.xRot, -0.12F);
+                m.head.xRot = Mth.lerp(k, m.head.xRot, m.head.xRot - 0.3F);
+                m.rightLeg.zRot = Mth.lerp(k, 0, 0.16F);
+                m.leftLeg.zRot = Mth.lerp(k, 0, -0.16F);
+            }
             case GOLEM -> {
                 // brazos cruzados, firme como un gólem
                 set(m.rightArm, k, -1.05F + breath, -0.72F, 0.05F);
