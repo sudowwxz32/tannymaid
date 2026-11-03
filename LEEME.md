@@ -128,3 +128,14 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
 - El juego se cerraba ("Unregistered memory fetched: minecraft:attack_target") cuando estabas fusionado y había
   cerca un mob de tu misma especie: se le preguntaba una memoria que solo tienen los mobs con "cerebro" (warden,
   piglins). Ahora se revisa primero.
+
+## 8.2.0 — Kaori: holograma, teletransportes y más lista
+- **Tecla J: Holograma de Kaori** (azul): su mochila, equipo, vida, forma, modo y dónde está, desde cualquier lugar.
+  Botones: **Traer a Kaori** (aparece a tu lado aunque esté lejos) e **Ir a mi casa** (te lleva junto a tu cama dentro
+  de la casa-cápsula que te hizo Kaori; primero duerme en esa cama).
+- Arreglado: Kaori se quedaba con la pose de transformación y con una sola expresión (los tiempos usaban relojes
+  distintos en el cliente y el servidor). Ya no tiene la Fase 3 (Base, SSJ 1, SSJ 2 y Dios).
+- Te sigue mejor: corre si te alejas, se acerca más, aparece a tu lado si se atasca, si vas en elytra o montura, y te
+  sigue a otras dimensiones.
+- Más intuitiva: se equipa sola la mejor arma y armadura de su mochila, come si está herida, te da un tazón de arroz
+  si te queda poca vida y al anochecer te ofrece sacar una casa.

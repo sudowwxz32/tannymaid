@@ -92,6 +92,9 @@ public final class ClientForgeEvents {
             Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.FUSION_ABILITY, 0, 0));
         }
         // N: separarse de la fusión cuando quieras
+        while (ClientModEvents.KAORI_HOLO.consumeClick()) {
+            Net.CHANNEL.sendToServer(new com.bdsz.companion.KaoriHolo.Request(com.bdsz.companion.KaoriHolo.OPEN));
+        }
         while (ClientModEvents.DEFUSE.consumeClick()) {
             Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.DEFUSE, 0, 0));
         }

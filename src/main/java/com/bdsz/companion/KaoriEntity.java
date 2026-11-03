@@ -100,10 +100,10 @@ public class KaoriEntity extends PathfinderMob {
         super.defineSynchedData();
         entityData.define(DATA_MODE, KaoriMode.FOLLOW.ordinal());
         entityData.define(DATA_WEAK, false);
-        entityData.define(DATA_TALK, -1000);
+        entityData.define(DATA_TALK, -100000);
         entityData.define(DATA_COLLECT, true);
         entityData.define(DATA_FORM, 0);
-        entityData.define(DATA_FORM_AT, -1000);
+        entityData.define(DATA_FORM_AT, -100000);
         entityData.define(DATA_FLY, false);
     }
 
@@ -113,7 +113,7 @@ public class KaoriEntity extends PathfinderMob {
         goalSelector.addGoal(1, new KaoriGoals.Rest(this));
         goalSelector.addGoal(2, new KaoriGoals.Combat(this));
         goalSelector.addGoal(3, new KaoriGoals.Gather(this));
-        goalSelector.addGoal(3, new KaoriGoals.Follow(this, 1.15D, 5.0F, 2.4F));
+        goalSelector.addGoal(3, new KaoriGoals.Follow(this, 1.3D, 3.6F, 2.0F));
         goalSelector.addGoal(3, new KaoriGoals.Stay(this));
         goalSelector.addGoal(4, new KaoriGoals.Farm(this));
         goalSelector.addGoal(4, new OpenDoorGoal(this, true));
@@ -213,6 +213,105 @@ public class KaoriEntity extends PathfinderMob {
         }
     }
 
+    // ------------------------------------------------------------------ más intuitiva
+
+    private long lastWarn, lastNight;
+
+    /** Pequeñas decisiones por su cuenta: equiparse mejor, comer, cuidarte y no quedarse en otra dimensión. */
+    private void smartTick() {
+        ServerPlayer o = getOwnerPlayer();
+        if (o == null || isWeakened()) return;
+        long now = level().getGameTime();
+        // te sigue a otra dimensión (Nether, End) si está en modo seguir
+        if (getMode().follows() && o.level() != level() && !o.isSpectator()) {
+            teleportToOwner(o);
+            return;
+        }
+        // se equipa sola lo mejor que haya en su mochila (arma y armadura)
+        autoEquip();
+        // come de su mochila si está herida
+        if (getHealth() < getMaxHealth() * 0.6F) {
+            for (int i = 0; i < bag.getContainerSize(); i++) {
+                ItemStack s = bag.getItem(i);
+                if (!s.isEdible() || KaoriActions.isGift(s) || s.is(ModRegistry.SENZU_BEAN.get())) continue;
+                net.minecraft.world.food.FoodProperties fp = s.getFoodProperties(this);
+                heal(fp == null ? 4 : fp.getNutrition() * 1.5F);
+                s.shrink(1);
+                bag.setChanged();
+                level().playSound(null, blockPosition(), SoundEvents.GENERIC_EAT, SoundSource.NEUTRAL, 0.8F, 1.2F);
+                break;
+            }
+        }
+        // te cuida: si te queda poca vida, te avisa y te da un tazón de arroz de su mochila
+        if (o.level() == level() && o.getHealth() <= 6.0F && now - lastWarn > 600 && distanceToSqr(o) < 24 * 24) {
+            lastWarn = now;
+            if (consumeItem(ModRegistry.RICE_BOWL.get())) {
+                ItemStack rice = new ItemStack(ModRegistry.RICE_BOWL.get());
+                if (!o.getInventory().add(rice)) o.drop(rice, false);
+                say(o, "¡Te queda poca vida! Toma un tazón de arroz y cómetelo YA. No me hagas preocuparme.");
+            } else {
+                say(o, "¡Cuidado, te queda poca vida! Aléjate y come algo... no quiero cargarte de vuelta.");
+            }
+        }
+        // al anochecer te ofrece sacar una casa-cápsula
+        long day = level().getDayTime() % 24000;
+        if (day > 12800 && day < 13200 && now - lastNight > 6000 && hutPos == null && o.level() == level() && distanceToSqr(o) < 24 * 24) {
+            lastNight = now;
+            say(o, "Ya está anocheciendo. Si quieres, saco una casa-cápsula para dormir (menú → Casas).");
+        }
+    }
+
+    private static double damageOf(ItemStack s) {
+        double d = 0;
+        for (net.minecraft.world.entity.ai.attributes.AttributeModifier m
+                : s.getAttributeModifiers(EquipmentSlot.MAINHAND).get(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)) {
+            d += m.getAmount();
+        }
+        return d;
+    }
+
+    private static int defenseOf(ItemStack s) {
+        return s.getItem() instanceof ArmorItem a ? a.getDefense() : 0;
+    }
+
+    private void autoEquip() {
+        boolean changed = false;
+        // arma
+        int best = -1;
+        double bestDmg = equip.getItem(4).isEmpty() ? 0 : damageOf(equip.getItem(4));
+        for (int i = 0; i < bag.getContainerSize(); i++) {
+            ItemStack s = bag.getItem(i);
+            if (!(s.getItem() instanceof SwordItem || s.getItem() instanceof AxeItem)) continue;
+            double dmg = damageOf(s);
+            if (dmg > bestDmg + 0.5) { bestDmg = dmg; best = i; }
+        }
+        if (best >= 0) {
+            ItemStack old = equip.getItem(4);
+            equip.setItem(4, bag.getItem(best));
+            bag.setItem(best, old);
+            changed = true;
+        }
+        // armadura
+        EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+        for (int k = 0; k < 4; k++) {
+            int bi = -1, bd = defenseOf(equip.getItem(k));
+            for (int i = 0; i < bag.getContainerSize(); i++) {
+                ItemStack s = bag.getItem(i);
+                if (s.getItem() instanceof ArmorItem a && a.getEquipmentSlot() == slots[k] && a.getDefense() > bd) { bd = a.getDefense(); bi = i; }
+            }
+            if (bi >= 0) {
+                ItemStack old = equip.getItem(k);
+                equip.setItem(k, bag.getItem(bi));
+                bag.setItem(bi, old);
+                changed = true;
+            }
+        }
+        if (changed) {
+            level().playSound(null, blockPosition(), SoundEvents.ARMOR_EQUIP_IRON, SoundSource.NEUTRAL, 0.8F, 1.1F);
+            if (getRandom().nextInt(2) == 0) say(null, "Me puse lo mejor de mi mochila. Ahora sí estoy presentable.");
+        }
+    }
+
     // ------------------------------------------------------------------ tiempo juntos (desbloquea casas)
 
     public static final long[] HOUSE_BOND = {0L, 24000L, 72000L, 144000L};
@@ -298,13 +397,14 @@ public class KaoriEntity extends PathfinderMob {
     public int getForm() { return entityData.get(DATA_FORM); }
 
     /** Ticks desde la última transformación (para el destello y el grito). */
-    public int sinceTransform() { return tickCount - entityData.get(DATA_FORM_AT); }
+    public int sinceTransform() { return (int) (level().getGameTime() & 0x3FFFFFFF) - entityData.get(DATA_FORM_AT); }
 
     public void setForm(int form, boolean effects) {
         form = Math.max(0, Math.min(4, form));
+        if (form == 3) form = 2;                       // ya no tiene la Fase 3
         int old = getForm();
         entityData.set(DATA_FORM, form);
-        entityData.set(DATA_FORM_AT, tickCount);
+        entityData.set(DATA_FORM_AT, effects ? (int) (level().getGameTime() & 0x3FFFFFFF) : -100000);
         mod(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, FORM_DMG, new double[]{0, 7, 14, 24, 36}[form]);
         mod(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, FORM_SPEED, new double[]{0, 0.06, 0.1, 0.12, 0.14}[form]);
         mod(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, FORM_ARMOR, new double[]{0, 6, 10, 14, 18}[form]);
@@ -349,7 +449,10 @@ public class KaoriEntity extends PathfinderMob {
 
     public boolean isCollecting() { return entityData.get(DATA_COLLECT); }
 
-    public boolean isTalking() { return tickCount - entityData.get(DATA_TALK) < 50; }
+    public boolean isTalking() {
+        int now = (int) (level().getGameTime() & 0x3FFFFFFF), at = entityData.get(DATA_TALK);
+        return now >= at && now - at < 50;
+    }
 
     @Nullable public BlockPos getAnchor() { return anchor; }
 
@@ -367,7 +470,7 @@ public class KaoriEntity extends PathfinderMob {
 
     /** Habla (al chat del dueño) y pone cara contenta unos segundos. */
     public void say(@Nullable Player to, String text) {
-        entityData.set(DATA_TALK, tickCount);
+        entityData.set(DATA_TALK, (int) (level().getGameTime() & 0x3FFFFFFF));
         Player p = to != null ? to : getOwnerPlayer();
         if (p != null) p.sendSystemMessage(Component.literal("§6[Kaori] §f" + text));
     }
@@ -403,6 +506,7 @@ public class KaoriEntity extends PathfinderMob {
         flightTick();
         if (tickCount % 20 == 0) bondTick();
         if (tickCount % 200 == 0) generatorTick();
+        if (tickCount % 40 == 0) smartTick();
         if (tickCount % 20 == 0 && KaoriActions.isStale(this)) {
             // solo puede haber una Kaori: la copia vieja desaparece (sus cosas ya viajaron con la nueva)
             if (level() instanceof ServerLevel sl) sl.sendParticles(ParticleTypes.CLOUD, getX(), getY() + 1, getZ(), 30, 0.5, 0.8, 0.5, 0.05);

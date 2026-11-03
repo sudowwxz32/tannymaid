@@ -152,12 +152,12 @@ public final class KaoriActions {
             case TRADE_GET -> KaoriTrade.fetchMissing(p, k);
             case FORM -> {
                 int f = Math.max(0, Math.min(4, arg));
+                if (f == 3) f = 2;
                 if (f == k.getForm()) { k.say(p, f == 0 ? "Ya estoy en mi estado base." : "Ya estoy transformada, ¿no lo ves?"); break; }
                 k.setForm(f, true);
                 k.say(p, switch (f) {
                     case 1 -> "¡HAAAAA! ...Super Saiyajin. Sí, el dorado me queda perfecto.";
                     case 2 -> "¡¡HAAAAAAAA!! Super Saiyajin 2. Ahora sí, que tiemblen.";
-                    case 3 -> "¡¡¡HAAAAAAAAAAAA!!! ...Super Saiyajin 3. Sí, el cabello largo también me queda bien.";
                     case 4 -> "...Super Saiyajin Dios. Siente esta calma. Es poder divino, no lo olvides.";
                     default -> "Vuelvo a mi estado base. Tampoco hay que presumir todo el tiempo.";
                 });

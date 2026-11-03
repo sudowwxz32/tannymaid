@@ -79,22 +79,39 @@ public final class KaoriGoals {
                     && k.distanceToSqr(owner) > stop * stop;
         }
 
-        @Override public void start() { recalc = 0; }
+        private int stuck;
+        private double lastD;
+
+        @Override public void start() { recalc = 0; stuck = 0; lastD = Double.MAX_VALUE; }
 
         @Override
         public void stop() {
             owner = null;
             k.getNavigation().stop();
+            k.setSprinting(false);
         }
+
+        @Override public boolean requiresUpdateEveryTick() { return true; }
 
         @Override
         public void tick() {
             k.getLookControl().setLookAt(owner, 10.0F, k.getMaxHeadXRot());
+            double d = k.distanceToSqr(owner);
+            k.setSprinting(d > 7 * 7 || owner.isSprinting());
             if (--recalc <= 0) {
-                recalc = adjustedTickDelay(10);
-                double d = k.distanceToSqr(owner);
-                if (d >= 24 * 24) k.teleportNear(owner);
-                else k.getNavigation().moveTo(owner, d > 64 ? speed * 1.3 : speed);
+                recalc = adjustedTickDelay(5);
+                // si se atasca (no se acerca en 2 s), o te alejas mucho, aparece a tu lado
+                if (d >= lastD - 0.5) stuck += 5; else stuck = 0;
+                lastD = d;
+                if (d >= 16 * 16 || (stuck >= 40 && d > 6 * 6) || owner.isFallFlying() && d > 10 * 10 || owner.isPassenger() && d > 10 * 10) {
+                    k.teleportNear(owner);
+                    stuck = 0;
+                    lastD = Double.MAX_VALUE;
+                    return;
+                }
+                double sp = d > 10 * 10 ? speed * 1.45 : d > 5 * 5 ? speed * 1.2 : speed;
+                if (owner.isSprinting()) sp *= 1.15;
+                k.getNavigation().moveTo(owner, sp);
             }
         }
     }
