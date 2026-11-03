@@ -13,6 +13,9 @@ import net.minecraft.util.Mth;
 
 /** Kaori: chaqueta oliva, top blanco, cinturón de cápsulas, shorts cargo, botas, gafas de mecánica y coleta alta. */
 public class KaoriRenderer extends HumanoidMobRenderer<KaoriEntity, KaoriModel> {
+    /** true mientras se dibuja a Kaori dentro de un menú (ahí sí se ve la armadura). */
+    public static boolean PREVIEW;
+
     public enum Face { NORMAL, BLINK, HAPPY, SURPRISED, FOCUSED, TIRED }
 
     private static final ResourceLocation NORMAL = tex("kaori"), BLINK = tex("kaori_blink"), HAPPY = tex("kaori_happy"),
@@ -21,8 +24,15 @@ public class KaoriRenderer extends HumanoidMobRenderer<KaoriEntity, KaoriModel> 
     public KaoriRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new KaoriModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM)), 0.45F);
         // armadura un poco más holgada para que cubra la ropa 3D y no se vea nada por fuera
+        // la armadura solo se ve en sus menús (en el mundo queda oculta y se ve su ropa)
         addLayer(new HumanoidArmorLayer<>(this, new HumanoidArmorModel<>(ctx.bakeLayer(KaoriLayers.ARMOR_INNER)),
-                new HumanoidArmorModel<>(ctx.bakeLayer(KaoriLayers.ARMOR_OUTER)), ctx.getModelManager()));
+                new HumanoidArmorModel<>(ctx.bakeLayer(KaoriLayers.ARMOR_OUTER)), ctx.getModelManager()) {
+            @Override
+            public void render(PoseStack pose, net.minecraft.client.renderer.MultiBufferSource buf, int light, KaoriEntity e, float a, float b,
+                               float c, float d, float f, float h) {
+                if (PREVIEW) super.render(pose, buf, light, e, a, b, c, d, f, h);
+            }
+        });
         addLayer(new KaoriLayers.Outfit(this, ctx.getModelSet()));
         addLayer(new KaoriLayers.Head(this, ctx.getModelSet()));
         addLayer(new KaoriLayers.Ship(this, ctx.getModelSet()));

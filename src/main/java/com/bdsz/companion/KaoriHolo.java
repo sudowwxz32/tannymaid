@@ -38,7 +38,34 @@ import java.util.function.Supplier;
 public final class KaoriHolo {
     private KaoriHolo() {}
 
-    public static final int OPEN = 0, TP_KAORI = 1, TP_HOME = 2;
+    public static final int OPEN = 0, TP_KAORI = 1, TP_HOME = 2, TAKE = 1000;
+
+    /** Acción para tomar el objeto de una ranura (0-26 mochila, 27+ equipo). */
+    public static int take(int slot, boolean one) {
+        return TAKE + slot * 2 + (one ? 1 : 0);
+    }
+
+    private static void doTake(ServerPlayer p, int code) {
+        int slot = (code - TAKE) / 2;
+        boolean one = ((code - TAKE) & 1) == 1;
+        KaoriEntity k = KaoriActions.findKaori(p);
+        if (k == null) {
+            // está lejos (sin cargar): viene primero a tu lado para darte el objeto, así nunca se duplica
+            KaoriActions.summon(p);
+            k = KaoriActions.findKaori(p);
+            if (k == null) return;
+        }
+        net.minecraft.world.SimpleContainer c = slot < 27 ? k.getBag() : k.getEquip();
+        int i = slot < 27 ? slot : slot - 27;
+        if (i < 0 || i >= c.getContainerSize()) return;
+        ItemStack st = c.getItem(i);
+        if (st.isEmpty()) return;
+        ItemStack got = one ? st.split(1) : st.copy();
+        if (!one) c.setItem(i, ItemStack.EMPTY);
+        c.setChanged();
+        if (!p.getInventory().add(got)) p.drop(got, false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.4F, 1.6F);
+    }
 
     // ------------------------------------------------------------------ servidor
 
@@ -62,6 +89,11 @@ public final class KaoriHolo {
     }
 
     public static void handle(ServerPlayer p, int action) {
+        if (action >= TAKE) {
+            doTake(p, action);
+            send(p, KaoriActions.findKaori(p));
+            return;
+        }
         KaoriEntity k = KaoriActions.findKaori(p);
         switch (action) {
             case TP_KAORI -> {
@@ -107,21 +139,21 @@ public final class KaoriHolo {
         d.loaded = k != null;
         if (k != null) {
             for (int i = 0; i < 27; i++) d.bag.add(k.getBag().getItem(i).copy());
-            for (int i = 0; i < 6; i++) d.equip.add(k.getEquip().getItem(i).copy());
+            for (int i = 0; i < KaoriEntity.EQUIP_SIZE; i++) d.equip.add(k.getEquip().getItem(i).copy());
             d.health = k.getHealth();
             d.max = k.getMaxHealth();
             d.form = k.getForm();
             d.mode = k.getMode().ordinal();
             d.weak = k.isWeakened();
-            d.where = k.level() == p.level() ? (int) Math.round(Math.sqrt(k.distanceToSqr(p))) + " m" : k.level().dimension().location().getPath();
+            d.where = k.level() == p.level() ? (int) Math.round(Math.sqrt(k.distanceToSqr(p))) + " m de ti" : "en " + k.level().dimension().location().getPath();
         } else {
             fill(d.bag, backup.getList("Bag", 10), 27);
-            fill(d.equip, backup.getList("Equip", 10), 6);
+            fill(d.equip, backup.getList("Equip", 10), KaoriEntity.EQUIP_SIZE);
             d.health = backup.getFloat("Health");
             d.max = 30;
             d.form = backup.getInt("Form");
             d.mode = backup.getInt("Mode");
-            d.where = "lejos (zona sin cargar)";
+            d.where = "muy lejos";
         }
         d.home = homeBed(p, hut(p, k)) != null;
         Hut h = hut(p, k);

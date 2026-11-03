@@ -139,3 +139,12 @@ toda la ropa tiene piezas 3D. Amable y muy educada, pero altanera, ruda y fuerte
   sigue a otras dimensiones.
 - Más intuitiva: se equipa sola la mejor arma y armadura de su mochila, come si está herida, te da un tazón de arroz
   si te queda poca vida y al anochecer te ofrece sacar una casa.
+
+## 8.3.0 — Menús de Kaori renovados, cinturón de herramientas y antorcha
+- **Holograma (J)** renovado: estado, equipo y cinturón, mochila 9×3 y casa. **Clic en un objeto para tomarlo**
+  (clic derecho: solo uno). Si Kaori está muy lejos, primero viene a tu lado (así nada se duplica).
+- **Armadura**: en el mundo queda oculta (se ve su ropa); en sus menús sí se ve puesta.
+- **Cinturón**: ranuras para pico, hacha, pala, azada, arco/ballesta y otra herramienta (las usa al farmear y en la
+  agricultura) y una **antorcha** que lleva colgada del cinturón en 3D y que coloca sola donde está oscuro.
+- **Menú de Kaori** ordenado en pestañas (Principal · Ayuda · Casas y comercio), colores carbón, rojo y dorado,
+  barra de vida y botones alineados. La mochila tiene iconos de guía en cada ranura del equipo.

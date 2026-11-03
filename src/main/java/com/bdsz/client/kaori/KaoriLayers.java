@@ -65,8 +65,9 @@ public final class KaoriLayers {
             rightLeg.copyFrom(m.rightLeg);
             leftLeg.copyFrom(m.leftLeg);
             // con armadura se esconde la ropa que quedaría por fuera
-            boolean chest = !e.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), legs = !e.getItemBySlot(EquipmentSlot.LEGS).isEmpty(),
-                    feet = !e.getItemBySlot(EquipmentSlot.FEET).isEmpty();
+            boolean pv = KaoriRenderer.PREVIEW;
+            boolean chest = pv && !e.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), legs = pv && !e.getItemBySlot(EquipmentSlot.LEGS).isEmpty(),
+                    feet = pv && !e.getItemBySlot(EquipmentSlot.FEET).isEmpty();
             for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
                 String n = en.getKey();
                 if (n.contains("_arm") || n.contains("_leg") || n.equals("body")) continue;
@@ -79,6 +80,20 @@ public final class KaoriLayers {
                 en.getValue().visible = v;
             }
             root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(TEX)), light, LivingEntityRenderer.getOverlayCoords(e, 0.0F));
+            // antorcha colgada del cinturón (lado derecho)
+            net.minecraft.world.item.ItemStack torch = e.getBeltTorch();
+            if (!torch.isEmpty() && !legs) {
+                pose.pushPose();
+                body.translateAndRotate(pose);
+                pose.translate(-4.9F / 16F, 9.2F / 16F, 0.2F / 16F);
+                pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(180F + 18F));
+                pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(90F));
+                pose.scale(0.42F, 0.42F, 0.42F);
+                net.minecraft.client.Minecraft.getInstance().getItemRenderer().renderStatic(torch,
+                        net.minecraft.world.item.ItemDisplayContext.FIXED, light, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,
+                        pose, buf, e.level(), e.getId());
+                pose.popPose();
+            }
         }
     }
 
@@ -104,7 +119,7 @@ public final class KaoriLayers {
             if (e.isInvisible()) return;
             ModelPart ph = getParentModel().head;
             int overlay = LivingEntityRenderer.getOverlayCoords(e, 0.0F);
-            boolean helmet = !e.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
+            boolean helmet = KaoriRenderer.PREVIEW && !e.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
             float breeze = Mth.sin(age * 0.07F) * 0.04F;
             float walk = Mth.sin(limbSwing * 0.6662F) * limbAmount;
             // la coleta se balancea al caminar y con la brisa

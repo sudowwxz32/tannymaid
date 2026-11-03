@@ -380,8 +380,7 @@ public final class KaoriGoals {
         }
 
         private int hoeSlot() {
-            for (int i = 0; i < k.getBag().getContainerSize(); i++) if (k.getBag().getItem(i).getItem() instanceof HoeItem) return i;
-            return -1;
+            return k.hoe().isEmpty() ? -1 : 0;
         }
 
         private void harvest() {
@@ -422,8 +421,9 @@ public final class KaoriGoals {
             if (slot < 0) return;
             lv.setBlock(job, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
             lv.playSound(null, job, SoundEvents.HOE_TILL, SoundSource.BLOCKS, 1.0F, 1.0F);
-            ItemStack hoe = k.getBag().getItem(slot);
+            ItemStack hoe = k.hoe();
             hoe.hurtAndBreak(1, k, e -> {});
+            k.getEquip().setChanged();
             k.getBag().setChanged();
             k.swing(InteractionHand.MAIN_HAND);
         }

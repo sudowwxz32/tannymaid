@@ -61,7 +61,10 @@ public class KaoriEntity extends PathfinderMob {
 
     private final SimpleContainer bag = new SimpleContainer(27);
     /** 0 casco, 1 pechera, 2 grebas, 3 botas, 4 mano principal, 5 mano secundaria */
-    private final SimpleContainer equip = new SimpleContainer(6);
+    private final SimpleContainer equip = new SimpleContainer(EQUIP_SIZE);
+    /** 6 pico, 7 hacha, 8 pala, 9 azada, 10 arco, 11 otra herramienta, 12 antorcha del cinturón */
+    public static final int EQUIP_SIZE = 13, PICK = 6, AXE = 7, SHOVEL = 8, HOE = 9, BOW = 10, EXTRA = 11, TORCH = 12;
+    private static final EntityDataAccessor<ItemStack> DATA_TORCH = SynchedEntityData.defineId(KaoriEntity.class, EntityDataSerializers.ITEM_STACK);
     @Nullable private UUID ownerUUID;
     @Nullable private BlockPos anchor;
     @Nullable private KaoriResource gather;
@@ -105,6 +108,7 @@ public class KaoriEntity extends PathfinderMob {
         entityData.define(DATA_FORM, 0);
         entityData.define(DATA_FORM_AT, -100000);
         entityData.define(DATA_FLY, false);
+        entityData.define(DATA_TORCH, ItemStack.EMPTY);
     }
 
     @Override
@@ -229,6 +233,23 @@ public class KaoriEntity extends PathfinderMob {
         }
         // se equipa sola lo mejor que haya en su mochila (arma y armadura)
         autoEquip();
+        // pone antorchas de su cinturón donde está oscuro (para que no aparezcan monstruos)
+        ItemStack torch = equip.getItem(TORCH);
+        if (!torch.isEmpty() && torch.getItem() instanceof net.minecraft.world.item.BlockItem bi && onGround()) {
+            BlockPos at = blockPosition();
+            if (level().getMaxLocalRawBrightness(at) < 6 && level().getBlockState(at).canBeReplaced()
+                    && level().getFluidState(at).isEmpty()
+                    && level().getBlockState(at.below()).isFaceSturdy(level(), at.below(), net.minecraft.core.Direction.UP)) {
+                net.minecraft.world.level.block.state.BlockState ts = bi.getBlock().defaultBlockState();
+                if (ts.canSurvive(level(), at)) {
+                    level().setBlock(at, ts, 3);
+                    level().playSound(null, at, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 0.8F, 1.2F);
+                    swing(InteractionHand.OFF_HAND);
+                    torch.shrink(1);
+                    equip.setChanged();
+                }
+            }
+        }
         // come de su mochila si está herida
         if (getHealth() < getMaxHealth() * 0.6F) {
             for (int i = 0; i < bag.getContainerSize(); i++) {
@@ -729,8 +750,12 @@ public class KaoriEntity extends PathfinderMob {
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET,
             EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND};
 
+    public ItemStack getBeltTorch() { return entityData.get(DATA_TORCH); }
+
     public void applyEquipment() {
         if (level().isClientSide) return;
+        ItemStack t = equip.getItem(TORCH);
+        if (!ItemStack.matches(t, entityData.get(DATA_TORCH))) entityData.set(DATA_TORCH, t.copy());
         for (int i = 0; i < 6; i++) {
             if (i == 4 && (isGathering() || getMode() == KaoriMode.FARM)) continue;   // con la herramienta del trabajo
             setItemSlot(SLOTS[i], equip.getItem(i));
@@ -746,13 +771,21 @@ public class KaoriEntity extends PathfinderMob {
     public ItemStack bestTool(net.minecraft.world.level.block.state.BlockState state) {
         ItemStack best = ItemStack.EMPTY;
         float speed = 1.0F;
-        for (int i = 0; i < bag.getContainerSize() + 1; i++) {
-            ItemStack s = i < bag.getContainerSize() ? bag.getItem(i) : equip.getItem(4);
+        int[] belt = {4, PICK, AXE, SHOVEL, HOE, EXTRA};
+        for (int i = 0; i < bag.getContainerSize() + belt.length; i++) {
+            ItemStack s = i < bag.getContainerSize() ? bag.getItem(i) : equip.getItem(belt[i - bag.getContainerSize()]);
             if (s.isEmpty() || !(s.getItem() instanceof DiggerItem)) continue;
             float sp = s.getDestroySpeed(state);
             if (sp > speed) { speed = sp; best = s; }
         }
         return best;
+    }
+
+    /** La azada: primero la de su cinturón de herramientas, si no, una de la mochila. */
+    public ItemStack hoe() {
+        if (equip.getItem(HOE).getItem() instanceof HoeItem) return equip.getItem(HOE);
+        for (int i = 0; i < bag.getContainerSize(); i++) if (bag.getItem(i).getItem() instanceof HoeItem) return bag.getItem(i);
+        return ItemStack.EMPTY;
     }
 
     public boolean canStore(ItemStack stack) { return bag.canAddItem(stack); }
