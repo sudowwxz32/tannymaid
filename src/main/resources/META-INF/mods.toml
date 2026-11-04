@@ -1,0 +1,28 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="linterna"
+version="1.0.0"
+displayName="Linterna"
+authors="Linterna"
+description='''
+La primera noche llega una luz verde y te pregunta: ¿Tienes miedo?
+Si no lo tienes, recibes un anillo verde: vuela, levanta cosas, crea armaduras, picos, armas, martillos y
+constructos de energía. Recárgalo con el Candelabro de Poder.
+'''
+
+[[dependencies.linterna]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.linterna]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="BOTH"

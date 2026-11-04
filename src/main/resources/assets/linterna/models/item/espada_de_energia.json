@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "linterna:item/espada_de_energia"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "item.linterna.anillo_verde": "Green Ring",
+  "item.linterna.candelabro_de_poder": "Power Candelabra",
+  "block.linterna.candelabro_de_poder": "Power Candelabra",
+  "block.linterna.constructo": "Energy Construct",
+  "item.linterna.pico_de_energia": "Energy Pickaxe",
+  "item.linterna.espada_de_energia": "Energy Sword",
+  "item.linterna.bomba_de_energia": "Energy Bomb",
+  "entity.linterna.rayo_verde": "Green Bolt",
+  "key.categories.linterna": "Linterna (green ring)",
+  "key.linterna.fly": "Fly",
+  "key.linterna.armor": "Energy armor",
+  "key.linterna.pick": "Energy pickaxe",
+  "key.linterna.ghost": "Intangible",
+  "key.linterna.guns": "Energy guns",
+  "key.linterna.hammer": "Hammer",
+  "key.linterna.suit": "Suit",
+  "key.linterna.catalog": "Ring catalog"
+}

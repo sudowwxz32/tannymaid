@@ -1,0 +1,19 @@
+{
+  "item.linterna.anillo_verde": "Anillo Verde",
+  "item.linterna.candelabro_de_poder": "Candelabro de Poder",
+  "block.linterna.candelabro_de_poder": "Candelabro de Poder",
+  "block.linterna.constructo": "Constructo de energía",
+  "item.linterna.pico_de_energia": "Pico de energía",
+  "item.linterna.espada_de_energia": "Espada de energía",
+  "item.linterna.bomba_de_energia": "Bomba de energía",
+  "entity.linterna.rayo_verde": "Rayo verde",
+  "key.categories.linterna": "Linterna (anillo verde)",
+  "key.linterna.fly": "Volar",
+  "key.linterna.armor": "Armadura de energía",
+  "key.linterna.pick": "Pico de energía",
+  "key.linterna.ghost": "Intangible",
+  "key.linterna.guns": "Armas de energía",
+  "key.linterna.hammer": "Martillo",
+  "key.linterna.suit": "Traje",
+  "key.linterna.catalog": "Catálogo del anillo"
+}
