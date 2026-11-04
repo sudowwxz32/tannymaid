@@ -6,6 +6,8 @@
   "item.linterna.pico_de_energia": "Energy Pickaxe",
   "item.linterna.espada_de_energia": "Energy Sword",
   "item.linterna.bomba_de_energia": "Energy Bomb",
+  "item.linterna.canon_de_energia": "Energy Cannon",
+  "item.linterna.guadana_de_energia": "Energy Scythe",
   "entity.linterna.rayo_verde": "Green Bolt",
   "key.categories.linterna": "Linterna (green ring)",
   "key.linterna.fly": "Fly",

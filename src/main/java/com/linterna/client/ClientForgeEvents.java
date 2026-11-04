@@ -45,6 +45,27 @@ public final class ClientForgeEvents {
         if (e.getItemStack().is(ModRegistry.CANDELABRA_ITEM.get())) Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.RECHARGE, 0));
     }
 
+    /** Con el traje puesto se ocultan las capas exteriores de la skin para que el traje encaje con el cuerpo. */
+    @SubscribeEvent
+    public static void pre(net.minecraftforge.client.event.RenderPlayerEvent.Pre e) {
+        if (ClientStates.get(e.getEntity().getId()).on(com.linterna.data.LanternState.SUIT)) {
+            var m = e.getRenderer().getModel();
+            m.jacket.visible = m.leftSleeve.visible = m.rightSleeve.visible = m.leftPants.visible = m.rightPants.visible = false;
+            HIDDEN = true;
+        }
+    }
+
+    @SubscribeEvent
+    public static void post(net.minecraftforge.client.event.RenderPlayerEvent.Post e) {
+        if (HIDDEN) {
+            var m = e.getRenderer().getModel();
+            m.jacket.visible = m.leftSleeve.visible = m.rightSleeve.visible = m.leftPants.visible = m.rightPants.visible = true;
+            HIDDEN = false;
+        }
+    }
+
+    private static boolean HIDDEN;
+
     @SubscribeEvent
     public static void logout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientStates.clear();

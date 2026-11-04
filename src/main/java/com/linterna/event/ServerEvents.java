@@ -107,7 +107,12 @@ public final class ServerEvents {
     /** Los objetos del anillo (pico) no se pueden tirar: se desvanecen. */
     @SubscribeEvent
     public static void toss(ItemTossEvent e) {
-        if (e.getEntity().getItem().is(ModRegistry.ENERGY_PICK.get()) && e.getPlayer() instanceof ServerPlayer p) {
+        net.minecraft.world.item.ItemStack it = e.getEntity().getItem();
+        if (it.hasTag() && it.getTag().getBoolean(Constructs.WEAPON)) {
+            e.getEntity().discard();          // las armas de energía se desvanecen al soltarlas
+            return;
+        }
+        if (it.is(ModRegistry.ENERGY_PICK.get()) && e.getPlayer() instanceof ServerPlayer p) {
             e.setCanceled(true);
             LanternState s = LanternData.get(p);
             s.set(LanternState.PICK, false);

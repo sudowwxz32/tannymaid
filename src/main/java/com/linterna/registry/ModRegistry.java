@@ -41,6 +41,10 @@ public final class ModRegistry {
             () -> new EnergyPickItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
     public static final RegistryObject<Item> ENERGY_SWORD = ITEMS.register("espada_de_energia",
             () -> new EnergySwordItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+    public static final RegistryObject<Item> ENERGY_CANNON = ITEMS.register("canon_de_energia",
+            () -> new CannonItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+    public static final RegistryObject<Item> ENERGY_SCYTHE = ITEMS.register("guadana_de_energia",
+            () -> new ScytheItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
     public static final RegistryObject<Item> ENERGY_BOMB = ITEMS.register("bomba_de_energia",
             () -> new BombItem(new Item.Properties().stacksTo(16).rarity(Rarity.RARE)));
 

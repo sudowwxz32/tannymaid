@@ -257,6 +257,12 @@ public final class LanternLogic {
             lv.sendParticles(GREEN, p.getX(), p.getY() + 0.8, p.getZ(), 2, 0.3, 0.5, 0.3, 0);   // estela verde
         }
         Holding.tick(p);
+        s.held = LanternData.get(p).held;          // Holding pudo soltar lo que sostenía
+        // silueta verde de resalte en el personaje mientras usa el anillo
+        boolean glow = (s.powers & (LanternState.FLY | LanternState.ARMOR | LanternState.GHOST | LanternState.GUNS)) != 0;
+        if (glow != p.hasGlowingTag()) {
+            if (glow) Glow.on(p); else Glow.off(p);
+        }
         if (dirty) LanternData.set(p, s); else LanternData.quiet(p, s);
     }
 

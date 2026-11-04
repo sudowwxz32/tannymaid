@@ -20,13 +20,21 @@ import java.util.Comparator;
 public final class Constructs {
     private Constructs() {}
 
-    public static final String[] NAMES = {"Pared", "Barrera", "Domo de defensa", "Plataforma", "Jaula", "Bombas", "Espada", "Esmeraldas falsas"};
-    public static final int[] COST = {300, 450, 900, 200, 400, 300, 300, 800};
+    public static final String[] NAMES = {"Pared", "Barrera", "Domo de defensa", "Plataforma", "Jaula", "Bombas", "Espada de luz", "Esmeraldas falsas",
+            "Espada", "Hacha", "Arco", "Ballesta", "Tridente", "Escudo", "Cañón", "Guadaña"};
+    public static final int[] COST = {300, 450, 900, 200, 400, 300, 300, 800,
+            300, 300, 350, 350, 450, 250, 500, 450};
+    /** Cuántos son constructos (el resto son armas). */
+    public static final int CONSTRUCTS = 8;
     public static final String[] TIPS = {
             "Una pared sólida de 5×3 frente a ti", "Una barrera curva de 7×4 que te cubre de flechas y monstruos",
             "Un domo de defensa alrededor tuyo (radio 4)", "Una plataforma de 5×5 bajo tus pies (para volar o puentes)",
             "Encierra al monstruo más cercano en una jaula", "4 bombas de energía para lanzar (clic derecho)",
-            "Una espada de energía (dura 3 minutos)", "16 esmeraldas que se desvanecen en 5 minutos"};
+            "Una espada de energía (dura 3 minutos)", "16 esmeraldas que se desvanecen en 5 minutos",
+            "Espada de diamante de energía: Filo V, irrompible", "Hacha de diamante de energía: Filo V y Eficiencia V",
+            "Arco de energía: Poder V, Empuje II, Llama e Infinidad (con su flecha)", "Ballesta de energía: Multidisparo y Carga Rápida III (32 flechas)",
+            "Tridente de energía: Lealtad III, Empalamiento V y Canalización", "Escudo de energía irrompible",
+            "Cañón de energía: clic derecho dispara ráfagas verdes", "Guadaña de energía: golpe amplio que corta a todos alrededor"};
 
     public static final String EXPIRE = "LinternaExpira";
 
@@ -82,6 +90,20 @@ public final class Constructs {
                 sw.getOrCreateTag().putLong(EXPIRE, now + 3600);
                 give(p, sw);
             }
+            case 8 -> weapon(p, new ItemStack(Items.DIAMOND_SWORD), "Espada verde", now, "sharpness", 5, "looting", 3);
+            case 9 -> weapon(p, new ItemStack(Items.DIAMOND_AXE), "Hacha verde", now, "sharpness", 5, "efficiency", 5);
+            case 10 -> {
+                weapon(p, new ItemStack(Items.BOW), "Arco verde", now, "power", 5, "punch", 2, "flame", 1, "infinity", 1);
+                weapon(p, new ItemStack(Items.ARROW), "Flecha de energía", now);
+            }
+            case 11 -> {
+                weapon(p, new ItemStack(Items.CROSSBOW), "Ballesta verde", now, "multishot", 1, "quick_charge", 3);
+                weapon(p, new ItemStack(Items.ARROW, 32), "Flecha de energía", now);
+            }
+            case 12 -> weapon(p, new ItemStack(Items.TRIDENT), "Tridente verde", now, "loyalty", 3, "impaling", 5, "channeling", 1);
+            case 13 -> weapon(p, new ItemStack(Items.SHIELD), "Escudo verde", now);
+            case 14 -> weapon(p, new ItemStack(ModRegistry.ENERGY_CANNON.get()), null, now);
+            case 15 -> weapon(p, new ItemStack(ModRegistry.ENERGY_SCYTHE.get()), null, now);
             case 7 -> {
                 ItemStack em = new ItemStack(Items.EMERALD, 16);
                 CompoundTag t = em.getOrCreateTag();
@@ -95,6 +117,23 @@ public final class Constructs {
         lv.sendParticles(LanternLogic.GREEN, p.getX(), p.getY() + 1, p.getZ(), 40, 1.5, 1.0, 1.5, 0);
         LanternLogic.msg(p, "§a✦ Constructo: " + NAMES[what]);
         LanternData.set(p, s);
+    }
+
+    public static final String WEAPON = "LinternaArma";
+
+    /** Arma de energía: irrompible, encantada, verde, no se puede tirar y se desvanece en 3 minutos. */
+    private static void weapon(ServerPlayer p, ItemStack st, String name, long now, Object... ench) {
+        CompoundTag t = st.getOrCreateTag();
+        t.putLong(EXPIRE, now + 3600);
+        t.putBoolean(WEAPON, true);
+        if (st.isDamageableItem()) t.putBoolean("Unbreakable", true);
+        if (name != null) st.setHoverName(net.minecraft.network.chat.Component.literal("§a" + name));
+        for (int i = 0; i + 1 < ench.length; i += 2) {
+            net.minecraft.world.item.enchantment.Enchantment en = net.minecraftforge.registries.ForgeRegistries.ENCHANTMENTS
+                    .getValue(new net.minecraft.resources.ResourceLocation((String) ench[i]));
+            if (en != null) st.enchant(en, (Integer) ench[i + 1]);
+        }
+        give(p, st);
     }
 
     private static void place(ServerLevel lv, BlockPos q) {

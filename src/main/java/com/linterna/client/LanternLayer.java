@@ -29,15 +29,17 @@ import net.minecraft.util.Mth;
 public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private static final ResourceLocation ENERGY = new ResourceLocation(Linterna.MODID, "textures/entity/energia.png");
     private static final ResourceLocation SUIT = new ResourceLocation(Linterna.MODID, "textures/entity/traje.png");
-    private final PlayerModel<AbstractClientPlayer> shellW, shellS, armorW, armorS, suitW, suitS;
+    private static final ResourceLocation ARMOR = new ResourceLocation(Linterna.MODID, "textures/entity/armadura_energia.png");
+    private final PlayerModel<AbstractClientPlayer> shellW, shellS, suitW, suitS;
+    private final net.minecraft.client.model.HumanoidModel<AbstractClientPlayer> armorOut, armorIn;
     private final ModelPart hammer, gun, ring;
 
     public LanternLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent, EntityModelSet models) {
         super(parent);
         shellW = new PlayerModel<>(models.bakeLayer(ClientModEvents.SHELL_WIDE), false);
         shellS = new PlayerModel<>(models.bakeLayer(ClientModEvents.SHELL_SLIM), true);
-        armorW = new PlayerModel<>(models.bakeLayer(ClientModEvents.ARMOR_WIDE), false);
-        armorS = new PlayerModel<>(models.bakeLayer(ClientModEvents.ARMOR_SLIM), true);
+        armorOut = new net.minecraft.client.model.HumanoidModel<>(models.bakeLayer(ClientModEvents.ARMOR_OUTER));
+        armorIn = new net.minecraft.client.model.HumanoidModel<>(models.bakeLayer(ClientModEvents.ARMOR_INNER));
         suitW = new PlayerModel<>(models.bakeLayer(ClientModEvents.SUIT_WIDE), false);
         suitS = new PlayerModel<>(models.bakeLayer(ClientModEvents.SUIT_SLIM), true);
         ModelPart c = models.bakeLayer(ClientModEvents.CONSTRUCTS);
@@ -64,11 +66,24 @@ public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         return LayerDefinition.create(mesh, 64, 64);
     }
 
-    private static void copy(PlayerModel<?> from, PlayerModel<?> to) {
-        ModelPart[][] pairs = {{from.head, to.head}, {from.body, to.body}, {from.rightArm, to.rightArm}, {from.leftArm, to.leftArm},
-                {from.rightLeg, to.rightLeg}, {from.leftLeg, to.leftLeg}, {from.hat, to.hat}, {from.jacket, to.jacket},
-                {from.rightSleeve, to.rightSleeve}, {from.leftSleeve, to.leftSleeve}, {from.rightPants, to.rightPants}, {from.leftPants, to.leftPants}};
-        for (ModelPart[] p : pairs) p[1].copyFrom(p[0]);
+    /** Copia la pose exacta (y la escala) del jugador para que todo encaje con su cuerpo. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void copy(PlayerModel<AbstractClientPlayer> from, net.minecraft.client.model.HumanoidModel to) {
+        from.copyPropertiesTo(to);
+        ModelPart[][] pairs = {{from.head, to.head}, {from.hat, to.hat}, {from.body, to.body}, {from.rightArm, to.rightArm},
+                {from.leftArm, to.leftArm}, {from.rightLeg, to.rightLeg}, {from.leftLeg, to.leftLeg}};
+        for (ModelPart[] p : pairs) scale(p[0], p[1]);
+        if (to instanceof PlayerModel<?> pm) {
+            ModelPart[][] outer = {{from.jacket, pm.jacket}, {from.rightSleeve, pm.rightSleeve}, {from.leftSleeve, pm.leftSleeve},
+                    {from.rightPants, pm.rightPants}, {from.leftPants, pm.leftPants}};
+            for (ModelPart[] p : outer) { p[1].copyFrom(p[0]); scale(p[0], p[1]); }
+        }
+    }
+
+    private static void scale(ModelPart a, ModelPart b) {
+        b.xScale = a.xScale;
+        b.yScale = a.yScale;
+        b.zScale = a.zScale;
     }
 
     @Override
@@ -85,22 +100,29 @@ public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         if (s.on(LanternState.SUIT) && !p.isInvisible()) {
             PlayerModel<AbstractClientPlayer> m = slim ? suitS : suitW;
             copy(parent, m);
+            m.setAllVisible(true);
             m.head.visible = m.hat.visible = false;
             m.renderToBuffer(pose, buf.getBuffer(RenderType.entityCutoutNoCull(SUIT)), light, overlay, 1, 1, 1, 1);
         }
-        // ---- armadura de energía semitransparente
+        // ---- armadura de energía semitransparente (casco, pechera, hombreras, grebas y botas)
         if (s.on(LanternState.ARMOR)) {
-            PlayerModel<AbstractClientPlayer> m = slim ? armorS : armorW;
-            copy(parent, m);
-            m.hat.visible = m.jacket.visible = m.leftSleeve.visible = m.rightSleeve.visible = m.leftPants.visible = m.rightPants.visible = false;
-            m.renderToBuffer(pose, buf.getBuffer(RenderType.entityTranslucentEmissive(ENERGY)), LightTexture.FULL_BRIGHT, overlay,
-                    0.3F, 1.0F, 0.4F, 0.42F * pulse);
+            var vc = buf.getBuffer(RenderType.entityTranslucentEmissive(ARMOR));
+            copy(parent, armorIn);
+            armorIn.setAllVisible(false);
+            armorIn.body.visible = armorIn.rightLeg.visible = armorIn.leftLeg.visible = true;
+            armorIn.renderToBuffer(pose, vc, LightTexture.FULL_BRIGHT, overlay, 0.35F, 1.0F, 0.45F, 0.55F * pulse);
+            copy(parent, armorOut);
+            armorOut.setAllVisible(false);
+            armorOut.head.visible = armorOut.body.visible = armorOut.rightArm.visible = armorOut.leftArm.visible = true;
+            armorOut.rightLeg.visible = armorOut.leftLeg.visible = true;
+            armorOut.renderToBuffer(pose, vc, LightTexture.FULL_BRIGHT, overlay, 0.35F, 1.0F, 0.45F, 0.6F * pulse);
         }
         // ---- silueta verde (volando o intangible)
         boolean ghost = s.on(LanternState.GHOST);
         if (ghost || (s.on(LanternState.FLY) && !p.onGround())) {
             PlayerModel<AbstractClientPlayer> m = slim ? shellS : shellW;
             copy(parent, m);
+            m.setAllVisible(true);
             m.hat.visible = m.jacket.visible = m.leftSleeve.visible = m.rightSleeve.visible = m.leftPants.visible = m.rightPants.visible = false;
             m.renderToBuffer(pose, buf.getBuffer(RenderType.entityTranslucentEmissive(ENERGY)), LightTexture.FULL_BRIGHT, overlay,
                     0.35F, 1.0F, 0.45F, (ghost ? 0.5F : 0.28F) * pulse);

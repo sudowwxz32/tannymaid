@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /** Guarda el estado en el jugador (persistente) y lo sincroniza con los clientes. */
 public final class LanternData {
     private static final String KEY = "Linterna";
-    private static final Map<UUID, int[]> LIVE = new ConcurrentHashMap<>();   // martillo, recarga
+    private static final Map<UUID, int[]> LIVE = new ConcurrentHashMap<>();   // martillo, recarga, sostenido
 
     private LanternData() {}
 
@@ -30,13 +30,14 @@ public final class LanternData {
         if (l != null) {
             s.hammer = l[0];
             s.recharge = l[1];
+            s.held = l[2];
         }
         return s;
     }
 
     private static void store(Player p, LanternState s) {
         root(p).put(KEY, s.save());
-        LIVE.put(p.getUUID(), new int[]{s.hammer, s.recharge});
+        LIVE.put(p.getUUID(), new int[]{s.hammer, s.recharge, s.held});
     }
 
     /** Guarda y avisa a todos los que lo ven. */

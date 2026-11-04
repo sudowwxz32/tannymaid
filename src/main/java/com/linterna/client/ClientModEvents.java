@@ -38,7 +38,7 @@ public final class ClientModEvents {
 
     public static final ModelLayerLocation SHELL_WIDE = loc("shell_wide"), SHELL_SLIM = loc("shell_slim"),
             ARMOR_WIDE = loc("armor_wide"), ARMOR_SLIM = loc("armor_slim"), SUIT_WIDE = loc("suit_wide"), SUIT_SLIM = loc("suit_slim"),
-            CONSTRUCTS = loc("constructs");
+            CONSTRUCTS = loc("constructs"), ARMOR_OUTER = loc("armor_outer"), ARMOR_INNER = loc("armor_inner");
 
     private static KeyMapping key(String name, int code, KeyModifier mod) {
         String id = "key.linterna." + name;
@@ -66,6 +66,11 @@ public final class ClientModEvents {
         e.registerLayerDefinition(SUIT_WIDE, () -> mesh(0.04F, false));
         e.registerLayerDefinition(SUIT_SLIM, () -> mesh(0.04F, true));
         e.registerLayerDefinition(CONSTRUCTS, LanternLayer::constructs);
+        // armadura de energía con la forma de una armadura de verdad (casco, pechera, grebas y botas)
+        e.registerLayerDefinition(ARMOR_OUTER, () -> LayerDefinition.create(
+                net.minecraft.client.model.HumanoidArmorModel.createBodyLayer(new CubeDeformation(1.0F)), 64, 32));
+        e.registerLayerDefinition(ARMOR_INNER, () -> LayerDefinition.create(
+                net.minecraft.client.model.HumanoidArmorModel.createBodyLayer(new CubeDeformation(0.5F)), 64, 32));
     }
 
     @SubscribeEvent

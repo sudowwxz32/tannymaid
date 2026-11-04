@@ -108,6 +108,54 @@ def suit():
     save(im, f"{A}/textures/entity/traje.png")
 
 
+def armor():
+    """Armadura de energía (formato de armadura 64x32): placas translúcidas con bordes brillantes."""
+    S = 2
+    im = Image.new("RGBA", (64 * S, 32 * S), T)
+
+    def faces(u, v, w, h, d):
+        return {"top": (u + d, v, w, d), "bottom": (u + d + w, v, w, d), "right": (u, v + d, d, h),
+                "front": (u + d, v + d, w, h), "left": (u + d + w, v + d, d, h), "back": (u + 2 * d + w, v + d, w, h)}
+
+    def paint(u, v, w, h, d, plates):
+        for f, (fx, fy, fw, fh) in faces(u, v, w, h, d).items():
+            for y in range(fy * S, (fy + fh) * S):
+                for x in range(fx * S, (fx + fw) * S):
+                    lx, ly = (x - fx * S) / S, (y - fy * S) / S
+                    edge = lx < 0.5 or ly < 0.5 or lx > fw - 0.5 or ly > fh - 0.5
+                    seam = any(abs(ly - k) < 0.25 for k in plates) if f not in ("top", "bottom") else False
+                    if edge or seam:
+                        im.putpixel((x, y), (235, 255, 240, 255))
+                    else:
+                        a = 120 + (35 if (int(lx * 2) + int(ly * 2)) % 2 == 0 else 0)
+                        im.putpixel((x, y), (255, 255, 255, a))
+
+    paint(0, 0, 8, 8, 8, [5.5])              # casco con visera
+    paint(16, 16, 8, 12, 4, [3.5, 7.0, 10.0])  # pechera por placas
+    paint(40, 16, 4, 12, 4, [4.0, 8.0])      # brazos y hombreras
+    paint(0, 16, 4, 12, 4, [4.0, 8.0])       # grebas y botas
+    save(im, f"{A}/textures/entity/armadura_energia.png")
+
+
+def cannon_tex():
+    im = Image.new("RGBA", (16, 16), T)
+    d = ImageDraw.Draw(im)
+    d.rectangle((2, 6, 9, 10), fill=(40, 180, 75, 230), outline=(170, 255, 190, 255))
+    d.rectangle((9, 7, 15, 9), fill=(90, 240, 125, 230))
+    d.rectangle((4, 10, 6, 14), fill=(40, 180, 75, 230), outline=(170, 255, 190, 255))
+    im.putpixel((15, 8), (230, 255, 235, 255))
+    save(im, f"{A}/textures/item/canon_de_energia.png")
+
+
+def scythe_tex():
+    im = Image.new("RGBA", (16, 16), T)
+    for i in range(13):
+        im.putpixel((2 + i // 2 + (i % 2), 15 - i), (60, 200, 90, 230))
+    d = ImageDraw.Draw(im)
+    d.arc((3, 0, 17, 12), 180, 300, fill=(170, 255, 190, 255), width=2)
+    save(im, f"{A}/textures/item/guadana_de_energia.png")
+
+
 # ---------------------------------------------------------------- objetos y bloques
 def ring():
     im = Image.new("RGBA", (16, 16), T)
@@ -216,8 +264,8 @@ def candelabra_model():
 
 
 def items():
-    for n in ("anillo_verde", "pico_de_energia", "espada_de_energia", "bomba_de_energia"):
-        parent = "item/handheld" if n in ("pico_de_energia", "espada_de_energia") else "item/generated"
+    for n in ("anillo_verde", "pico_de_energia", "espada_de_energia", "bomba_de_energia", "canon_de_energia", "guadana_de_energia"):
+        parent = "item/handheld" if n in ("pico_de_energia", "espada_de_energia", "guadana_de_energia") else "item/generated"
         jdump({"parent": parent, "textures": {"layer0": "linterna:item/" + n}}, f"{A}/models/item/{n}.json")
 
 
@@ -225,14 +273,16 @@ def lang():
     es = {"item.linterna.anillo_verde": "Anillo Verde", "item.linterna.candelabro_de_poder": "Candelabro de Poder",
           "block.linterna.candelabro_de_poder": "Candelabro de Poder", "block.linterna.constructo": "Constructo de energía",
           "item.linterna.pico_de_energia": "Pico de energía", "item.linterna.espada_de_energia": "Espada de energía",
-          "item.linterna.bomba_de_energia": "Bomba de energía", "entity.linterna.rayo_verde": "Rayo verde",
+          "item.linterna.bomba_de_energia": "Bomba de energía", "item.linterna.canon_de_energia": "Cañón de energía",
+          "item.linterna.guadana_de_energia": "Guadaña de energía", "entity.linterna.rayo_verde": "Rayo verde",
           "key.categories.linterna": "Linterna (anillo verde)", "key.linterna.fly": "Volar", "key.linterna.armor": "Armadura de energía",
           "key.linterna.pick": "Pico de energía", "key.linterna.ghost": "Intangible", "key.linterna.guns": "Armas de energía",
           "key.linterna.hammer": "Martillo", "key.linterna.suit": "Traje", "key.linterna.catalog": "Catálogo del anillo"}
     en = {"item.linterna.anillo_verde": "Green Ring", "item.linterna.candelabro_de_poder": "Power Candelabra",
           "block.linterna.candelabro_de_poder": "Power Candelabra", "block.linterna.constructo": "Energy Construct",
           "item.linterna.pico_de_energia": "Energy Pickaxe", "item.linterna.espada_de_energia": "Energy Sword",
-          "item.linterna.bomba_de_energia": "Energy Bomb", "entity.linterna.rayo_verde": "Green Bolt",
+          "item.linterna.bomba_de_energia": "Energy Bomb", "item.linterna.canon_de_energia": "Energy Cannon",
+          "item.linterna.guadana_de_energia": "Energy Scythe", "entity.linterna.rayo_verde": "Green Bolt",
           "key.categories.linterna": "Linterna (green ring)", "key.linterna.fly": "Fly", "key.linterna.armor": "Energy armor",
           "key.linterna.pick": "Energy pickaxe", "key.linterna.ghost": "Intangible", "key.linterna.guns": "Energy guns",
           "key.linterna.hammer": "Hammer", "key.linterna.suit": "Suit", "key.linterna.catalog": "Ring catalog"}
@@ -242,5 +292,5 @@ def lang():
 
 
 if __name__ == "__main__":
-    energy(); rayo(); suit(); ring(); pick(); sword(); bomb(); construct(); candelabra_tex(); candelabra_model(); items(); lang()
+    energy(); rayo(); suit(); armor(); cannon_tex(); scythe_tex(); ring(); pick(); sword(); bomb(); construct(); candelabra_tex(); candelabra_model(); items(); lang()
     print("linterna ok")

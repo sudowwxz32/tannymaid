@@ -23,3 +23,12 @@ La primera noche de un mundo nuevo llega una **luz verde** que te eleva al cielo
 - Comandos: `/linterna estado`; para operadores `/linterna llamar`, `reiniciar`, `recargar`, `anillo`.
 
 Texturas y modelos: `python3 tools/gen_linterna.py`.
+
+## Novedades 1.1.0
+- **Catálogo (M)** rediseñado como holograma verde, con pestañas *Constructos* y *Armas*.
+- **Armas vanilla de energía** en el catálogo: espada, hacha, arco, ballesta, tridente y escudo, todas encantadas e irrompibles. Duran 3 minutos.
+- **Armas nuevas:** Cañón de energía (dispara 3 rayos) y Guadaña de energía (golpe en área).
+- **Rayo de selección:** al hacer clic derecho con el anillo sale un rayo verde hasta el objetivo, ya sea un bloque, un material, un animal o un enemigo. El rayo se mantiene mientras lo sostienes y el objetivo tiene una silueta verde.
+- **Silueta verde** alrededor del portador cuando vuela, usa la armadura, está intangible o tiene las armas activas.
+- **Armadura (Y)** con forma real de armadura que se ajusta al cuerpo y sigue sus movimientos.
+- **Traje (Alt+T)** ajustado a la piel: oculta la capa exterior de la skin para que encaje bien.
