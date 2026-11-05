@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Block;
 import javax.annotation.Nullable;
 import java.util.List;
 
-/** Candelabro de Poder: en la mano, clic izquierdo recarga el anillo. También se puede colocar. */
+/** Lámpara de Poder (lámpara de aceite antigua, verde): recarga el anillo. También se puede colocar. */
 public class CandelabraItem extends BlockItem {
     public CandelabraItem(Block block, Properties props) {
         super(block, props);
@@ -18,12 +18,19 @@ public class CandelabraItem extends BlockItem {
 
     @Override
     public boolean isFoil(ItemStack stack) {
-        return true;
+        return false;
+    }
+
+    @Override
+    public boolean onEntityItemUpdate(ItemStack stack, net.minecraft.world.entity.item.ItemEntity entity) {
+        entity.setUnlimitedLifetime();
+        return false;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tip, TooltipFlag flag) {
-        tip.add(Component.literal("§aClic izquierdo con él en la mano: recarga el Anillo Verde"));
-        tip.add(Component.literal("§7Colocado: clic izquierdo sobre él también lo recarga"));
+        tip.add(Component.literal("§aClic izquierdo con ella en la mano: recarga el Anillo Verde"));
+        tip.add(Component.literal("§7Colocada: clic izquierdo o derecho sobre ella también lo recarga"));
+        tip.add(Component.literal("§2Nunca la pierdes al morir"));
     }
 }

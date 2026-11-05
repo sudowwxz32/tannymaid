@@ -26,7 +26,7 @@ public class RayoRenderer extends EntityRenderer<RayoVerde> {
     @Override
     public void render(RayoVerde e, float yaw, float partial, PoseStack pose, MultiBufferSource buf, int light) {
         pose.pushPose();
-        float s = e.isBomb() ? 0.7F : 0.45F;
+        float s = e.isBomb() ? 0.7F : e.size();
         pose.translate(0, 0.2, 0);
         pose.mulPose(entityRenderDispatcher.cameraOrientation());
         pose.mulPose(Axis.YP.rotationDegrees(180.0F));

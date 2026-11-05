@@ -32,8 +32,9 @@ public class CatalogScreen extends Screen {
         icons = new ItemStack[]{new ItemStack(Items.LIME_STAINED_GLASS), new ItemStack(Items.LIME_STAINED_GLASS_PANE), new ItemStack(Items.GLASS),
                 new ItemStack(Items.LIME_CARPET), new ItemStack(Items.IRON_BARS), new ItemStack(ModRegistry.ENERGY_BOMB.get()),
                 new ItemStack(ModRegistry.ENERGY_SWORD.get()), new ItemStack(Items.EMERALD),
-                new ItemStack(Items.DIAMOND_SWORD), new ItemStack(Items.DIAMOND_AXE), new ItemStack(Items.BOW), new ItemStack(Items.CROSSBOW),
-                new ItemStack(Items.TRIDENT), new ItemStack(Items.SHIELD), new ItemStack(ModRegistry.ENERGY_CANNON.get()),
+                new ItemStack(ModRegistry.ENERGY_SWORD.get()), new ItemStack(ModRegistry.ENERGY_AXE.get()), new ItemStack(ModRegistry.ENERGY_BOW.get()),
+                new ItemStack(ModRegistry.ENERGY_SHIELD.get()), new ItemStack(ModRegistry.ENERGY_LANCE.get()), new ItemStack(ModRegistry.ENERGY_MACE.get()),
+                new ItemStack(ModRegistry.ENERGY_CANNON.get()),
                 new ItemStack(ModRegistry.ENERGY_SCYTHE.get())};
     }
 
@@ -45,8 +46,15 @@ public class CatalogScreen extends Screen {
     private int cardY(int i) { return top() + 44 + (i / 4) * (CH + 6); }
     private int tabX(int t) { return left() + 10 + t * 100; }
 
+    private int ringX() { return left() + 210; }
+    private boolean onRing(double mx, double my) { return mx >= ringX() && mx < ringX() + 92 && my >= top() + 22 && my < top() + 37; }
+
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
+        if (onRing(mx, my)) {
+            Net.CHANNEL.sendToServer(new ActionPacket(ActionPacket.OPEN_RING, 0));
+            return true;
+        }
         for (int t = 0; t < 2; t++) {
             if (mx >= tabX(t) && mx < tabX(t) + 96 && my >= top() + 22 && my < top() + 37) {
                 tab = t;
@@ -104,7 +112,10 @@ public class CatalogScreen extends Screen {
             frame(g, tabX(k), y + 22, 96, 15, sel ? 0x704CFF6A : hov ? 0x404CFF6A : 0x2032C050, sel ? G_HI : G2);
             g.drawCenteredString(font, tabs[k], tabX(k) + 48, y + 26, sel ? G_HI : G_TXT);
         }
-        String tip = "";
+        boolean rh = onRing(mx, my);
+        frame(g, ringX(), y + 22, 92, 15, rh ? 0x704CFF6A : 0x3032C050, rh ? G_HI : G1);
+        g.drawCenteredString(font, (s.worn ? "◉ " : "◎ ") + "Ranura del anillo", ringX() + 46, y + 26, s.worn ? G_HI : G_TXT);
+        String tip = rh ? "Ponte el anillo en su ranura: funciona sin tenerlo en la mano y nunca lo pierdes al morir" : "";
         for (int i = 0; i < count(); i++) {
             int idx = first() + i, cx = cardX(i), cy = cardY(i);
             boolean hover = mx >= cx && mx < cx + CW && my >= cy && my < cy + CH;

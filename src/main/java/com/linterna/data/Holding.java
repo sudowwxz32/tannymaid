@@ -72,7 +72,10 @@ public final class Holding {
             fb.dropItem = true;
             grab = fb;
         }
-        if (grab == null) return;
+        if (grab == null) {
+            LanternLogic.ringShot(p);              // nada que levantar: el anillo dispara
+            return;
+        }
         HELD.put(p.getUUID(), grab.getId());
         grab.setNoGravity(true);
         Glow.on(grab);                              // silueta verde en lo que sostienes

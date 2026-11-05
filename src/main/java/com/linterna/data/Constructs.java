@@ -21,9 +21,9 @@ public final class Constructs {
     private Constructs() {}
 
     public static final String[] NAMES = {"Pared", "Barrera", "Domo de defensa", "Plataforma", "Jaula", "Bombas", "Espada de luz", "Esmeraldas falsas",
-            "Espada", "Hacha", "Arco", "Ballesta", "Tridente", "Escudo", "Cañón", "Guadaña"};
+            "Espada", "Hacha", "Arco", "Escudo", "Lanza", "Mazo", "Cañón", "Guadaña"};
     public static final int[] COST = {300, 450, 900, 200, 400, 300, 300, 800,
-            300, 300, 350, 350, 450, 250, 500, 450};
+            300, 300, 350, 250, 400, 450, 500, 450};
     /** Cuántos son constructos (el resto son armas). */
     public static final int CONSTRUCTS = 8;
     public static final String[] TIPS = {
@@ -31,9 +31,9 @@ public final class Constructs {
             "Un domo de defensa alrededor tuyo (radio 4)", "Una plataforma de 5×5 bajo tus pies (para volar o puentes)",
             "Encierra al monstruo más cercano en una jaula", "4 bombas de energía para lanzar (clic derecho)",
             "Una espada de energía (dura 3 minutos)", "16 esmeraldas que se desvanecen en 5 minutos",
-            "Espada de diamante de energía: Filo V, irrompible", "Hacha de diamante de energía: Filo V y Eficiencia V",
-            "Arco de energía: Poder V, Empuje II, Llama e Infinidad (con su flecha)", "Ballesta de energía: Multidisparo y Carga Rápida III (32 flechas)",
-            "Tridente de energía: Lealtad III, Empalamiento V y Canalización", "Escudo de energía irrompible",
+            "Espada holograma verde: muy afilada y nunca se rompe", "Hacha holograma verde: tala al instante y pega fuerte",
+            "Arco holograma verde: no necesita flechas, dispara flechas de luz", "Escudo holograma verde: bloquea todo y nunca se rompe",
+            "Lanza holograma verde: clic derecho lanza una jabalina de luz que atraviesa enemigos", "Mazo holograma verde: golpe pesado; cayendo hace una onda expansiva",
             "Cañón de energía: clic derecho dispara ráfagas verdes", "Guadaña de energía: golpe amplio que corta a todos alrededor"};
 
     public static final String EXPIRE = "LinternaExpira";
@@ -90,18 +90,12 @@ public final class Constructs {
                 sw.getOrCreateTag().putLong(EXPIRE, now + 3600);
                 give(p, sw);
             }
-            case 8 -> weapon(p, new ItemStack(Items.DIAMOND_SWORD), "Espada verde", now, "sharpness", 5, "looting", 3);
-            case 9 -> weapon(p, new ItemStack(Items.DIAMOND_AXE), "Hacha verde", now, "sharpness", 5, "efficiency", 5);
-            case 10 -> {
-                weapon(p, new ItemStack(Items.BOW), "Arco verde", now, "power", 5, "punch", 2, "flame", 1, "infinity", 1);
-                weapon(p, new ItemStack(Items.ARROW), "Flecha de energía", now);
-            }
-            case 11 -> {
-                weapon(p, new ItemStack(Items.CROSSBOW), "Ballesta verde", now, "multishot", 1, "quick_charge", 3);
-                weapon(p, new ItemStack(Items.ARROW, 32), "Flecha de energía", now);
-            }
-            case 12 -> weapon(p, new ItemStack(Items.TRIDENT), "Tridente verde", now, "loyalty", 3, "impaling", 5, "channeling", 1);
-            case 13 -> weapon(p, new ItemStack(Items.SHIELD), "Escudo verde", now);
+            case 8 -> weapon(p, new ItemStack(ModRegistry.ENERGY_SWORD.get()), null, now);
+            case 9 -> weapon(p, new ItemStack(ModRegistry.ENERGY_AXE.get()), null, now);
+            case 10 -> weapon(p, new ItemStack(ModRegistry.ENERGY_BOW.get()), null, now);
+            case 11 -> weapon(p, new ItemStack(ModRegistry.ENERGY_SHIELD.get()), null, now);
+            case 12 -> weapon(p, new ItemStack(ModRegistry.ENERGY_LANCE.get()), null, now);
+            case 13 -> weapon(p, new ItemStack(ModRegistry.ENERGY_MACE.get()), null, now);
             case 14 -> weapon(p, new ItemStack(ModRegistry.ENERGY_CANNON.get()), null, now);
             case 15 -> weapon(p, new ItemStack(ModRegistry.ENERGY_SCYTHE.get()), null, now);
             case 7 -> {

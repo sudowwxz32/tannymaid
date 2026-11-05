@@ -36,6 +36,7 @@ public final class LanternLogic {
 
     /** ¿Tiene el anillo encima? */
     public static boolean hasRing(Player p) {
+        if (RingSlot.worn(p)) return true;
         for (ItemStack s : p.getInventory().items) if (s.is(ModRegistry.RING.get())) return true;
         for (ItemStack s : p.getInventory().offhand) if (s.is(ModRegistry.RING.get())) return true;
         return false;
@@ -49,7 +50,7 @@ public final class LanternLogic {
         if (!hasRing(p)) { msg(p, "§aNecesitas tener el Anillo Verde contigo."); return; }
         if (s.abduct != 0) return;
         if (s.charge <= 0 && !(action == ActionPacket.SUIT && s.on(LanternState.SUIT))) {
-            msg(p, "§cEl anillo no tiene energía. §aRecárgalo con el Candelabro de Poder (clic izquierdo).");
+            msg(p, "§cEl anillo no tiene energía. §aRecárgalo con el Lámpara de Poder (clic izquierdo).");
             return;
         }
         switch (action) {
@@ -111,6 +112,38 @@ public final class LanternLogic {
         }
     }
 
+    // ------------------------------------------------------------------ disparos del anillo
+
+    private static final java.util.Map<java.util.UUID, Long> LAST_SHOT = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Pequeño proyectil de energía que sale del anillo. */
+    public static void ringShot(ServerPlayer p) {
+        LanternState s = LanternData.get(p);
+        if (!s.bearer() || s.abduct != 0 || !hasRing(p)) return;
+        boolean inHand = p.getMainHandItem().is(ModRegistry.RING.get()) || p.getOffhandItem().is(ModRegistry.RING.get());
+        if (!inHand && !(RingSlot.worn(p) && p.getMainHandItem().isEmpty())) return;
+        long now = p.level().getGameTime();
+        Long last = LAST_SHOT.get(p.getUUID());
+        if (last != null && now - last < 5) return;
+        LAST_SHOT.put(p.getUUID(), now);
+        if (!spend(p, s, 40)) return;
+        ServerLevel lv = p.serverLevel();
+        Vec3 look = p.getLookAngle();
+        Vec3 right = new Vec3(-look.z, 0, look.x).normalize();
+        Vec3 from = p.getEyePosition().subtract(0, 0.3, 0).add(right.scale(0.3)).add(look.scale(0.4));
+        RayoVerde r = new RayoVerde(lv, p, false);
+        r.setDamage(5.0F);
+        r.setSize(0.22F);
+        r.setPos(from.x, from.y, from.z);
+        r.shoot(look.x, look.y, look.z, 3.4F, 0.2F);
+        lv.addFreshEntity(r);
+        lv.sendParticles(GREEN, from.x, from.y, from.z, 6, 0.05, 0.05, 0.05, 0);
+        lv.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.9F, 1.8F);
+        lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.25F, 2.0F);
+        p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+        LanternData.quiet(p, s);
+    }
+
     // ------------------------------------------------------------------ martillo
 
     private static void hammer(ServerPlayer p, LanternState s) {
@@ -158,6 +191,7 @@ public final class LanternLogic {
         LanternData.set(p, s);
         p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.3F);
         msg(p, "§a✦ El anillo se recarga...");
+        p.sendSystemMessage(Component.literal("§2§o«Que la luz verde me guíe y me dé valor.»"));
     }
 
     private static boolean nearCandelabra(ServerPlayer p) {
@@ -241,10 +275,10 @@ public final class LanternLogic {
             s.useTicks += 1;
             if (s.charge <= 0) {
                 s.charge = 0;
-                off(p, s, "§cEl anillo se quedó sin energía. §aRecárgalo con el Candelabro de Poder.");
+                off(p, s, "§cEl anillo se quedó sin energía. §aRecárgalo con el Lámpara de Poder.");
                 Holding.release(p, false);
             } else if (s.charge == LanternState.MAX_CHARGE / 10 || s.charge == LanternState.MAX_CHARGE / 10 - 1) {
-                msg(p, "§eAnillo al 10 %. Busca tu Candelabro de Poder.");
+                msg(p, "§eAnillo al 10 %. Busca tu Lámpara de Poder.");
             }
             if (p.tickCount % 20 == 0) dirty = true;
         }
@@ -257,6 +291,18 @@ public final class LanternLogic {
             lv.sendParticles(GREEN, p.getX(), p.getY() + 0.8, p.getZ(), 2, 0.3, 0.5, 0.3, 0);   // estela verde
         }
         Holding.tick(p);
+        if (p.tickCount % 10 == 0) {
+            boolean worn = RingSlot.worn(p);
+            if (worn != s.worn) { s.worn = worn; dirty = true; }
+            // el anillo apenas protege: fuego y agua no le hacen nada al portador
+            if (hasRing(p) && s.charge > 0) {
+                p.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 60, 0, true, false, false));
+                p.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 60, 0, true, false, false));
+                p.removeEffect(MobEffects.POISON);
+                p.removeEffect(MobEffects.WITHER);
+                p.clearFire();
+            }
+        }
         s.held = LanternData.get(p).held;          // Holding pudo soltar lo que sostenía
         // silueta verde de resalte en el personaje mientras usa el anillo
         boolean glow = (s.powers & (LanternState.FLY | LanternState.ARMOR | LanternState.GHOST | LanternState.GUNS)) != 0;

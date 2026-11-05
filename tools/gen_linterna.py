@@ -156,17 +156,102 @@ def scythe_tex():
     save(im, f"{A}/textures/item/guadana_de_energia.png")
 
 
+
+# ---------------------------------------------------------------- estilo holograma verde (igual que el pico)
+def holo(mask_fn, name, size=16):
+    """Dibuja la silueta con mask_fn(draw) y la convierte en holograma: borde brillante, interior translúcido con líneas."""
+    m = Image.new("L", (size, size), 0)
+    mask_fn(ImageDraw.Draw(m))
+    im = Image.new("RGBA", (size, size), T)
+    on = lambda x, y: 0 <= x < size and 0 <= y < size and m.getpixel((x, y)) > 0
+    for y in range(size):
+        for x in range(size):
+            if not on(x, y):
+                continue
+            edge = not (on(x - 1, y) and on(x + 1, y) and on(x, y - 1) and on(x, y + 1))
+            if edge:
+                im.putpixel((x, y), (190, 255, 205, 255))
+            else:
+                a = 150 if y % 2 == 0 else 120
+                im.putpixel((x, y), (70, 230, 105, a) if (x + y) % 5 else (130, 255, 160, a + 40))
+    save(im, f"{A}/textures/item/{name}.png")
+
+
+def weapons():
+    holo(lambda d: (d.line((2, 13, 12, 3), fill=255, width=2), d.polygon([(9, 2), (13, 2), (14, 3), (14, 6), (12, 5)], fill=255),
+                    d.polygon([(3, 2), (6, 2), (5, 4), (2, 5)], fill=255), d.line((3, 3, 12, 8), fill=255, width=2)), "pico_de_energia")
+    holo(lambda d: (d.line((3, 12, 13, 2), fill=255, width=3), d.line((1, 11, 5, 15), fill=255, width=2), d.line((1, 15, 3, 13), fill=255, width=2)),
+         "espada_de_energia")
+    holo(lambda d: (d.line((3, 14, 11, 4), fill=255, width=2), d.polygon([(8, 2), (12, 1), (15, 4), (14, 9), (10, 7)], fill=255)), "hacha_de_energia")
+    holo(lambda d: (d.line((2, 15, 14, 1), fill=255, width=2), d.polygon([(11, 1), (15, 0), (15, 5), (13, 3)], fill=255),
+                    d.polygon([(0, 13), (3, 11), (5, 13), (2, 15)], fill=255)), "lanza_de_energia")
+    holo(lambda d: (d.line((2, 14, 9, 7), fill=255, width=2), d.rectangle((8, 2, 13, 7), fill=255),
+                    d.polygon([(10, 0), (11, 0), (11, 2), (10, 2)], fill=255), d.polygon([(14, 4), (15, 4), (15, 5), (14, 5)], fill=255),
+                    d.polygon([(6, 4), (7, 4), (7, 5), (6, 5)], fill=255), d.polygon([(10, 8), (11, 8), (11, 9), (10, 9)], fill=255)), "mazo_de_energia")
+    holo(lambda d: (d.line((3, 15, 11, 3), fill=255, width=2),
+                    d.polygon([(11, 2), (8, 0), (4, 0), (1, 2), (0, 6), (2, 5), (4, 3), (7, 2), (10, 4)], fill=255)), "guadana_de_energia")
+    holo(lambda d: (d.rectangle((1, 6, 10, 10), fill=255), d.rectangle((10, 7, 15, 9), fill=255), d.rectangle((3, 10, 6, 14), fill=255)), "canon_de_energia")
+    holo(lambda d: (d.ellipse((2, 4, 13, 15), fill=255), d.line((9, 4, 11, 1), fill=255)), "bomba_de_energia")
+    holo(lambda d: d.polygon([(2, 1), (13, 1), (13, 8), (11, 12), (7.5, 15), (4, 12), (2, 8)], fill=255), "escudo_de_energia")
+    def bez(p0, p1, p2, n=12):
+        return [((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1])
+                for t in [i / n for i in range(n + 1)]]
+    for n, pull in (("arco_de_energia", 0), ("arco_de_energia_0", 1), ("arco_de_energia_1", 2), ("arco_de_energia_2", 3)):
+        def bow(d, pull=pull):
+            d.line(bez((13, 1), (0, 0), (1, 14)), fill=255, width=2)            # el arco curvado
+            mid = (6 + pull * 1.5, 6 + pull * 1.5)
+            d.line([(13, 1), mid, (1, 14)], fill=255)                              # la cuerda
+            if pull:
+                d.line([mid, (mid[0] - 6, mid[1] - 6)], fill=255)                 # flecha de luz
+        holo(bow, n)
+
 # ---------------------------------------------------------------- objetos y bloques
 def ring():
     im = Image.new("RGBA", (16, 16), T)
     d = ImageDraw.Draw(im)
-    d.ellipse((2, 6, 13, 15), outline=(30, 150, 60, 255), width=2)
-    d.ellipse((3, 7, 12, 14), outline=(90, 240, 120, 255), width=1)
-    d.rectangle((5, 1, 10, 6), fill=(30, 150, 60, 255))
-    d.rectangle((6, 2, 9, 5), fill=(120, 255, 150, 255))
-    im.putpixel((6, 2), (230, 255, 235, 255))
+    d.ellipse((2, 5, 13, 15), outline=(26, 120, 50, 255), width=2)
+    d.ellipse((3, 6, 12, 14), outline=(110, 230, 140, 255), width=1)
+    d.rounded_rectangle((4, 0, 11, 6), 2, fill=(26, 110, 46, 255), outline=(150, 255, 170, 255))
+    d.ellipse((6, 1, 9, 4), fill=(200, 255, 210, 255))
+    im.putpixel((7, 2), (255, 255, 255, 255))
     save(im, f"{A}/textures/item/anillo_verde.png")
+    t = Image.new("RGBA", (16, 16), T)
+    for y in range(16):
+        for x in range(16):
+            if y < 8:
+                c = (28, 112, 52) if (x + y) % 4 else (70, 180, 95)
+                if y in (0, 7):
+                    c = (110, 220, 135)
+            else:
+                dd = math.hypot(x - 7.5, y - 11.5)
+                c = (235, 255, 240) if dd < 1.4 else (120, 255, 150) if dd < 3 else (60, 220, 100)
+            t.putpixel((x, y), c + (255,))
+    save(t, f"{A}/textures/item/anillo_modelo.png")
 
+
+def ring_model():
+    def el(fr, to, uv, glow=False):
+        e = {"from": fr, "to": to, "faces": {f: {"uv": uv, "texture": "#t"} for f in ("north", "south", "east", "west", "up", "down")}}
+        if glow:
+            e["forge_data"] = {"block_light": 15, "sky_light": 15}
+        return e
+    M, G = [0, 0, 16, 8], [4, 8, 12, 16]
+    E = [el([4.5, 2, 7], [11.5, 3.5, 9], M), el([4.5, 9.5, 7], [11.5, 11, 9], M),
+         el([4.5, 3.5, 7], [6, 9.5, 9], M), el([10, 3.5, 7], [11.5, 9.5, 9], M),
+         el([5, 11, 6], [11, 12.5, 10], M),
+         el([5.5, 12.5, 6.5], [10.5, 13, 9.5], M),
+         el([6, 12.5, 7], [10, 14.5, 9], G, True),
+         el([6.5, 14.5, 7.5], [9.5, 15, 8.5], G, True)]
+    jdump({"parent": "block/block", "render_type": "minecraft:cutout", "gui_light": "front",
+           "textures": {"t": "linterna:item/anillo_modelo", "particle": "linterna:item/anillo_verde"}, "elements": E,
+           "display": {"gui": {"rotation": [20, -35, 0], "translation": [0, 0, 0], "scale": [1.05, 1.05, 1.05]},
+                       "ground": {"translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
+                       "fixed": {"rotation": [0, 0, 0], "scale": [0.9, 0.9, 0.9]},
+                       "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 1.5, 1.5], "scale": [0.45, 0.45, 0.45]},
+                       "thirdperson_lefthand": {"rotation": [75, 45, 0], "translation": [0, 1.5, 1.5], "scale": [0.45, 0.45, 0.45]},
+                       "firstperson_righthand": {"rotation": [0, -30, 15], "translation": [1, 3, 0], "scale": [0.55, 0.55, 0.55]},
+                       "firstperson_lefthand": {"rotation": [0, -30, 15], "translation": [1, 3, 0], "scale": [0.55, 0.55, 0.55]}}},
+          f"{A}/models/item/anillo_verde.json")
 
 def pick():
     im = Image.new("RGBA", (16, 16), T)
@@ -213,43 +298,56 @@ def construct():
 
 
 def candelabra_tex():
-    """Textura del candelabro: metal verde oscuro, verde brillante, velas y llamas."""
+    """Lámpara de aceite antigua verde: bronce verde oscuro, metal brillante, cristal y llama verde."""
     im = Image.new("RGBA", (16, 16), T)
     for y in range(16):
         for x in range(16):
             if y < 4:
-                c = (30, 120, 50) if (x + y) % 3 else (50, 160, 70)            # metal oscuro
+                c = (24, 92, 44, 255) if (x * 3 + y) % 5 else (48, 140, 66, 255)
             elif y < 8:
-                c = (70, 210, 100) if (x + y) % 3 else (110, 240, 140)         # metal brillante
+                c = (64, 190, 92, 255) if (x + y) % 4 else (150, 245, 170, 255)
+                if y == 4:
+                    c = (190, 255, 200, 255)
             elif y < 12:
-                c = (220, 255, 225) if x % 4 else (190, 240, 200)              # vela
+                hl = x in (2, 3) or (x == 12 and y % 2 == 0)
+                c = (210, 255, 220, 150) if hl else (90, 255, 130, 95)
+                if x in (0, 15):
+                    c = (40, 150, 70, 220)
             else:
-                c = (120, 255, 150) if (x + y) % 2 else (200, 255, 210)        # llama verde
-            im.putpixel((x, y), c + (255,))
-    save(im, f"{A}/textures/block/candelabro.png")
+                dd = math.hypot(x - 7.5, (y - 12) * 1.6)
+                c = (245, 255, 245, 255) if dd < 2 else (150, 255, 170, 255) if dd < 4.5 else (60, 230, 100, 255)
+            im.putpixel((x, y), c)
+    save(im, f"{A}/textures/block/lampara_de_poder.png")
 
 
 def candelabra_model():
-    """Modelo 3D del candelabro: base, columna, brazos y tres velas con llama verde."""
-    M = {"dark": [0, 0, 16, 4], "light": [0, 4, 16, 8], "candle": [0, 8, 16, 12], "flame": [0, 12, 16, 16]}
+    """Lámpara de aceite antigua: base, depósito, chimenea de cristal con llama verde, jaula, tapa y asa."""
+    M = {"dark": [0, 0, 16, 4], "light": [0, 4, 16, 8], "glass": [0, 8, 16, 12], "flame": [4, 12, 12, 16]}
 
-    def el(fr, to, tex):
-        u = M[tex]
-        faces = {f: {"uv": u, "texture": "#t"} for f in ("north", "south", "east", "west", "up", "down")}
-        return {"from": fr, "to": to, "faces": faces}
+    def el(fr, to, tex, glow=False, faces=("north", "south", "east", "west", "up", "down")):
+        e = {"from": fr, "to": to, "faces": {f: {"uv": M[tex], "texture": "#t"} for f in faces}}
+        if glow:
+            e["forge_data"] = {"block_light": 15, "sky_light": 15}
+        return e
 
-    E = [el([5, 0, 5], [11, 1, 11], "dark"), el([6, 1, 6], [10, 2, 10], "light"), el([7.25, 2, 7.25], [8.75, 9, 8.75], "light"),
-         el([6.5, 4, 6.5], [9.5, 5, 9.5], "dark"),
-         el([2.5, 8.5, 7.5], [13.5, 9.5, 8.5], "light"),                    # brazos
-         el([2, 9.5, 7], [4, 10.5, 9], "dark"), el([12, 9.5, 7], [14, 10.5, 9], "dark"), el([7, 9, 7], [9, 10, 9], "dark"),
-         el([2.5, 10.5, 7.5], [3.5, 13, 8.5], "candle"), el([12.5, 10.5, 7.5], [13.5, 13, 8.5], "candle"),
-         el([7.5, 10, 7.5], [8.5, 13.5, 8.5], "candle"),
-         el([2.6, 13, 7.6], [3.4, 14.5, 8.4], "flame"), el([12.6, 13, 7.6], [13.4, 14.5, 8.4], "flame"), el([7.6, 13.5, 7.6], [8.4, 15, 8.4], "flame")]
-    jdump({"parent": "block/block", "textures": {"t": "linterna:block/candelabro", "particle": "linterna:block/candelabro"},
+    E = [el([4, 0, 4], [12, 1, 12], "dark"), el([4.5, 1, 4.5], [11.5, 3.5, 11.5], "light"), el([5, 3.5, 5], [11, 4.5, 11], "dark"),
+         el([7.5, 4.5, 7.5], [8.5, 5.5, 8.5], "dark"),
+         el([7, 5.5, 7], [9, 9, 9], "flame", True), el([7.5, 9, 7.5], [8.5, 10.5, 8.5], "flame", True),
+         el([5.5, 4.5, 5.5], [10.5, 11.5, 10.5], "glass", True),
+         el([4.75, 4, 4.75], [5.5, 12, 5.5], "dark"), el([10.5, 4, 4.75], [11.25, 12, 5.5], "dark"),
+         el([4.75, 4, 10.5], [5.5, 12, 11.25], "dark"), el([10.5, 4, 10.5], [11.25, 12, 11.25], "dark"),
+         el([4.75, 7.75, 4.75], [11.25, 8.25, 11.25], "light", faces=("north", "south", "east", "west")),
+         el([4.5, 11.5, 4.5], [11.5, 12.5, 11.5], "light"), el([5.5, 12.5, 5.5], [10.5, 13.5, 10.5], "dark"),
+         el([7, 13.5, 7], [9, 14.5, 9], "light"),
+         el([7.5, 12.5, 4], [8.5, 15, 5], "dark"), el([7.5, 12.5, 11], [8.5, 15, 12], "dark"), el([7.5, 15, 4], [8.5, 16, 12], "dark")]
+    jdump({"parent": "block/block", "render_type": "minecraft:translucent", "ambientocclusion": False,
+           "textures": {"t": "linterna:block/lampara_de_poder", "particle": "linterna:block/lampara_de_poder"},
            "elements": E,
-           "display": {"gui": {"rotation": [30, 225, 0], "translation": [0, 1, 0], "scale": [0.9, 0.9, 0.9]},
+           "display": {"gui": {"rotation": [25, 225, 0], "translation": [0, 0, 0], "scale": [0.95, 0.95, 0.95]},
                        "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 2, 0], "scale": [0.6, 0.6, 0.6]},
-                       "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.5, 0.5, 0.5]},
+                       "firstperson_lefthand": {"rotation": [0, 45, 0], "translation": [0, 2, 0], "scale": [0.6, 0.6, 0.6]},
+                       "thirdperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 1, 1], "scale": [0.55, 0.55, 0.55]},
+                       "thirdperson_lefthand": {"rotation": [0, 45, 0], "translation": [0, 1, 1], "scale": [0.55, 0.55, 0.55]},
                        "ground": {"translation": [0, 3, 0], "scale": [0.5, 0.5, 0.5]}}},
           f"{A}/models/block/candelabro_de_poder.json")
     jdump({"variants": {"": {"model": "linterna:block/candelabro_de_poder"}}}, f"{A}/blockstates/candelabro_de_poder.json")
@@ -264,25 +362,51 @@ def candelabra_model():
 
 
 def items():
-    for n in ("anillo_verde", "pico_de_energia", "espada_de_energia", "bomba_de_energia", "canon_de_energia", "guadana_de_energia"):
-        parent = "item/handheld" if n in ("pico_de_energia", "espada_de_energia", "guadana_de_energia") else "item/generated"
-        jdump({"parent": parent, "textures": {"layer0": "linterna:item/" + n}}, f"{A}/models/item/{n}.json")
+    hand = ("pico_de_energia", "espada_de_energia", "guadana_de_energia", "hacha_de_energia", "lanza_de_energia", "mazo_de_energia")
+    for n in hand + ("bomba_de_energia", "canon_de_energia"):
+        jdump({"parent": "item/handheld" if n in hand else "item/generated", "textures": {"layer0": "linterna:item/" + n}}, f"{A}/models/item/{n}.json")
+    bow_disp = {"thirdperson_righthand": {"rotation": [-80, 260, -40], "translation": [-1, -2, 2.5], "scale": [0.9, 0.9, 0.9]},
+                "thirdperson_lefthand": {"rotation": [-80, -280, 40], "translation": [-1, -2, 2.5], "scale": [0.9, 0.9, 0.9]},
+                "firstperson_righthand": {"rotation": [0, -90, 25], "translation": [1.13, 3.2, 1.13], "scale": [0.68, 0.68, 0.68]},
+                "firstperson_lefthand": {"rotation": [0, 90, -25], "translation": [1.13, 3.2, 1.13], "scale": [0.68, 0.68, 0.68]}}
+    jdump({"parent": "item/generated", "textures": {"layer0": "linterna:item/arco_de_energia"}, "display": bow_disp,
+           "overrides": [{"predicate": {"pulling": 1}, "model": "linterna:item/arco_de_energia_0"},
+                         {"predicate": {"pulling": 1, "pull": 0.65}, "model": "linterna:item/arco_de_energia_1"},
+                         {"predicate": {"pulling": 1, "pull": 0.9}, "model": "linterna:item/arco_de_energia_2"}]},
+          f"{A}/models/item/arco_de_energia.json")
+    for i in range(3):
+        jdump({"parent": "item/generated", "textures": {"layer0": f"linterna:item/arco_de_energia_{i}"}, "display": bow_disp},
+              f"{A}/models/item/arco_de_energia_{i}.json")
+    shield = {"thirdperson_righthand": {"rotation": [0, 90, 0], "translation": [0, 1, 1.5], "scale": [0.9, 0.9, 0.9]},
+              "thirdperson_lefthand": {"rotation": [0, 90, 0], "translation": [0, 1, 1.5], "scale": [0.9, 0.9, 0.9]},
+              "firstperson_righthand": {"rotation": [0, 10, 0], "translation": [3, 1, -2], "scale": [0.9, 0.9, 0.9]},
+              "firstperson_lefthand": {"rotation": [0, -10, 0], "translation": [3, 1, -2], "scale": [0.9, 0.9, 0.9]}}
+    blocking = {"thirdperson_righthand": {"rotation": [45, 135, 0], "translation": [3.5, 1, 1], "scale": [0.9, 0.9, 0.9]},
+                "thirdperson_lefthand": {"rotation": [45, 135, 0], "translation": [3.5, 1, 1], "scale": [0.9, 0.9, 0.9]},
+                "firstperson_righthand": {"rotation": [0, 0, 0], "translation": [-3, 3, -1], "scale": [1.1, 1.1, 1.1]},
+                "firstperson_lefthand": {"rotation": [0, 0, 0], "translation": [-3, 3, -1], "scale": [1.1, 1.1, 1.1]}}
+    jdump({"parent": "item/generated", "textures": {"layer0": "linterna:item/escudo_de_energia"}, "display": shield,
+           "overrides": [{"predicate": {"blocking": 1}, "model": "linterna:item/escudo_de_energia_bloqueando"}]},
+          f"{A}/models/item/escudo_de_energia.json")
+    jdump({"parent": "item/generated", "textures": {"layer0": "linterna:item/escudo_de_energia"}, "display": blocking},
+          f"{A}/models/item/escudo_de_energia_bloqueando.json")
+    ring_model()
 
 
 def lang():
-    es = {"item.linterna.anillo_verde": "Anillo Verde", "item.linterna.candelabro_de_poder": "Candelabro de Poder",
-          "block.linterna.candelabro_de_poder": "Candelabro de Poder", "block.linterna.constructo": "Constructo de energía",
+    es = {"item.linterna.anillo_verde": "Anillo Verde", "item.linterna.candelabro_de_poder": "Lámpara de Poder",
+          "block.linterna.candelabro_de_poder": "Lámpara de Poder", "block.linterna.constructo": "Constructo de energía",
           "item.linterna.pico_de_energia": "Pico de energía", "item.linterna.espada_de_energia": "Espada de energía",
           "item.linterna.bomba_de_energia": "Bomba de energía", "item.linterna.canon_de_energia": "Cañón de energía",
-          "item.linterna.guadana_de_energia": "Guadaña de energía", "entity.linterna.rayo_verde": "Rayo verde",
+          "item.linterna.guadana_de_energia": "Guadaña de energía", "item.linterna.hacha_de_energia": "Hacha de energía", "item.linterna.escudo_de_energia": "Escudo de energía", "item.linterna.arco_de_energia": "Arco de energía", "item.linterna.lanza_de_energia": "Lanza de energía", "item.linterna.mazo_de_energia": "Mazo de energía", "entity.linterna.rayo_verde": "Rayo verde",
           "key.categories.linterna": "Linterna (anillo verde)", "key.linterna.fly": "Volar", "key.linterna.armor": "Armadura de energía",
           "key.linterna.pick": "Pico de energía", "key.linterna.ghost": "Intangible", "key.linterna.guns": "Armas de energía",
           "key.linterna.hammer": "Martillo", "key.linterna.suit": "Traje", "key.linterna.catalog": "Catálogo del anillo"}
-    en = {"item.linterna.anillo_verde": "Green Ring", "item.linterna.candelabro_de_poder": "Power Candelabra",
-          "block.linterna.candelabro_de_poder": "Power Candelabra", "block.linterna.constructo": "Energy Construct",
+    en = {"item.linterna.anillo_verde": "Green Ring", "item.linterna.candelabro_de_poder": "Power Lamp",
+          "block.linterna.candelabro_de_poder": "Power Lamp", "block.linterna.constructo": "Energy Construct",
           "item.linterna.pico_de_energia": "Energy Pickaxe", "item.linterna.espada_de_energia": "Energy Sword",
           "item.linterna.bomba_de_energia": "Energy Bomb", "item.linterna.canon_de_energia": "Energy Cannon",
-          "item.linterna.guadana_de_energia": "Energy Scythe", "entity.linterna.rayo_verde": "Green Bolt",
+          "item.linterna.guadana_de_energia": "Energy Scythe", "item.linterna.hacha_de_energia": "Energy Axe", "item.linterna.escudo_de_energia": "Energy Shield", "item.linterna.arco_de_energia": "Energy Bow", "item.linterna.lanza_de_energia": "Energy Lance", "item.linterna.mazo_de_energia": "Energy Mace", "entity.linterna.rayo_verde": "Green Bolt",
           "key.categories.linterna": "Linterna (green ring)", "key.linterna.fly": "Fly", "key.linterna.armor": "Energy armor",
           "key.linterna.pick": "Energy pickaxe", "key.linterna.ghost": "Intangible", "key.linterna.guns": "Energy guns",
           "key.linterna.hammer": "Hammer", "key.linterna.suit": "Suit", "key.linterna.catalog": "Ring catalog"}
@@ -292,5 +416,5 @@ def lang():
 
 
 if __name__ == "__main__":
-    energy(); rayo(); suit(); armor(); cannon_tex(); scythe_tex(); ring(); pick(); sword(); bomb(); construct(); candelabra_tex(); candelabra_model(); items(); lang()
+    energy(); rayo(); suit(); armor(); weapons(); ring(); construct(); candelabra_tex(); candelabra_model(); items(); lang()
     print("linterna ok")

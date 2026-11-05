@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 /** Cliente → servidor: teclas del anillo, respuestas y el catálogo. */
 public class ActionPacket {
     public static final int FLY = 0, ARMOR = 1, PICK = 2, GHOST = 3, GUNS = 4, HAMMER = 5, SUIT = 6, CATALOG = 7,
-            ANSWER = 8, RECHARGE = 9;
+            ANSWER = 8, RECHARGE = 9, OPEN_RING = 10, SHOOT = 11, GRAB = 12;
 
     public final int action, arg;
 
@@ -38,6 +38,9 @@ public class ActionPacket {
                 case ANSWER -> Abduction.answer(sp, p.arg == 1);
                 case CATALOG -> Constructs.create(sp, p.arg);
                 case RECHARGE -> LanternLogic.startRecharge(sp);
+                case OPEN_RING -> com.linterna.data.RingSlot.open(sp);
+                case SHOOT -> LanternLogic.ringShot(sp);
+                case GRAB -> { if (com.linterna.data.RingSlot.worn(sp) && sp.getMainHandItem().isEmpty()) com.linterna.data.Holding.use(sp); }
                 default -> LanternLogic.key(sp, p.action);
             }
         });

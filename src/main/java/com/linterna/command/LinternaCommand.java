@@ -52,7 +52,8 @@ public final class LinternaCommand {
                     s.stage = 2;
                     if (s.charge <= 0) s.charge = LanternState.MAX_CHARGE;
                     LanternData.set(p, s);
-                    p.getInventory().add(new ItemStack(ModRegistry.RING.get()));
+                    if (!com.linterna.data.RingSlot.worn(p)) com.linterna.data.RingSlot.set(p, new ItemStack(ModRegistry.RING.get()));
+                    else p.getInventory().add(new ItemStack(ModRegistry.RING.get()));
                     p.getInventory().add(new ItemStack(ModRegistry.CANDELABRA_ITEM.get()));
                     return 1;
                 })));

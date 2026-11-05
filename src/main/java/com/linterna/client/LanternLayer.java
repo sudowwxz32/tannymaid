@@ -32,7 +32,7 @@ public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
     private static final ResourceLocation ARMOR = new ResourceLocation(Linterna.MODID, "textures/entity/armadura_energia.png");
     private final PlayerModel<AbstractClientPlayer> shellW, shellS, suitW, suitS;
     private final net.minecraft.client.model.HumanoidModel<AbstractClientPlayer> armorOut, armorIn;
-    private final ModelPart hammer, gun, ring;
+    private final ModelPart hammer, gun, ring, gem;
 
     public LanternLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent, EntityModelSet models) {
         super(parent);
@@ -46,6 +46,7 @@ public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         hammer = c.getChild("hammer");
         gun = c.getChild("gun");
         ring = c.getChild("ring");
+        gem = c.getChild("gem");
     }
 
     public static LayerDefinition constructs() {
@@ -60,9 +61,15 @@ public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                 .texOffs(0, 0).addBox(-2.0F, -2.0F, -3.0F, 4.0F, 4.0F, 6.0F)           // cuerpo
                 .texOffs(0, 0).addBox(-1.0F, -1.0F, -10.0F, 2.0F, 2.0F, 7.0F)          // cañón
                 .texOffs(0, 0).addBox(-1.5F, 2.0F, -1.0F, 3.0F, 3.0F, 2.0F), PartPose.ZERO);
+        // anillo: aro alrededor del dedo + sello con la gema
         root.addOrReplaceChild("ring", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-1.4F, 0.0F, -1.4F, 2.8F, 1.0F, 2.8F)
-                .texOffs(0, 0).addBox(-0.7F, -0.6F, -2.1F, 1.4F, 1.0F, 1.0F), PartPose.ZERO);
+                .texOffs(0, 0).addBox(-1.35F, 0.0F, -1.35F, 2.7F, 0.7F, 0.45F)
+                .texOffs(0, 0).addBox(-1.35F, 0.0F, 0.9F, 2.7F, 0.7F, 0.45F)
+                .texOffs(0, 0).addBox(-1.35F, 0.0F, -0.9F, 0.45F, 0.7F, 1.8F)
+                .texOffs(0, 0).addBox(0.9F, 0.0F, -0.9F, 0.45F, 0.7F, 1.8F)
+                .texOffs(0, 0).addBox(-0.9F, -0.25F, -1.85F, 1.8F, 1.2F, 0.5F), PartPose.ZERO);
+        root.addOrReplaceChild("gem", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-0.6F, -0.05F, -2.25F, 1.2F, 0.8F, 0.45F), PartPose.ZERO);
         return LayerDefinition.create(mesh, 64, 64);
     }
 
@@ -128,12 +135,17 @@ public class LanternLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                     0.35F, 1.0F, 0.45F, (ghost ? 0.5F : 0.28F) * pulse);
         }
         var glow = buf.getBuffer(RenderType.entityTranslucentEmissive(ENERGY));
-        // ---- anillo en la mano derecha
-        pose.pushPose();
-        parent.rightArm.translateAndRotate(pose);
-        pose.translate(-1.0F / 16F, 9.6F / 16F, 0);
-        ring.render(pose, glow, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0.3F, 1.0F, 0.4F, 0.95F);
-        pose.popPose();
+        // ---- el anillo puesto en el dedo (mano derecha), con la gema brillando
+        if (s.worn) {
+            pose.pushPose();
+            parent.rightArm.translateAndRotate(pose);
+            pose.translate((slim ? -0.5F : -1.0F) / 16F, 10.2F / 16F, 0);
+            ring.render(pose, glow, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0.16F, 0.62F, 0.26F, 1.0F);
+            gem.render(pose, glow, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0.6F, 1.0F, 0.65F, 1.0F);
+            pose.scale(1.6F, 1.6F, 1.6F);
+            gem.render(pose, glow, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0.3F, 1.0F, 0.4F, 0.3F * pulse);
+            pose.popPose();
+        }
         // ---- armas flotantes
         if (s.on(LanternState.GUNS)) {
             for (int side = -1; side <= 1; side += 2) {

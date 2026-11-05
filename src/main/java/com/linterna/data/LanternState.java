@@ -19,6 +19,7 @@ public class LanternState {
     public int recharge;        // ticks de la recarga
     public int abduct;          // 0 nada, 1 luz, 2 subiendo, 3 pregunta, 4 cayendo
     public int held = -1;       // id de la entidad que sostiene con el rayo (-1 = nada)
+    public boolean worn;        // lleva el anillo puesto en su ranura
 
     public boolean on(int bit) { return (powers & bit) != 0; }
 
@@ -57,6 +58,7 @@ public class LanternState {
         b.writeVarInt(recharge);
         b.writeVarInt(abduct);
         b.writeVarInt(held + 1);
+        b.writeBoolean(worn);
     }
 
     public static LanternState read(FriendlyByteBuf b) {
@@ -69,6 +71,7 @@ public class LanternState {
         s.recharge = b.readVarInt();
         s.abduct = b.readVarInt();
         s.held = b.readVarInt() - 1;
+        s.worn = b.readBoolean();
         return s;
     }
 }

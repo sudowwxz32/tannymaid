@@ -17,6 +17,15 @@ import net.minecraft.world.phys.HitResult;
 /** Disparo de energía verde (armas del anillo) o bomba de energía (explota al chocar). */
 public class RayoVerde extends ThrowableProjectile {
     private static final EntityDataAccessor<Boolean> BOMB = SynchedEntityData.defineId(RayoVerde.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> SIZE = SynchedEntityData.defineId(RayoVerde.class, EntityDataSerializers.FLOAT);
+    private float damage = 9.0F;
+    private boolean pierce;
+    private final java.util.Set<Integer> struck = new java.util.HashSet<>();
+
+    public void setDamage(float d) { damage = d; }
+    public void setPierce(boolean p) { pierce = p; if (p) entityData.set(SIZE, 0.75F); }
+    public void setSize(float s) { entityData.set(SIZE, s); }
+    public float size() { return entityData.get(SIZE); }
 
     public RayoVerde(EntityType<? extends RayoVerde> type, Level level) {
         super(type, level);
@@ -30,6 +39,7 @@ public class RayoVerde extends ThrowableProjectile {
     @Override
     protected void defineSynchedData() {
         entityData.define(BOMB, false);
+        entityData.define(SIZE, 0.45F);
     }
 
     public boolean isBomb() {
@@ -53,13 +63,17 @@ public class RayoVerde extends ThrowableProjectile {
     @Override
     protected void onHitEntity(EntityHitResult hit) {
         Entity e = hit.getEntity();
-        if (e == getOwner()) return;
-        if (!isBomb()) e.hurt(damageSources().indirectMagic(this, getOwner()), 9.0F);
+        if (e == getOwner() || !struck.add(e.getId())) return;
+        if (!isBomb()) e.hurt(damageSources().indirectMagic(this, getOwner()), damage);
     }
 
     @Override
     protected void onHit(HitResult hit) {
         if (hit instanceof EntityHitResult eh && eh.getEntity() == getOwner()) return;
+        if (pierce && hit instanceof EntityHitResult eh2) {          // la lanza atraviesa a los enemigos
+            onHitEntity(eh2);
+            return;
+        }
         super.onHit(hit);
         if (level() instanceof ServerLevel lv) {
             if (isBomb()) {

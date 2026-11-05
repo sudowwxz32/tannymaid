@@ -31,13 +31,14 @@ public final class LanternData {
             s.hammer = l[0];
             s.recharge = l[1];
             s.held = l[2];
+            s.worn = l[3] == 1;
         }
         return s;
     }
 
     private static void store(Player p, LanternState s) {
         root(p).put(KEY, s.save());
-        LIVE.put(p.getUUID(), new int[]{s.hammer, s.recharge, s.held});
+        LIVE.put(p.getUUID(), new int[]{s.hammer, s.recharge, s.held, s.worn ? 1 : 0});
     }
 
     /** Guarda y avisa a todos los que lo ven. */

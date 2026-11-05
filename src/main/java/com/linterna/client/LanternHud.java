@@ -14,6 +14,14 @@ public class LanternHud implements IGuiOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
         LanternState s = ClientStates.get(mc.player.getId());
+        if (s.abduct >= 1 && s.abduct <= 3) {
+            // la pantalla se tiñe de verde mientras la luz te lleva
+            float k = 0.5F + 0.5F * net.minecraft.util.Mth.sin((mc.player.tickCount + partial) * 0.25F);
+            int a = (int) (40 + 50 * k);
+            g.fillGradient(0, 0, w, h / 3, (a << 24) | 0x20FF50, 0x0020FF50);
+            g.fillGradient(0, h * 2 / 3, w, h, 0x0020FF50, (a << 24) | 0x20FF50);
+            g.fill(0, 0, w, h, ((a / 3) << 24) | 0x10C040);
+        }
         if (!s.bearer()) return;
         int x = 8, y = h - 30, bw = 90;
         float k = s.charge / (float) LanternState.MAX_CHARGE;

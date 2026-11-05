@@ -74,6 +74,20 @@ public final class ClientModEvents {
     }
 
     @SubscribeEvent
+    public static void setup(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent e) {
+        e.enqueueWork(() -> {
+            net.minecraft.client.gui.screens.MenuScreens.register(ModRegistry.RING_MENU.get(), RingScreen::new);
+            ResourceLocation pull = new ResourceLocation("pull"), pulling = new ResourceLocation("pulling"), blocking = new ResourceLocation("blocking");
+            net.minecraft.client.renderer.item.ItemProperties.register(ModRegistry.ENERGY_BOW.get(), pull, (st, lv, en, seed) ->
+                    en == null || en.getUseItem() != st ? 0.0F : (st.getUseDuration() - en.getUseItemRemainingTicks()) / 20.0F);
+            net.minecraft.client.renderer.item.ItemProperties.register(ModRegistry.ENERGY_BOW.get(), pulling, (st, lv, en, seed) ->
+                    en != null && en.isUsingItem() && en.getUseItem() == st ? 1.0F : 0.0F);
+            net.minecraft.client.renderer.item.ItemProperties.register(ModRegistry.ENERGY_SHIELD.get(), blocking, (st, lv, en, seed) ->
+                    en != null && en.isUsingItem() && en.getUseItem() == st ? 1.0F : 0.0F);
+        });
+    }
+
+    @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
         e.registerEntityRenderer(ModRegistry.RAYO.get(), RayoRenderer::new);
     }
