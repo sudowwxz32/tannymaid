@@ -16,10 +16,8 @@ public final class ClientModEvents {
 
     @SubscribeEvent
     public static void layers(EntityRenderersEvent.RegisterLayerDefinitions e) {
-        for (WaifuKind k : WaifuKind.values()) {
-            e.registerLayerDefinition(WaifuLayers.head(k), WaifuLayers.headDef(k));
-            e.registerLayerDefinition(WaifuLayers.outfit(k), WaifuLayers.outfitDef(k));
-        }
+        e.registerLayerDefinition(WaifuLayers.FACE, WaifuModels::face);
+        for (WaifuKind k : WaifuKind.values()) e.registerLayerDefinition(WaifuLayers.body(k), WaifuLayers.bodyDef(k));
     }
 
     @SubscribeEvent

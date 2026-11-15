@@ -27,3 +27,10 @@ P G P
 | **Shiori** | Mesa de encantamientos | Encanta con **poder máximo** (como 15 estanterías) y te presta su lapislázuli. Dispara magia a los monstruos, guarda su experiencia, **repara tu equipo** con ella y te la da con **Dar XP**. Trabajando: mina lapislázuli. |
 
 En modo **Seguir** te acompañan y te defienden.
+
+## Novedades 1.1.0 — modelos estilizados
+- **Cuerpo propio** (ya no usan la skin del jugador): cuello, pecho, busto, cintura estrecha, cadera ancha, piernas largas que se afinan (muslo, pantorrilla y pie), brazos delgados con hombros y cabeza un poco más pequeña.
+- **Caras de anime en alta resolución**: ojos grandes con iris en degradado, aro, pupila y dos brillos, pestañas gruesas con alita, cejas, rubor con rayitas y boca. Seis expresiones (normal, parpadeo, feliz, sorprendida, concentrada y cansada).
+- **Sombreado cel** en toda la ropa: luz desde arriba, lados más oscuros y contorno fino.
+- **Ropa más detallada**: medias con liga, botas con cordones, lazos 3D, enagua, cofia, gafas de forja, delantal con llama, capa, mangas acampanadas, gargantilla y joyas.
+- Pose de reposo con la cadera ladeada y la falda que se abre al caminar.

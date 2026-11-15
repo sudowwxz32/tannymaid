@@ -29,47 +29,18 @@ import java.util.function.Supplier;
 public final class WaifuLayers {
     private WaifuLayers() {}
 
-    public static ModelLayerLocation head(WaifuKind k) {
-        return new ModelLayerLocation(new ResourceLocation(TotallyWaifu.MODID, k.id()), "head");
+    public static final ModelLayerLocation FACE = new ModelLayerLocation(new ResourceLocation(TotallyWaifu.MODID, "waifu"), "face");
+
+    public static ModelLayerLocation body(WaifuKind k) {
+        return new ModelLayerLocation(new ResourceLocation(TotallyWaifu.MODID, k.id()), "body");
     }
 
-    public static ModelLayerLocation outfit(WaifuKind k) {
-        return new ModelLayerLocation(new ResourceLocation(TotallyWaifu.MODID, k.id()), "outfit");
-    }
-
-    public static Supplier<LayerDefinition> headDef(WaifuKind k) {
+    public static Supplier<LayerDefinition> bodyDef(WaifuKind k) {
         return switch (k) {
-            case KOZUE -> WaifuModels::headKozue;
-            case HOMURA -> WaifuModels::headHomura;
-            case KURA -> WaifuModels::headKura;
-            case SHIORI -> WaifuModels::headShiori;
-        };
-    }
-
-    public static Supplier<LayerDefinition> outfitDef(WaifuKind k) {
-        return switch (k) {
-            case KOZUE -> WaifuModels::outfitKozue;
-            case HOMURA -> WaifuModels::outfitHomura;
-            case KURA -> WaifuModels::outfitKura;
-            case SHIORI -> WaifuModels::outfitShiori;
-        };
-    }
-
-    private static Map<String, ModelPart> bakeHead(WaifuKind k, ModelPart root) {
-        return switch (k) {
-            case KOZUE -> WaifuModels.bakeHeadKozue(root);
-            case HOMURA -> WaifuModels.bakeHeadHomura(root);
-            case KURA -> WaifuModels.bakeHeadKura(root);
-            case SHIORI -> WaifuModels.bakeHeadShiori(root);
-        };
-    }
-
-    private static Map<String, ModelPart> bakeOutfit(WaifuKind k, ModelPart root) {
-        return switch (k) {
-            case KOZUE -> WaifuModels.bakeOutfitKozue(root);
-            case HOMURA -> WaifuModels.bakeOutfitHomura(root);
-            case KURA -> WaifuModels.bakeOutfitKura(root);
-            case SHIORI -> WaifuModels.bakeOutfitShiori(root);
+            case KOZUE -> WaifuModels::bodyKozue;
+            case HOMURA -> WaifuModels::bodyHomura;
+            case KURA -> WaifuModels::bodyKura;
+            case SHIORI -> WaifuModels::bodyShiori;
         };
     }
 
@@ -91,66 +62,55 @@ public final class WaifuLayers {
         };
     }
 
-    // ------------------------------------------------------------------ ropa
-    public static class Outfit extends RenderLayer<WaifuEntity, WaifuModel> {
-        private final ResourceLocation tex;
-        private final ModelPart root, body, rightArm, leftArm, rightLeg, leftLeg;
-        private final Map<ModelPart, Float> skirtFront = new HashMap<>(), skirtBack = new HashMap<>(), skirtSide = new HashMap<>();
+    // ------------------------------------------------------------------ cara de anime (una textura por expresión)
+    public static class Face extends RenderLayer<WaifuEntity, WaifuModel> {
+        private final ModelPart head;
+        private final ResourceLocation normal, blink, happy, surprised, focused, tired;
 
-        public Outfit(RenderLayerParent<WaifuEntity, WaifuModel> parent, EntityModelSet models, WaifuKind k) {
+        public Face(RenderLayerParent<WaifuEntity, WaifuModel> parent, EntityModelSet models, WaifuKind k) {
             super(parent);
-            tex = WaifuRenderer.tex(k, "outfit");
-            root = models.bakeLayer(outfit(k));
-            Map<String, ModelPart> parts = bakeOutfit(k, root);
-            body = parts.get("body");
-            rightArm = parts.get("right_arm");
-            leftArm = parts.get("left_arm");
-            rightLeg = parts.get("right_leg");
-            leftLeg = parts.get("left_leg");
-            for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
-                String n = en.getKey();
-                if (!n.startsWith("skirt")) continue;
-                ModelPart p = en.getValue();
-                if (n.equals("skirt_front") || n.equals("skirt_fr") || n.equals("skirt_fl")) skirtFront.put(p, p.xRot);
-                else if (n.equals("skirt_back") || n.equals("skirt_br") || n.equals("skirt_bl")) skirtBack.put(p, p.xRot);
-                else skirtSide.put(p, p.xRot);
-            }
+            head = models.bakeLayer(FACE).getChild("head");
+            normal = WaifuRenderer.tex(k, "face");
+            blink = WaifuRenderer.tex(k, "face_blink");
+            happy = WaifuRenderer.tex(k, "face_happy");
+            surprised = WaifuRenderer.tex(k, "face_surprised");
+            focused = WaifuRenderer.tex(k, "face_focused");
+            tired = WaifuRenderer.tex(k, "face_tired");
+        }
+
+        private ResourceLocation expression(WaifuEntity e) {
+            if (e.hurtTime > 0) return surprised;
+            if (e.getHealth() < e.getMaxHealth() * 0.3F) return tired;
+            long t = e.tickCount + e.getId() * 53L;
+            if (t % 90 < 3 || (t % 270 >= 6 && t % 270 < 9)) return blink;
+            if (e.isHappy()) return happy;
+            if (e.isBusy() || e.isAggressive()) return focused;
+            return normal;
         }
 
         @Override
         public void render(PoseStack pose, MultiBufferSource buf, int light, WaifuEntity e, float limbSwing, float limbAmount,
                            float partial, float age, float headYaw, float headPitch) {
             if (e.isInvisible()) return;
-            WaifuModel m = getParentModel();
-            body.copyFrom(m.body);
-            rightArm.copyFrom(m.rightArm);
-            leftArm.copyFrom(m.leftArm);
-            rightLeg.copyFrom(m.rightLeg);
-            leftLeg.copyFrom(m.leftLeg);
-            // la falda se abre con las piernas al caminar y ondea un poco
-            float fwd = Math.max(0, -Math.min(m.rightLeg.xRot, m.leftLeg.xRot)), back = Math.max(0, Math.max(m.rightLeg.xRot, m.leftLeg.xRot));
-            float wave = Mth.sin(age * 0.1F) * 0.02F;
-            skirtFront.forEach((p, b) -> p.xRot = b - fwd * 0.55F + wave);
-            skirtBack.forEach((p, b) -> p.xRot = b - back * 0.55F + wave);
-            skirtSide.forEach((p, b) -> p.xRot = b - limbAmount * 0.12F + wave);
-            root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(tex)), light, LivingEntityRenderer.getOverlayCoords(e, 0.0F));
+            ModelPart ph = getParentModel().head;
+            head.copyFrom(ph);
+            head.xScale = ph.xScale;
+            head.yScale = ph.yScale;
+            head.zScale = ph.zScale;
+            head.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(expression(e))), light, LivingEntityRenderer.getOverlayCoords(e, 0.0F));
         }
     }
 
-    // ------------------------------------------------------------------ cabeza: cabello en mechones + accesorios
-    public static class Head extends RenderLayer<WaifuEntity, WaifuModel> {
-        private final ResourceLocation tex, strand;
-        private final ModelPart root, head;
+    // ------------------------------------------------------------------ cabello en mechones
+    public static class Hair extends RenderLayer<WaifuEntity, WaifuModel> {
+        private final ResourceLocation strand;
         private final WaifuHairMesh hair;
         private final WaifuKind kind;
 
-        public Head(RenderLayerParent<WaifuEntity, WaifuModel> parent, EntityModelSet models, WaifuKind k) {
+        public Hair(RenderLayerParent<WaifuEntity, WaifuModel> parent, WaifuKind k) {
             super(parent);
             kind = k;
-            tex = WaifuRenderer.tex(k, "head");
             strand = WaifuRenderer.tex(k, "hair_strand");
-            root = models.bakeLayer(head(k));
-            head = bakeHead(k, root).get("head");
             hair = new WaifuHairMesh(locks(k), hairColor(k));
         }
 
@@ -164,14 +124,12 @@ public final class WaifuLayers {
             float walk = Mth.sin(limbSwing * 0.6662F) * limbAmount;
             float swayX = 0.08F + breeze + limbAmount * 0.45F - ph.xRot * 0.35F;
             float swayZ = Mth.sin(age * 0.05F) * 0.04F + walk * 0.12F - ph.zRot * 0.6F;
-            if (kind == WaifuKind.SHIORI) swayX -= 0.03F + Mth.sin(age * 0.04F) * 0.03F;      // su magia le levanta un poco el cabello
+            if (kind == WaifuKind.SHIORI) swayX -= 0.03F + Mth.sin(age * 0.04F) * 0.03F;
             pose.pushPose();
             ph.translateAndRotate(pose);
             hair.render(buf.getBuffer(RenderType.entityCutoutNoCull(strand)), pose.last().pose(), pose.last().normal(),
                     light, overlay, swayX, swayZ, breeze * 0.5F + limbAmount * 0.1F, Mth.sin(age * 0.2F) * 0.1F, false);
             pose.popPose();
-            head.copyFrom(ph);
-            root.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(tex)), light, overlay);
         }
     }
 
@@ -191,7 +149,7 @@ public final class WaifuLayers {
             if (e.isInvisible()) return;
             pose.pushPose();
             float bob = Mth.sin(age * 0.1F) * 0.06F;
-            pose.translate(0.72F, -0.05F + bob, -0.15F);
+            pose.translate(0.62F, -0.05F + bob, -0.15F);
             pose.mulPose(Axis.YP.rotationDegrees(-90.0F + Mth.sin(age * 0.03F) * 20.0F));
             pose.mulPose(Axis.ZP.rotationDegrees(80.0F));
             pose.scale(0.75F, 0.75F, 0.75F);

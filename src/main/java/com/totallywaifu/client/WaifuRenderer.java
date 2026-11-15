@@ -4,28 +4,19 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.totallywaifu.TotallyWaifu;
 import com.totallywaifu.entity.WaifuEntity;
 import com.totallywaifu.entity.WaifuKind;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
-/** Dibuja a una waifu: skin con expresiones, ropa 3D, cabello en mechones y sus accesorios. */
+/** Dibuja a una waifu: cuerpo estilizado con su ropa, cara de anime con expresiones, cabello en mechones y accesorios. */
 public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> {
-    private final WaifuKind kind;
-    private final ResourceLocation normal, blink, happy, surprised, focused, tired;
+    private final ResourceLocation body;
 
     public WaifuRenderer(EntityRendererProvider.Context ctx, WaifuKind kind) {
-        super(ctx, new WaifuModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM)), 0.45F);
-        this.kind = kind;
-        String n = kind.id();
-        normal = tex(kind, n);
-        blink = tex(kind, n + "_blink");
-        happy = tex(kind, n + "_happy");
-        surprised = tex(kind, n + "_surprised");
-        focused = tex(kind, n + "_focused");
-        tired = tex(kind, n + "_tired");
-        addLayer(new WaifuLayers.Outfit(this, ctx.getModelSet(), kind));
-        addLayer(new WaifuLayers.Head(this, ctx.getModelSet(), kind));
+        super(ctx, new WaifuModel(ctx.bakeLayer(WaifuLayers.body(kind)), kind), 0.45F);
+        body = tex(kind, "body");
+        addLayer(new WaifuLayers.Face(this, ctx.getModelSet(), kind));
+        addLayer(new WaifuLayers.Hair(this, kind));
         if (kind == WaifuKind.SHIORI) addLayer(new WaifuLayers.Book(this, ctx.getModelSet()));
     }
 
@@ -35,17 +26,11 @@ public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> 
 
     @Override
     public ResourceLocation getTextureLocation(WaifuEntity e) {
-        if (e.hurtTime > 0) return surprised;
-        if (e.getHealth() < e.getMaxHealth() * 0.3F) return tired;
-        long t = e.tickCount + e.getId() * 53L;
-        if (t % 90 < 3 || (t % 270 >= 6 && t % 270 < 9)) return blink;
-        if (e.isHappy()) return happy;
-        if (e.isBusy() || e.isAggressive()) return focused;
-        return normal;
+        return body;
     }
 
     @Override
     protected void scale(WaifuEntity e, PoseStack pose, float partial) {
-        pose.scale(0.95F, 0.97F, 0.95F);        // esbelta y alta
+        pose.scale(0.96F, 0.98F, 0.96F);
     }
 }
