@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 
 /** Panel de la waifu (Shift + clic derecho): su mochila, los modos y sus botones especiales. */
 public class WaifuMenu extends AbstractContainerMenu {
-    public static final int BAG_Y = 92, INV_Y = 160, HOTBAR_Y = 218, ORDER_X = 154, ORDER_Y = 70;
+    public static final int BAG_Y = 92, INV_Y = 160, HOTBAR_Y = 218, ORDER_X = 174, ORDER_Y = 70, ARMOR_X = 62, ARMOR_Y = 18;
     public static final int B_FOLLOW = 0, B_STAY = 1, B_WORK = 2, B_SORT = 3, B_XP = 4, B_HEART = 5;
 
     @Nullable public final WaifuEntity waifu;
@@ -29,14 +29,34 @@ public class WaifuMenu extends AbstractContainerMenu {
     public static WaifuMenu fromNetwork(int id, Inventory inv, FriendlyByteBuf buf) {
         Entity e = inv.player.level().getEntity(buf.readVarInt());
         WaifuKind k = WaifuKind.byId(buf.readVarInt());
-        return new WaifuMenu(id, inv, e instanceof WaifuEntity w ? w : null, k, new SimpleContainer(27), new SimpleContainer(1));
+        return new WaifuMenu(id, inv, e instanceof WaifuEntity w ? w : null, k, new SimpleContainer(27), new SimpleContainer(1), new SimpleContainer(4));
     }
 
     public WaifuMenu(int id, Inventory inv, WaifuEntity w) {
-        this(id, inv, w, w.kind, w.bag, w.order);
+        this(id, inv, w, w.kind, w.bag, w.order, new ArmorView(w));
     }
 
-    private WaifuMenu(int id, Inventory inv, @Nullable WaifuEntity w, WaifuKind kind, Container bag, Container order) {
+    private static final net.minecraft.world.entity.EquipmentSlot[] ARMOR = {net.minecraft.world.entity.EquipmentSlot.HEAD,
+            net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET};
+
+    /** Las 4 piezas de armadura que lleva puestas (se ven sobre su ropa y la protegen). */
+    private static class ArmorView extends SimpleContainer {
+        private final WaifuEntity w;
+
+        ArmorView(WaifuEntity w) {
+            super(4);
+            this.w = w;
+            for (int i = 0; i < 4; i++) super.setItem(i, w.getItemBySlot(ARMOR[i]));
+        }
+
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            if (w != null) for (int i = 0; i < 4; i++) w.setItemSlot(ARMOR[i], getItem(i));
+        }
+    }
+
+    private WaifuMenu(int id, Inventory inv, @Nullable WaifuEntity w, WaifuKind kind, Container bag, Container order, Container armor) {
         super(ModRegistry.PANEL.get(), id);
         this.waifu = w;
         this.kind = kind;
@@ -46,6 +66,13 @@ public class WaifuMenu extends AbstractContainerMenu {
         if (kind == WaifuKind.KOZUE) addSlot(new Slot(order, 0, ORDER_X, ORDER_Y) {
             @Override public int getMaxStackSize() { return 1; }
         });
+        for (int i = 0; i < 4; i++) {
+            final net.minecraft.world.entity.EquipmentSlot es = ARMOR[i];
+            addSlot(new Slot(armor, i, ARMOR_X, ARMOR_Y + i * 18) {
+                @Override public boolean mayPlace(ItemStack s) { return s.getItem() instanceof net.minecraft.world.item.Equipable eq && eq.getEquipmentSlot() == es; }
+                @Override public int getMaxStackSize() { return 1; }
+            });
+        }
         addDataSlot(mode);
         addDataSlot(xp);
         if (w != null) {
