@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="totallywaifu"
+version="1.0.0"
+displayName="Totally Waifu?"
+authors="Totally Waifu"
+description='''
+La mesa de crafteo, el horno, el cofre y la mesa de encantamientos cobran vida como chicas anime.
+Usa un Corazón de Waifu sobre uno de esos bloques: abren su menú y además trabajan para ti.
+'''
+
+[[dependencies.totallywaifu]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.totallywaifu]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="BOTH"
