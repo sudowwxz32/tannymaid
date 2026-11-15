@@ -34,3 +34,17 @@ En modo **Seguir** te acompañan y te defienden.
 - **Sombreado cel** en toda la ropa: luz desde arriba, lados más oscuros y contorno fino.
 - **Ropa más detallada**: medias con liga, botas con cordones, lazos 3D, enagua, cofia, gafas de forja, delantal con llama, capa, mangas acampanadas, gargantilla y joyas.
 - Pose de reposo con la cadera ladeada y la falda que se abre al caminar.
+
+## Novedades 1.2.0: cuerpos lisos, sin cubos
+- El cuerpo ahora es una **malla suave**: cada parte (cuello, torso, brazos, piernas, falda, mangas, botas y cinturón) está hecha de anillos redondeados que se afinan y ensanchan, con normales suaves. Ya no se notan los cubos: se ve liso y redondeado.
+  - Torso con busto, cintura estrecha y cadera.
+  - Piernas con muslo, rodilla, pantorrilla, tobillo y pie.
+  - Brazos con hombro, codo, muñeca y mano.
+- **Cabeza redondeada** con la cara pintada al frente.
+- **Caras nuevas a 128 px**:
+  - Ojos grandes y limpios: iris en degradado, pupila, brillos y pestaña gruesa con alita.
+  - Pliegue del párpado, cejas afiladas y rubor suave.
+  - Seis expresiones.
+- **Texturas limpias**: colores lisos sin ruido de píxeles, pliegues suaves en la tela y contornos finos entre prendas.
+- La falda se abre de verdad al caminar: se deforma la malla.
+- Generador: `tools/gen_smooth.py` (la vista previa usa la misma geometría que el juego).

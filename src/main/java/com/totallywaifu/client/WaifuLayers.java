@@ -29,8 +29,6 @@ import java.util.function.Supplier;
 public final class WaifuLayers {
     private WaifuLayers() {}
 
-    public static final ModelLayerLocation FACE = new ModelLayerLocation(new ResourceLocation(TotallyWaifu.MODID, "waifu"), "face");
-
     public static ModelLayerLocation body(WaifuKind k) {
         return new ModelLayerLocation(new ResourceLocation(TotallyWaifu.MODID, k.id()), "body");
     }
@@ -62,14 +60,49 @@ public final class WaifuLayers {
         };
     }
 
-    // ------------------------------------------------------------------ cara de anime (una textura por expresión)
+    static ModelPart[] bones(WaifuModel m) {
+        return new ModelPart[]{m.head, m.body, m.rightArm, m.leftArm, m.rightLeg, m.leftLeg};
+    }
+
+    private static float[][] shapes(WaifuKind k) {
+        return switch (k) {
+            case KOZUE -> WaifuShapes.KOZUE;
+            case HOMURA -> WaifuShapes.HOMURA;
+            case KURA -> WaifuShapes.KURA;
+            case SHIORI -> WaifuShapes.SHIORI;
+        };
+    }
+
+    // ------------------------------------------------------------------ cuerpo liso (malla suave)
+    public static class Body extends RenderLayer<WaifuEntity, WaifuModel> {
+        private final ResourceLocation tex;
+        private final WaifuMesh mesh;
+
+        public Body(RenderLayerParent<WaifuEntity, WaifuModel> parent, WaifuKind k) {
+            super(parent);
+            tex = WaifuRenderer.tex(k, "body");
+            mesh = new WaifuMesh(shapes(k));
+        }
+
+        @Override
+        public void render(PoseStack pose, MultiBufferSource buf, int light, WaifuEntity e, float limbSwing, float limbAmount,
+                           float partial, float age, float headYaw, float headPitch) {
+            if (e.isInvisible()) return;
+            WaifuModel m = getParentModel();
+            float fwd = Math.max(0, -Math.min(m.rightLeg.xRot, m.leftLeg.xRot)), back = Math.max(0, Math.max(m.rightLeg.xRot, m.leftLeg.xRot));
+            fwd += Math.max(0, -m.body.xRot) * 0.5F;
+            mesh.render(buf.getBuffer(RenderType.entityCutoutNoCull(tex)), pose, bones(m), light,
+                    LivingEntityRenderer.getOverlayCoords(e, 0.0F), Math.min(0.8F, fwd * 0.5F), Math.min(0.8F, back * 0.5F));
+        }
+    }
+
+    // ------------------------------------------------------------------ cara de anime (cabeza redondeada, una textura por expresión)
     public static class Face extends RenderLayer<WaifuEntity, WaifuModel> {
-        private final ModelPart head;
+        private static final WaifuMesh HEAD = new WaifuMesh(WaifuShapes.HEAD);
         private final ResourceLocation normal, blink, happy, surprised, focused, tired;
 
-        public Face(RenderLayerParent<WaifuEntity, WaifuModel> parent, EntityModelSet models, WaifuKind k) {
+        public Face(RenderLayerParent<WaifuEntity, WaifuModel> parent, WaifuKind k) {
             super(parent);
-            head = models.bakeLayer(FACE).getChild("head");
             normal = WaifuRenderer.tex(k, "face");
             blink = WaifuRenderer.tex(k, "face_blink");
             happy = WaifuRenderer.tex(k, "face_happy");
@@ -92,12 +125,8 @@ public final class WaifuLayers {
         public void render(PoseStack pose, MultiBufferSource buf, int light, WaifuEntity e, float limbSwing, float limbAmount,
                            float partial, float age, float headYaw, float headPitch) {
             if (e.isInvisible()) return;
-            ModelPart ph = getParentModel().head;
-            head.copyFrom(ph);
-            head.xScale = ph.xScale;
-            head.yScale = ph.yScale;
-            head.zScale = ph.zScale;
-            head.render(pose, buf.getBuffer(RenderType.entityCutoutNoCull(expression(e))), light, LivingEntityRenderer.getOverlayCoords(e, 0.0F));
+            HEAD.render(buf.getBuffer(RenderType.entityCutoutNoCull(expression(e))), pose, bones(getParentModel()), light,
+                    LivingEntityRenderer.getOverlayCoords(e, 0.0F), 0, 0);
         }
     }
 

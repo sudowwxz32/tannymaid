@@ -1,4 +1,4 @@
-// GENERADO por tools/gen_waifus.py — no editar a mano.
+// GENERADO por tools/gen_smooth.py — no editar a mano.
 package com.totallywaifu.client;
 
 /** Mechones de cada waifu: phi, th0, th1, caída, vuelo, curva, ancho, grosor, separación, tono, tipo. */

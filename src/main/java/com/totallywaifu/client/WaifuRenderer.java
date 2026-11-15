@@ -14,8 +14,9 @@ public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> 
 
     public WaifuRenderer(EntityRendererProvider.Context ctx, WaifuKind kind) {
         super(ctx, new WaifuModel(ctx.bakeLayer(WaifuLayers.body(kind)), kind), 0.45F);
-        body = tex(kind, "body");
-        addLayer(new WaifuLayers.Face(this, ctx.getModelSet(), kind));
+        body = tex(kind, "props");
+        addLayer(new WaifuLayers.Body(this, kind));
+        addLayer(new WaifuLayers.Face(this, kind));
         addLayer(new WaifuLayers.Hair(this, kind));
         if (kind == WaifuKind.SHIORI) addLayer(new WaifuLayers.Book(this, ctx.getModelSet()));
     }
@@ -31,6 +32,6 @@ public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> 
 
     @Override
     protected void scale(WaifuEntity e, PoseStack pose, float partial) {
-        pose.scale(0.96F, 0.98F, 0.96F);
+        pose.scale(0.95F, 0.97F, 0.95F);
     }
 }
