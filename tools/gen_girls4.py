@@ -113,7 +113,7 @@ def panda():
         if f == "front" and abs(x - w * 0.62) < 1.5:
             return GR
         return WHITE if (x + y) % 19 else (232, 232, 236)
-    marks = [(x, y, (70, 66, 76)) for x in (1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14) for y in (7, 8, 9, 10, 11)]
+    marks = [(x, y, (200, 192, 204)) for x in (1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14) for y in (8, 9, 10, 11) if not (y == 11 and x in (1, 14))]
     P, info = girl(((242, 242, 244), (255, 255, 255), (200, 200, 206)), "buns", ((20, 20, 24), (70, 64, 70), (200, 190, 200)), (20, 20, 24),
                    top=qipao, waist=cloth(BK), hips=qipao, sleeve=cloth(BK), upper=cloth(BK), fore=SK, hand=SK,
                    thigh=lambda f, x, y, w, h: SK(f, x, y, w, h) if f in ("front", "left", "right") and y < h * 0.4 else BK,
@@ -184,7 +184,6 @@ def piglin():
                            mirror_pair("ering", "head", (-4.6, -2.6, -0.6), (0, 0, 0), [Box(-0.4, 0, -0.4, 0.8, 1.2, 0.8, metal(G, GH))]),
                            [Part("gsword", "body", (-1.6, 2.0, 2.2), (0, 0, -0.45), [Box(-0.4, -4.0, -0.3, 0.8, 9.0, 0.6, metal(G, GH)),
                                                                                     Box(-1.5, 3.6, -0.4, 3.0, 0.7, 0.8, metal((140, 90, 40), G))])]])
-    info["fang"] = True
     return P, info
 
 
@@ -383,9 +382,9 @@ LOOK = {"kozue": ("athletic", "round"), "homura": ("curvy", "sharp"), "kura": ("
         "zombie": ("std", "sleepy"), "esqueleto": ("slim", "sharp"), "creeper": ("petite", "round"), "arana": ("curvy", "sharp"),
         "bruja": ("busty", "sharp"), "enderman": ("slim", "sleepy"),
         "cama": ("curvy", "sleepy"), "slime": ("curvy", "big"), "conejo": ("petite", "big"), "panda": ("curvy", "round"), "caballo": ("athletic", "gentle"),
-        "abeja": ("petite", "big"), "piglin": ("curvy", "sharp"), "wither": ("athletic", "sharp"), "blaze": ("slim", "sharp"), "ghast": ("slim", "sleepy"),
-        "dina": ("busty", "sharp"), "mita": ("curvy", "big"), "warden": ("athletic", "blind"), "zorro": ("slim", "cat"), "ajolote": ("petite", "big"),
+        "abeja": ("petite", "big"), "piglin": ("curvy", "gentle"), "wither": ("athletic", "round"), "blaze": ("slim", "big"), "ghast": ("slim", "sleepy"),
+        "dina": ("busty", "round"), "mita": ("curvy", "big"), "warden": ("athletic", "blind"), "zorro": ("slim", "cat"), "ajolote": ("petite", "big"),
         "allay": ("petite", "big"), "rana": ("petite", "round")}
 MARKS = {"zombie": [(11, 6, (150, 110, 120)), (12, 7, (150, 110, 120)), (13, 6, (150, 110, 120))], "arana": [(6, 5, (200, 20, 30)), (9, 5, (200, 20, 30))],
          "kozue": [(3, 11, (210, 150, 120)), (12, 11, (210, 150, 120)), (4, 12, (210, 150, 120))]}
-FANG = {"perro", "zorro", "piglin", "wither", "dina"}
+FANG = {"piglin"}

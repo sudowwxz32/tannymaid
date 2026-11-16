@@ -46,10 +46,9 @@ public final class ClientFx {
     private static String bannerTitle = "", bannerSub = "";
     private static ItemStack bannerIcon = ItemStack.EMPTY;
     private static int sleepGirl = -1;
-    private static WaifuEntity guide;
 
     private static final String[][] LINES = {
-            {"20", "§d✦ ...¿Me escuchas? ✦"},
+            {"20", "§f...¿Me escuchas?"},
             {"48", "§fBienvenido a un mundo donde las cosas sueñan con ser algo más."},
             {"80", "§fToma esto: la §d§lVara de Transformación§r§f."},
             {"112", "§fMesas, hornos, camas, animales y monstruos... ¡se volverán chicas! ♥"},
@@ -64,7 +63,6 @@ public final class ClientFx {
                 flashAt = landedAt = -1;
                 falling = false;
                 introYaw = mc.player != null ? mc.player.getYRot() : 0;
-                guide = null;
                 mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_CHIME, 0.6F));
             }
             case Fx.WAND -> {
@@ -104,7 +102,6 @@ public final class ClientFx {
     public static void tick(TickEvent.ClientTickEvent e) {
         if (e.phase != TickEvent.Phase.END) return;
         ticks++;
-        if (guide != null) guide.tickCount++;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) {
             introAt = -1;
@@ -183,23 +180,15 @@ public final class ClientFx {
             int c = (i % 3 == 0 ? 0xFFFFC0E0 : 0xFFFFFFFF);
             if ((i + (int) (t / 6)) % 4 != 0) g.fill((int) x, H - (int) y, (int) x + 1, H - (int) y + 1, c);
         }
-        // la guía (Shiori) aparece y te mira
-        if (guide == null && mc.level != null) {
-            guide = ModRegistry.TYPES.get(WaifuKind.SHIORI).get().create(mc.level);
-            if (guide != null) guide.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModRegistry.WAND.get()));
-        }
-        float grow = Mth.clamp((t - 6) / 20.0F, 0, 1);
+        // "???": un ente de luz aparece frente a ti
+        float grow = Mth.clamp((t - 6) / 24.0F, 0, 1);
         int cx = W / 2, base = (int) (H * 0.62F + Mth.sin(t * 0.08F) * 4);
-        if (guide != null && grow > 0) {
-            boolean handed = t > 128;
-            guide.setItemSlot(EquipmentSlot.MAINHAND, handed ? ItemStack.EMPTY : new ItemStack(ModRegistry.WAND.get()));
-            guide.cheer(t > 80 && t < 150 ? 5 : 0);
-            InventoryScreen.renderEntityInInventoryFollowsMouse(g, cx, base, (int) (62 * grow), 0, -18, guide);
-        }
+        if (grow > 0) light(g, cx, base, grow, t);
+        if (grow >= 1) g.drawCenteredString(f, "§e§l???", cx, base - 118, 0xFFFFFFFF);
         // la vara brilla y viene hacia ti
         if (t > 80 && t < 140) {
             float k = Mth.clamp((t - 112) / 26.0F, 0, 1);
-            float x = Mth.lerp(k, cx - 46, cx - 8), y = Mth.lerp(k, base - 96, H - 30);
+            float x = Mth.lerp(k, cx + 34, cx - 8), y = Mth.lerp(k, base - 70, H - 30);
             float s = Mth.lerp(k, 3.2F, 1.4F) * (1 + Mth.sin(t * 0.3F) * 0.05F);
             PoseStack ps = g.pose();
             ps.pushPose();
@@ -217,7 +206,7 @@ public final class ClientFx {
         for (int i = LINES.length - 1; i >= 0 && shown < 2; i--) {
             int at = Integer.parseInt(LINES[i][0]);
             if (t < at) continue;
-            String full = LINES[i][1];
+            String full = "§e§l???§r§7: " + LINES[i][1];
             int n = Math.min(full.length(), (int) ((t - at) * 1.6F));
             String txt = full.substring(0, n);
             int y = (int) (H * 0.80F) + (shown == 0 ? 0 : -14);
@@ -230,6 +219,61 @@ public final class ClientFx {
         if (t > introLen - 15) {
             int a = (int) (255 * Mth.clamp((t - (introLen - 15)) / 15.0F, 0, 1));
             g.fill(0, 0, W, H, (a << 24) | 0xFFFFFF);
+        }
+    }
+
+    /** El ente de luz: halo que gira, rayos, una silueta brillante y destellos. */
+    private static void light(GuiGraphics g, int cx, int base, float grow, float t) {
+        PoseStack ps = g.pose();
+        float pulse = 1 + Mth.sin(t * 0.12F) * 0.06F;
+        int cy = base - 55;
+        // resplandor (círculos suaves)
+        for (int r = 70; r > 0; r -= 5) {
+            float rr = r * grow * pulse;
+            int a = (int) (10 + (70 - r) * 0.9F);
+            int col = r > 40 ? 0xFFE6A0 : r > 20 ? 0xFFF4D0 : 0xFFFFFF;
+            for (int dy = -(int) rr; dy <= rr; dy += 2) {
+                int hw = (int) Math.sqrt(rr * rr - dy * dy);
+                g.fill(cx - hw, cy + dy, cx + hw, cy + dy + 2, (Math.min(255, a / 3) << 24) | col);
+            }
+        }
+        // rayos que giran
+        ps.pushPose();
+        ps.translate(cx, cy, 0);
+        for (int i = 0; i < 12; i++) {
+            ps.pushPose();
+            ps.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(t * 0.8F + i * 30));
+            int len = (int) ((80 + (i % 3) * 18) * grow * pulse);
+            g.fillGradient(-1, 8, 1, len, 0x70FFF4C0, 0x00FFF4C0);
+            ps.popPose();
+        }
+        ps.popPose();
+        // silueta de luz (cabeza, cuerpo con vestido, brazo que te ofrece la vara)
+        int s = (int) (grow * 100);
+        if (s <= 0) return;
+        float k = grow;
+        int head = (int) (9 * k);
+        int hy = cy - (int) (34 * k);
+        for (int dy = -head; dy <= head; dy++) {
+            int hw = (int) Math.sqrt(head * head - dy * dy);
+            g.fill(cx - hw, hy + dy, cx + hw, hy + dy + 1, 0xF0FFFFFF);
+        }
+        g.fill(cx - (int) (11 * k), hy - head - (int) (4 * k), cx + (int) (11 * k), hy - head - (int) (2 * k), 0xC0FFE680);   // aureola
+        for (int dy = 0; dy < (int) (70 * k); dy++) {                                                                     // vestido
+            float q = dy / (70 * k);
+            int hw = (int) ((5 + q * q * 20) * k);
+            int a = (int) (240 - q * 120);
+            g.fill(cx - hw, hy + head + 2 + dy, cx + hw, hy + head + 3 + dy, (a << 24) | (q > 0.6F ? 0xFFF0C8 : 0xFFFFFF));
+        }
+        int sy = hy + head + (int) (8 * k);
+        g.fill(cx + (int) (5 * k), sy, cx + (int) (30 * k), sy + (int) (4 * k), 0xE0FFFFFF);                                // brazo extendido
+        g.fill(cx - (int) (14 * k), sy, cx - (int) (5 * k), sy + (int) (22 * k), 0xC0FFFFFF);                               // brazo
+        // destellos alrededor
+        for (int i = 0; i < 10; i++) {
+            float an = t * 0.05F + i * 0.628F;
+            int rad = (int) ((48 + (i % 3) * 10) * k);
+            int x = cx + (int) (Mth.cos(an) * rad), y = cy + (int) (Mth.sin(an) * rad * 0.8F);
+            g.drawString(Minecraft.getInstance().font, "✦", x - 3, y - 4, (((int) (200 * k)) << 24) | (i % 2 == 0 ? 0xFFF0A0 : 0xFFFFFF), false);
         }
     }
 

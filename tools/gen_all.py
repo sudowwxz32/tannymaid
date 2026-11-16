@@ -11,6 +11,7 @@ import gen_girls4 as N
 from PIL import Image, ImageDraw
 
 ALL = dict(B.WAIFUS)
+OLD = set(B.WAIFUS) | set(M.GIRLS)
 ALL.update(M.GIRLS)
 ALL.update(N.GIRLS)
 DEFAULT_SKIN = (B.SKIN, B.SKIN_SH)
@@ -24,6 +25,9 @@ def make(name):
         P, info = ALL[name]()
     finally:
         B.SHAPE = B.SHAPES["std"]
+    if name in OLD:                     # las de la 3.0 conservan su cara de esa versión
+        info["eye"], info["marks"], info["fang"] = "round", [], False
+        return P, info
     info.setdefault("eye", eye)
     info["marks"] = list(info.get("marks", [])) + N.MARKS.get(name, [])
     info["fang"] = info.get("fang", False) or name in N.FANG
@@ -109,7 +113,36 @@ def preview(outdir, names=None):
     sheet.save(os.path.join(outdir, "sheet.png"))
 
 
+def faces(outdir):
+    """Solo regenera las caras (rápido) y hace una hoja con todas."""
+    os.makedirs(outdir, exist_ok=True)
+    tiles = []
+    for name in ALL:
+        P, info = make(name)
+        B.SKIN, B.SKIN_SH = info.get("skin", DEFAULT_SKIN)
+        out = os.path.join(B.TEXR, name)
+        for expr, suf in B.EXPRS:
+            B.face_tex(expr, info["iris"], info["lash"], info["hair"], eye=info["eye"], marks=info["marks"], fang=info["fang"]).save(os.path.join(out, "face" + suf + ".png"))
+        B.SKIN, B.SKIN_SH = DEFAULT_SKIN
+        f = Image.open(os.path.join(out, "face.png")).crop((64, 64, 128, 128)).resize((128, 128), Image.NEAREST)
+        h = Image.open(os.path.join(out, "face_happy.png")).crop((64, 64, 128, 128)).resize((128, 128), Image.NEAREST)
+        tiles.append((name, f, h))
+    cols = 7
+    rows = math.ceil(len(tiles) / cols)
+    sheet = Image.new("RGB", (cols * 270, rows * 150), (236, 228, 240))
+    d = ImageDraw.Draw(sheet)
+    for i, (n, f, h) in enumerate(tiles):
+        x, y = (i % cols) * 270 + 4, (i // cols) * 150 + 4
+        sheet.paste(f, (x, y + 16), f)
+        sheet.paste(h, (x + 134, y + 16), h)
+        d.text((x + 2, y + 2), n + (" (3.0)" if n in OLD else " (nueva)"), fill=(60, 40, 80))
+    sheet.save(os.path.join(outdir, "caras.png"))
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "faces":
+        faces(sys.argv[2])
+        sys.exit()
     main()
     if len(sys.argv) > 2 and sys.argv[1] == "preview":
         preview(sys.argv[2], sys.argv[3].split(",") if len(sys.argv) > 3 else None)

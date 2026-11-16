@@ -245,13 +245,15 @@ EXPRS = [("normal", ""), ("blink", "_blink"), ("happy", "_happy"), ("surprised",
 EYES = {"round": (["LLLLLL", ".DTTHW", ".TTTTW", "..ttt."], 8),
         "sharp": (["LL....", ".LLLLL", ".DTTHW", "..ttt."], 8),
         "sleepy": (["......", "LLLLLL", ".TTTHW", "..tt.."], 8),
-        "big": (["LLLLLL", "LDTTHW", ".TTTTW", ".TttHW", "..ttt."], 7),
-        "cat": (["LLLLLL", ".DTKTW", ".TTKTW", "..tKt."], 8),
+        "big": ([".LLLL.", "LDTTHW", ".TTTTW", ".TttHW", "..ttt."], 7),
+        "cat": ([".LLLL.", "LDTKTW", ".TTKTW", "..tKt."], 8),
         "gentle": (["..LLLL", ".LDTHW", ".TTTTW", "..tt.."], 8),
         "blind": (["......"], 8)}
 
 
 def eye_rows(expr, style):
+    if style == "round":                      # exactamente como en la 3.0
+        return EYE[expr], (7 if expr == "surprised" else 8)
     rows, ey = EYES.get(style, EYES["round"])
     if style == "blind":
         return [], ey
