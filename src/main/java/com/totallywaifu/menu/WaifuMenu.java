@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 /** Panel de la waifu (Shift + clic derecho): su mochila, los modos y sus botones especiales. */
 public class WaifuMenu extends AbstractContainerMenu {
     public static final int BAG_Y = 92, INV_Y = 160, HOTBAR_Y = 218, ORDER_X = 154, ORDER_Y = 70;
-    public static final int B_FOLLOW = 0, B_STAY = 1, B_WORK = 2, B_SORT = 3, B_XP = 4, B_HEART = 5, B_LOOK = 6;
+    public static final int B_FOLLOW = 0, B_STAY = 1, B_WORK = 2, B_SORT = 3, B_XP = 4, B_HEART = 5;
 
     @Nullable public final WaifuEntity waifu;
     public final WaifuKind kind;
@@ -81,13 +81,9 @@ public class WaifuMenu extends AbstractContainerMenu {
                     waifu.storedXp = 0;
                 }
             }
-            case B_LOOK -> {
-                waifu.setLook(waifu.getLook() + 1);
-                waifu.say(p, switch (waifu.getLook()) { case 1 -> "¿Qué tal mi nuevo look? Soy Noa ✦"; case 2 -> "¡Aspecto personalizado! (necesita el paquete de recursos)"; default -> "De vuelta a mi ropa de siempre."; });
-            }
             case B_HEART -> {
                 p.closeContainer();
-                waifu.packIntoHeart(p);
+                if (p instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.storeEntity(sp, waifu);
                 return true;
             }
             default -> { return false; }

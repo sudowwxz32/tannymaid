@@ -45,15 +45,21 @@ public final class ModRegistry {
     }
 
     public static final RegistryObject<Item> HEART = ITEMS.register("corazon_waifu",
-            () -> new HeartItem(new Item.Properties().stacksTo(16).rarity(Rarity.RARE)));
+            () -> new HeartItem(null, new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+    public static final Map<WaifuKind, RegistryObject<Item>> HEARTS = new EnumMap<>(WaifuKind.class);
+
+    static {
+        for (WaifuKind k : WaifuKind.values())
+            HEARTS.put(k, ITEMS.register("corazon_" + k.id(), () -> new HeartItem(k, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC))));
+    }
 
     public static final RegistryObject<MenuType<WaifuMenu>> PANEL = MENUS.register("panel", () -> IForgeMenuType.create(WaifuMenu::fromNetwork));
 
     public static final RegistryObject<CreativeModeTab> TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.literal("Totally Waifu?"))
-            .icon(() -> new ItemStack(HEART.get()))
+            .icon(() -> new ItemStack(HEARTS.get(WaifuKind.KOZUE).get()))
             .displayItems((p, out) -> {
-                out.accept(HEART.get());
+                for (WaifuKind k : WaifuKind.values()) out.accept(HEARTS.get(k).get());
                 for (WaifuKind k : WaifuKind.values()) out.accept(EGGS.get(k).get());
             }).build());
 

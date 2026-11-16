@@ -10,5 +10,6 @@ public class TotallyWaifu {
 
     public TotallyWaifu() {
         ModRegistry.register(FMLJavaModLoadingContext.get().getModEventBus());
+        com.totallywaifu.network.Net.register();
     }
 }

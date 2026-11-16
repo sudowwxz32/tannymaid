@@ -50,9 +50,6 @@ public class WaifuEntity extends PathfinderMob {
     private static final EntityDataAccessor<Integer> HAPPY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> LIT = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BUSY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDataAccessor<Integer> LOOK = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
-    /** Aspectos: 0 el suyo, 1 Noa (estilo de bloques), 2 personalizado (modelo de Blockbench en un paquete de recursos). */
-    public static final int LOOKS = 3;
 
     public final WaifuKind kind;
     /** Mochila (27). La primera fila es su reserva: Kura no se la lleva. */
@@ -95,7 +92,6 @@ public class WaifuEntity extends PathfinderMob {
         entityData.define(HAPPY, 0);
         entityData.define(LIT, false);
         entityData.define(BUSY, false);
-        entityData.define(LOOK, 0);
     }
 
     @Override
@@ -126,8 +122,6 @@ public class WaifuEntity extends PathfinderMob {
         work.reset();
     }
 
-    public int getLook() { return entityData.get(LOOK); }
-    public void setLook(int l) { entityData.set(LOOK, Math.floorMod(l, LOOKS)); }
 
     public boolean isHappy() { return entityData.get(HAPPY) > 0; }
     public void cheer(int ticks) { entityData.set(HAPPY, ticks); }
@@ -185,6 +179,7 @@ public class WaifuEntity extends PathfinderMob {
         if (tickCount % 40 == 0 && getHealth() < getMaxHealth()) heal(1.0F);
         if (kind == WaifuKind.HOMURA) WaifuWork.furnaceTick(this);
         work.always();
+        if (tickCount % 40 == 0 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.track(sp, this);
     }
 
     @Override
@@ -205,9 +200,7 @@ public class WaifuEntity extends PathfinderMob {
         if (!level().isClientSide) {
             // no muere de verdad: se refugia en un corazón con todas sus cosas
             setHealth(getMaxHealth());
-            spawnAtLocation(HeartItem.withWaifu(this));
-            Player p = ownerPlayer();
-            if (p != null) say(p, "¡Ay! Me escondí en mi corazón... recógelo y úsalo para que vuelva.");
+            if (!com.totallywaifu.data.Collection.onDefeat(this)) spawnAtLocation(HeartItem.withWaifu(this));
             ((ServerLevel) level()).sendParticles(ParticleTypes.HEART, getX(), getY() + 1, getZ(), 12, 0.5, 0.6, 0.5, 0);
             discard();
             return;
@@ -237,6 +230,7 @@ public class WaifuEntity extends PathfinderMob {
         ServerPlayer sp = (ServerPlayer) p;
         if (owner == null) {
             owner = p.getUUID();
+            com.totallywaifu.data.Collection.track(sp, this);
             say(p, "¡Hola! Soy " + kind.display + ". Desde ahora te ayudo. §8(Shift + clic: mi panel)");
             cheer(80);
             return InteractionResult.CONSUME;
@@ -300,7 +294,6 @@ public class WaifuEntity extends PathfinderMob {
     public void addAdditionalSaveData(CompoundTag t) {
         super.addAdditionalSaveData(t);
         t.putInt("Mode", getMode());
-        t.putInt("Look", getLook());
         if (owner != null) t.putUUID("Owner", owner);
         if (anchor != null) t.putLong("Anchor", anchor.asLong());
         t.put("Bag", save(bag));
@@ -316,7 +309,6 @@ public class WaifuEntity extends PathfinderMob {
     public void readAdditionalSaveData(CompoundTag t) {
         super.readAdditionalSaveData(t);
         entityData.set(MODE, t.getInt("Mode"));
-        setLook(t.getInt("Look"));
         owner = t.hasUUID("Owner") ? t.getUUID("Owner") : null;
         anchor = t.contains("Anchor") ? BlockPos.of(t.getLong("Anchor")) : null;
         load(bag, t.getList("Bag", Tag.TAG_COMPOUND));

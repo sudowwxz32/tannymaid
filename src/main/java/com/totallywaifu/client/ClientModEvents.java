@@ -16,19 +16,13 @@ public final class ClientModEvents {
 
     @SubscribeEvent
     public static void layers(EntityRenderersEvent.RegisterLayerDefinitions e) {
+        e.registerLayerDefinition(WaifuLayers.FACE, WaifuModels::face);
         for (WaifuKind k : WaifuKind.values()) e.registerLayerDefinition(WaifuLayers.body(k), WaifuLayers.bodyDef(k));
-        e.registerLayerDefinition(NoaRenderer.BODY, NoaModels::body);
-        e.registerLayerDefinition(NoaRenderer.FACE, NoaModels::face);
     }
 
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
         for (WaifuKind k : WaifuKind.values()) e.registerEntityRenderer(ModRegistry.TYPES.get(k).get(), ctx -> new WaifuRenderer(ctx, k));
-    }
-
-    @SubscribeEvent
-    public static void reload(net.minecraftforge.client.event.RegisterClientReloadListenersEvent e) {
-        e.registerReloadListener(new CustomLook());
     }
 
     @SubscribeEvent

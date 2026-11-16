@@ -2,20 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "P P",
-    "PGP",
-    " P "
+    "CCC",
+    "CPC",
+    "CCC"
   ],
   "key": {
+    "C": {
+      "item": "minecraft:cobblestone"
+    },
     "P": {
       "item": "minecraft:pink_dye"
-    },
-    "G": {
-      "item": "minecraft:gold_ingot"
     }
   },
   "result": {
-    "item": "totallywaifu:corazon_waifu",
-    "count": 1
+    "item": "totallywaifu:corazon_homura"
   }
 }
