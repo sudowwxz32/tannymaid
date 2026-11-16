@@ -23,6 +23,7 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
         for (WaifuKind k : WaifuKind.values()) e.registerEntityRenderer(ModRegistry.TYPES.get(k).get(), ctx -> new WaifuRenderer(ctx, k));
+        e.registerEntityRenderer(ModRegistry.SHOT.get(), ctx -> new net.minecraft.client.renderer.entity.ThrownItemRenderer<>(ctx, 1.4F, true));
     }
 
     @SubscribeEvent

@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:echo_shard"
+    },
+    "title": {
+      "text": "La guardiana silenciosa"
+    },
+    "description": {
+      "text": "Transforma a un warden en Umbra, tu protectora"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "totallywaifu:primera"
+}

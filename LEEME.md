@@ -1,4 +1,13 @@
-# Totally Waifu? 3.0 (Forge 1.20.1)
+# Totally Waifu? 4.0 (Forge 1.20.1)
+
+## Novedades 4.0
+- **Intro en un mundo nuevo**: apareces en el cielo, Shiori te entrega la Vara con palabras en pantalla, caes y aterrizas con una explosión (logro).
+- **Yume (cama)**: vara sobre una cama. Clic izquierdo o derecho de noche → duermes con la cabeza en sus piernas (animación en primera persona: la miras y tus ojos se cierran). Te protege toda la noche y guarda tu punto de regreso; en ♥ Mis Waifus, "Volver a donde dormí con Yume" te transporta allí (también si dormiste en ella en forma de cama).
+- **Nuevas chicas**: Gela (slime), Coco (conejo), Mei (panda), Brisa (caballo, ¡se monta!), Miel (abeja), Aurea (piglin, trueque con oro), Nyx (esqueleto del Nether, piel morena), Flama (blaze), Nube (ghast), **Dina y Mita** (hermanas TNT: vara sobre un bloque de TNT), **Umbra** (warden: guardiana máxima, vendada, altísima).
+- **Colección completa** → animación de logro + 4 waifus sorpresa para encontrar y convertir.
+- Las chicas de mesa/cama **guardan su mochila** cuando vuelven a ser bloque.
+- Kozue fabrica cualquier objeto (y las piezas intermedias) con su mochila y el cofre de Kura; Homura **solo cocina lo que le pidas** y mina menas y piedra; Luna caza el animal que golpees y te trae comida; más habilidades para todas.
+- Cada chica tiene silueta, peinado y ojos propios; Endra, Ferra y Umbra son mucho más altas.
 
 Las recetas vanilla vuelven: puedes fabricar mesas, hornos y cofres normalmente. La magia ahora está en la **Vara de Transformación**.
 

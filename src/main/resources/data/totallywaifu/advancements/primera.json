@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:pink_dye"
+    },
+    "title": {
+      "text": "♥ Mi primera waifu"
+    },
+    "description": {
+      "text": "Transforma algo en una chica con la vara"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "totallywaifu:vara"
+}

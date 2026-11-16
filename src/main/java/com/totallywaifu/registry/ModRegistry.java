@@ -35,12 +35,20 @@ public final class ModRegistry {
 
     static {
         for (WaifuKind k : WaifuKind.values()) {
-            RegistryObject<EntityType<WaifuEntity>> t = ENTITIES.register(k.id(), () -> EntityType.Builder.<WaifuEntity>of(WaifuEntity::new, MobCategory.CREATURE)
-                    .sized(0.6F, 1.95F).clientTrackingRange(10).build(k.id()));
+            RegistryObject<EntityType<WaifuEntity>> t = ENTITIES.register(k.id(), () -> {
+                EntityType.Builder<WaifuEntity> b = EntityType.Builder.<WaifuEntity>of(WaifuEntity::new, MobCategory.CREATURE)
+                        .sized(Math.min(0.9F, 0.6F * k.scale), 1.95F * k.scale).clientTrackingRange(10);
+                if (k.fireproof()) b = b.fireImmune();
+                return b.build(k.id());
+            });
             TYPES.put(k, t);
             EGGS.put(k, ITEMS.register(k.id() + "_spawn_egg", () -> new ForgeSpawnEggItem(t, k.eggA, k.eggB, new Item.Properties())));
         }
     }
+
+    public static final RegistryObject<EntityType<com.totallywaifu.entity.WaifuShot>> SHOT = ENTITIES.register("disparo",
+            () -> EntityType.Builder.<com.totallywaifu.entity.WaifuShot>of(com.totallywaifu.entity.WaifuShot::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F).clientTrackingRange(6).updateInterval(5).build("disparo"));
 
     public static final RegistryObject<Item> HEART = ITEMS.register("corazon_waifu",
             () -> new HeartItem(null, new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
@@ -54,7 +62,7 @@ public final class ModRegistry {
             .icon(() -> new ItemStack(WAND.get()))
             .displayItems((p, out) -> {
                 out.accept(WAND.get());
-                for (WaifuKind k : WaifuKind.values()) out.accept(EGGS.get(k).get());
+                for (WaifuKind k : WaifuKind.ORDER) out.accept(EGGS.get(k).get());
             }).build());
 
     private ModRegistry() {}

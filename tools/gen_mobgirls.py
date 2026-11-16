@@ -60,6 +60,44 @@ def hair_style(style, hp, bangs=None):
         P = hair_base(hp, [-5.2] * 8, back_len=7.8, lock_len=11.0)
         P.append(Part("long_back", "head", (0, -0.6, 3.2), (0.04, 0, 0), [Box(-4.5, 0, -1.4, 9.0, 13.5, 2.0, hp)]))
         return P
+    if style == "buns":
+        P = hair_base(hp, b, back_len=5.6)
+        P.append(Part("bun_r", "head", (-3.1, -8.9, 0.9), (0, 0, -0.3), [Box(-1.7, -1.7, -1.7, 3.4, 3.2, 3.4, hp)]))
+        return P
+    if style == "side":
+        P = hair_base(hp, b, back_len=6.0)
+        P += chain("side", "head", (4.4, -6.4, 1.6), (0.15, 0, -0.35), [(3.0, 2.6, 2.4, 0, 0), (3.6, 2.4, 2.2, 0, 0.3), (3.2, 2.0, 1.8, 0.05, 0.1), (2.2, 1.3, 1.2, 0.05, 0.05)], hp)
+        return P
+    if style == "braid":
+        P = hair_base(hp, b, back_len=6.2)
+        segs = [(2.2, 2.4 - i * 0.16, 2.0 - i * 0.12, 0.04, (0.14 if i % 2 else -0.14)) for i in range(7)]
+        P += chain("braid", "head", (0, -2.0, 3.6), (0.22, 0, 0), segs, hp)
+        return P
+    if style == "low":
+        P = hair_base(hp, b, back_len=6.4)
+        for s_, nm in ((-1, "r"), (1, "l")):
+            P += chain("low_" + nm, "head", (s_ * 3.7, -2.2, 2.2), (0.12, 0, -s_ * 0.12),
+                       [(3.0, 2.2, 2.2, 0, 0), (3.4, 2.0, 2.0, 0.05, -s_ * 0.06), (2.8, 1.6, 1.6, 0.05, -s_ * 0.04), (1.6, 1.0, 1.0, 0, 0)], hp)
+        return P
+    if style == "wavy":
+        P = hair_base(hp, b, back_len=7.0, lock_len=9.0)
+        P.append(Part("wave0", "head", (0, -1.4, 3.3), (0.06, 0, 0), [Box(-4.7, 0, -1.4, 9.4, 4.2, 2.2, hp)]))
+        P.append(Part("wave1", "wave0", (0, 4.0, 0), (0.16, 0, 0), [Box(-4.9, 0, -1.2, 9.8, 4.0, 2.0, hp)]))
+        P.append(Part("wave2", "wave1", (0, 3.8, 0), (-0.24, 0, 0), [Box(-4.6, 0, -1.0, 9.2, 3.6, 1.8, hp)]))
+        P.append(Part("wave3", "wave2", (0, 3.4, 0), (0.2, 0, 0), [Box(-3.8, 0, -0.8, 7.6, 2.4, 1.6, hp)]))
+        return P
+    if style == "drills":
+        P = hair_base(hp, b, back_len=6.6)
+        for s_, nm in ((-1, "r"), (1, "l")):
+            segs = [(1.8, 2.8 - i * 0.3, 2.8 - i * 0.3, 0.02, -s_ * 0.05) for i in range(7)]
+            P += chain("drill_" + nm, "head", (s_ * 4.6, -4.6, 1.4), (0.1, 0, -s_ * 0.18), segs, hp)
+        return P
+    if style == "spiky":
+        P = hair_base(hp, b, back_len=6.0, lock_len=6.4)
+        for i, (x, z, rx, rz, l) in enumerate(((-3.2, -2.0, -0.4, -0.7, 2.6), (-1.0, -2.6, -0.6, -0.2, 2.8), (1.2, -2.4, -0.6, 0.25, 2.8), (3.3, -1.6, -0.4, 0.7, 2.6),
+                                               (-2.6, 1.6, 0.5, -0.5, 3.0), (0.0, 2.4, 0.7, 0, 3.2), (2.6, 1.6, 0.5, 0.5, 3.0), (0.0, -0.2, 0, 0, 2.4))):
+            P.append(Part("spk%d" % i, "head", (x, -8.4, z), (rx, 0, rz), [Box(-1.0, -l, -1.0, 2.0, l, 2.0, hp), Box(-0.5, -l - 1.0, -0.5, 1.0, 1.2, 1.0, hp)]))
+        return P
     raise ValueError(style)
 
 
@@ -194,7 +232,7 @@ def vaca():
     W, BLK = (246, 244, 240), (40, 36, 40)
     spots = lambda f, x, y, w, h: BLK if ((x * 7 + y * 3) % 37 < 9 and (x // 9 + y // 7) % 2 == 0) else W
     DEN = (70, 100, 150)
-    return girl(hair3((60, 50, 50)), "long", ((90, 60, 40), (160, 110, 70), (220, 180, 130)), (40, 30, 30),
+    return girl(hair3((60, 50, 50)), "low", ((90, 60, 40), (160, 110, 70), (220, 180, 130)), (40, 30, 30),
                 top=spots, waist=cloth(DEN), hips=cloth(DEN), sleeve=spots, upper=B.skin_p, fore=B.skin_p, hand=B.skin_p,
                 thigh=B.skin_p, calf=band(B.skin_p, [(0.3, 1.0, W)]),
                 shoes=(boot((110, 80, 54), (90, 64, 42), (64, 44, 28), lace=W), sole((60, 42, 28)), 9.8, flat((90, 64, 42))),
@@ -233,7 +271,7 @@ def gallina():
 def perro():
     G1, G2, G3 = (190, 190, 196), (150, 150, 158), (236, 236, 240)
     JK = (70, 80, 100)
-    return girl(hair3((176, 176, 184)), "wild", ((140, 90, 20), (220, 160, 40), (255, 220, 120)), (50, 50, 60),
+    return girl(hair3((176, 176, 184)), "spiky", ((140, 90, 20), (220, 160, 40), (255, 220, 120)), (50, 50, 60),
                 top=cloth(JK), waist=cloth((40, 40, 50)), hips=cloth((40, 40, 50)), sleeve=cloth(JK), upper=cloth(JK), fore=cloth(G3), hand=flat((40, 40, 50)),
                 thigh=B.skin_p, calf=stock((40, 40, 50), (26, 26, 34)),
                 shoes=(boot((60, 60, 70), (80, 80, 92), (36, 36, 44), accent=(200, 40, 40)), sole((30, 30, 36)), 8.8, flat((200, 40, 40))),
@@ -246,7 +284,7 @@ def perro():
 def gato():
     OR, ORD, CR = (230, 150, 60), (190, 110, 40), (250, 236, 210)
     stripes = lambda f, x, y, w, h: ORD if (y // 5) % 3 == 0 else OR
-    return girl(hair3((226, 140, 60)), "bob", ((40, 110, 40), (110, 200, 70), (210, 255, 140)), (60, 36, 20),
+    return girl(hair3((226, 140, 60)), "side", ((40, 110, 40), (110, 200, 70), (210, 255, 140)), (60, 36, 20),
                 top=lambda f, x, y, w, h: CR if f == "front" and 0.3 * w < x < 0.7 * w else stripes(f, x, y, w, h), waist=cloth((60, 50, 60)), hips=cloth((60, 50, 60)),
                 sleeve=stripes, upper=stripes, fore=stripes, hand=flat(CR),
                 thigh=band(B.skin_p, [(0.55, 0.63, OR), (0.63, 1.0, (50, 44, 54))]), calf=stock((50, 44, 54), (34, 30, 38)),
@@ -260,7 +298,7 @@ def golem():
     IR, IRH, IRD = (210, 208, 200), (236, 234, 228), (160, 156, 150)
     VINE = (70, 130, 50)
     plate = lambda f, x, y, w, h: VINE if ((x + y * 3) % 23 < 2 and f == "front") else (IRH if (x + y) % 11 == 0 else IR)
-    return girl(hair3((150, 110, 70)), "long", ((120, 40, 20), (220, 90, 40), (255, 170, 110)), (60, 40, 30),
+    return girl(hair3((150, 110, 70)), "braid", ((120, 40, 20), (220, 90, 40), (255, 170, 110)), (60, 40, 30),
                 top=plate, waist=cloth((80, 70, 66)), hips=plate, sleeve=plate, upper=B.skin_p, fore=metal(IR, IRH), hand=metal(IRD, IR),
                 thigh=B.skin_p, calf=metal(IR, IRH),
                 shoes=(boot(IRD, IR, dk(IRD)), sole((110, 106, 100)), 7.8, metal(IR, IRH)),
@@ -342,7 +380,7 @@ def arana():
 def bruja():
     PU, PUH, PUD = (96, 44, 120), (130, 70, 160), (60, 26, 80)
     GR = (90, 160, 60)
-    return girl(hair3((40, 30, 50)), "long", ((100, 20, 140), (170, 80, 210), (230, 170, 255)), (30, 16, 40),
+    return girl(hair3((40, 30, 50)), "wavy", ((100, 20, 140), (170, 80, 210), (230, 170, 255)), (30, 16, 40),
                 top=cloth(PU, seam=PUD), waist=lambda f, x, y, w, h: GR if f == "front" and abs(x - w / 2) < 1.5 else PUD, hips=cloth(PU),
                 sleeve=cloth(PU), upper=cloth(PU), fore=cloth(PUH), hand=B.skin_p,
                 thigh=B.skin_p, calf=lambda f, x, y, w, h: (PU if (y // 4) % 2 == 0 else (30, 24, 34)),
@@ -355,7 +393,7 @@ def bruja():
 def enderman():
     BL, BLH = (24, 20, 30), (48, 40, 60)
     PUR, PURL = (190, 80, 230), (230, 160, 255)
-    return girl(hair3((26, 22, 32)), "hime", ((140, 30, 200), (210, 90, 255), (250, 200, 255)), (14, 10, 20),
+    return girl(hair3((26, 22, 32)), "long", ((140, 30, 200), (210, 90, 255), (250, 200, 255)), (14, 10, 20),
                 top=lambda f, x, y, w, h: PUR if (f == "front" and abs(x - w / 2) < 1) else (BLH if (x + y) % 11 == 0 else BL),
                 waist=cloth(BL), hips=cloth(BL), sleeve=cloth(BL), upper=cloth(BL), fore=cloth(BL), hand=B.skin_p,
                 thigh=stock(BL, (14, 12, 18)), calf=stock(BL, (14, 12, 18)),

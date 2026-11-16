@@ -7,15 +7,31 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_tanny as G
 import gen_blocky as B
 import gen_mobgirls as M
+import gen_girls4 as N
 from PIL import Image, ImageDraw
 
 ALL = dict(B.WAIFUS)
 ALL.update(M.GIRLS)
+ALL.update(N.GIRLS)
 DEFAULT_SKIN = (B.SKIN, B.SKIN_SH)
 
 
+def make(name):
+    """Construye la chica con su silueta (y anota ojos, marcas y colmillo)."""
+    shape, eye = N.LOOK.get(name, ("std", "round"))
+    B.SHAPE = B.SHAPES[shape]
+    try:
+        P, info = ALL[name]()
+    finally:
+        B.SHAPE = B.SHAPES["std"]
+    info.setdefault("eye", eye)
+    info["marks"] = list(info.get("marks", [])) + N.MARKS.get(name, [])
+    info["fang"] = info.get("fang", False) or name in N.FANG
+    return P, info
+
+
 def build(name):
-    P, info = ALL[name]()
+    P, info = make(name)
     B.SKIN, B.SKIN_SH = info.get("skin", DEFAULT_SKIN)
     P = B.mirror_all(P)
     out = os.path.join(B.TEXR, name)
@@ -23,7 +39,7 @@ def build(name):
     for f in os.listdir(out):
         os.remove(os.path.join(out, f))
     for expr, suf in B.EXPRS:
-        B.face_tex(expr, info["iris"], info["lash"], info["hair"]).save(os.path.join(out, "face" + suf + ".png"))
+        B.face_tex(expr, info["iris"], info["lash"], info["hair"], eye=info["eye"], marks=info["marks"], fang=info["fang"]).save(os.path.join(out, "face" + suf + ".png"))
     G.S = 8
     G.AO = True
     G.jit = lambda c, a=4: c
@@ -65,7 +81,7 @@ def preview(outdir, names=None):
     G.S = 8
     tiles = []
     for name in names or ALL:
-        P, info = ALL[name]()
+        P, info = make(name)
         P = B.mirror_all(P)
         G.pack(P, 64)
         out = os.path.join(B.TEXR, name)
@@ -82,7 +98,7 @@ def preview(outdir, names=None):
         G.draw(quads, path, 12.5, 140, [(math.pi, 0.05), (math.pi - 0.7, 0.1), (0.0, 0.05)], (250, 470))
         tiles.append((name, Image.open(path)))
     w, h = tiles[0][1].size
-    cols = 3
+    cols = 6
     rows = math.ceil(len(tiles) / cols)
     sheet = Image.new("RGB", (w * cols, (h + 20) * rows), (226, 232, 240))
     d = ImageDraw.Draw(sheet)

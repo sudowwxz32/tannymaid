@@ -50,6 +50,10 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     private static final EntityDataAccessor<Integer> HAPPY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> LIT = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BUSY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SITTING = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
+    /** Yume: quién duerme en sus piernas ahora mismo. */
+    @Nullable public UUID sleeper;
+    int modeBeforeSleep = FOLLOW;
 
     public final WaifuKind kind;
     /** Mochila (27). La primera fila es su reserva: Kura no se la lleva. */
@@ -78,12 +82,16 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         setPersistenceRequired();
         setCanPickUpLoot(false);
         for (EquipmentSlot s : EquipmentSlot.values()) setDropChance(s, 0.0F);
+        if (kind == WaifuKind.CABALLO || kind == WaifuKind.ENDERMAN || kind == WaifuKind.WARDEN || kind == WaifuKind.GOLEM) setMaxUpStep(1.1F);
+        if (kind == WaifuKind.PIGLIN) setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(net.minecraft.world.item.Items.GOLDEN_SWORD));
+        if (kind == WaifuKind.WITHER) setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(net.minecraft.world.item.Items.STONE_SWORD));
     }
 
     public static AttributeSupplier.Builder attributes(WaifuKind k) {
         AttributeSupplier.Builder b = PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, k.health).add(Attributes.MOVEMENT_SPEED, k.speed)
                 .add(Attributes.ATTACK_DAMAGE, k.attack).add(Attributes.FOLLOW_RANGE, 32.0).add(Attributes.ARMOR, k.armor);
-        if (k == WaifuKind.GOLEM) b.add(Attributes.KNOCKBACK_RESISTANCE, 1.0).add(Attributes.ATTACK_KNOCKBACK, 1.5);
+        if (k == WaifuKind.GOLEM || k == WaifuKind.WARDEN) b.add(Attributes.KNOCKBACK_RESISTANCE, 1.0).add(Attributes.ATTACK_KNOCKBACK, 1.5);
+        if (k == WaifuKind.PANDA || k == WaifuKind.SLIME) b.add(Attributes.ATTACK_KNOCKBACK, 1.2);
         return b;
     }
 
@@ -141,6 +149,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         entityData.define(HAPPY, 0);
         entityData.define(LIT, false);
         entityData.define(BUSY, false);
+        entityData.define(SITTING, false);
     }
 
     @Override
@@ -148,7 +157,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.15, true) {
             @Override public boolean canUse() {
-                return kind != WaifuKind.SHIORI && kind != WaifuKind.ESQUELETO && kind != WaifuKind.BRUJA && getMode() != STAY && super.canUse();
+                return !kind.ranged() && getMode() != STAY && !isSitting() && !isVehicle() && super.canUse();
             }
         });
         goalSelector.addGoal(3, new WaifuGoals.Work(this));
@@ -178,6 +187,8 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     public boolean isHappy() { return entityData.get(HAPPY) > 0; }
     public void cheer(int ticks) { entityData.set(HAPPY, ticks); }
     public boolean isLit() { return entityData.get(LIT); }
+    public boolean isSitting() { return entityData.get(SITTING); }
+    public void setSitting(boolean b) { entityData.set(SITTING, b); }
     public boolean isBusy() { return entityData.get(BUSY); }
     void setBusy(boolean b) { if (b != isBusy()) entityData.set(BUSY, b); }
 
@@ -228,6 +239,14 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
                         (random.nextDouble() - 0.5) * 2);
             }
             if (kind == WaifuKind.BRUJA && random.nextInt(10) == 0) level().addParticle(ParticleTypes.WITCH, getRandomX(0.5), getY() + 2.2, getRandomZ(0.5), 0, 0, 0);
+            if (kind == WaifuKind.BLAZE && random.nextInt(3) == 0) {
+                level().addParticle(random.nextBoolean() ? ParticleTypes.FLAME : ParticleTypes.SMOKE, getRandomX(0.8), getY() + random.nextDouble() * getBbHeight() * 0.7, getRandomZ(0.8), 0, 0.02, 0);
+            }
+            if (kind == WaifuKind.WARDEN && random.nextInt(8) == 0) level().addParticle(ParticleTypes.SCULK_SOUL, getRandomX(0.6), getY() + getBbHeight() * 0.6, getRandomZ(0.6), 0, 0.03, 0);
+            if (kind == WaifuKind.ALLAY && random.nextInt(4) == 0) level().addParticle(ParticleTypes.END_ROD, getRandomX(0.6), getY() + random.nextDouble() * 1.4, getRandomZ(0.6), 0, 0.01, 0);
+            if ((kind == WaifuKind.DINA || kind == WaifuKind.MITA) && random.nextInt(6) == 0) level().addParticle(ParticleTypes.SMOKE, getX(), getY() + getBbHeight() + 0.25, getZ(), 0, 0.03, 0);
+            if (kind == WaifuKind.SLIME && random.nextInt(14) == 0) level().addParticle(ParticleTypes.ITEM_SLIME, getRandomX(0.5), getY() + 0.2, getRandomZ(0.5), 0, 0, 0);
+            if (kind == WaifuKind.CAMA && isSitting() && random.nextInt(20) == 0) level().addParticle(ParticleTypes.NOTE, getX(), getY() + 1.6, getZ(), random.nextDouble(), 0, 0);
             if (isHappy() && random.nextInt(12) == 0) level().addParticle(ParticleTypes.HEART, getX(), getY() + 2.1, getZ(), 0, 0.05, 0);
             return;
         }
@@ -235,6 +254,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         if (h > 0) entityData.set(HAPPY, h - 1);
         if (tickCount % (kind == WaifuKind.ZOMBIE ? 15 : 40) == 0 && getHealth() < getMaxHealth()) heal(1.0F);
         if (kind == WaifuKind.HOMURA) WaifuWork.furnaceTick(this);
+        if (sleeper != null || isSitting()) Sleep.tick(this);
         work.always();
         if (tickCount % 40 == 0 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.refresh(sp, this);
     }
@@ -242,6 +262,9 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     @Override
     public boolean hurt(DamageSource src, float amount) {
         if (isOwner(src.getEntity()) || src.getEntity() instanceof WaifuEntity) return false;
+        if ((kind == WaifuKind.DINA || kind == WaifuKind.MITA || kind == WaifuKind.CREEPER || kind == WaifuKind.WARDEN)
+                && src.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) return false;
+        if (src.getDirectEntity() instanceof WaifuShot) return false;
         return super.hurt(src, amount);
     }
 
@@ -277,7 +300,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
 
     @Override
     public boolean causeFallDamage(float dist, float mult, DamageSource src) {
-        if (kind == WaifuKind.GALLINA || kind == WaifuKind.GATO || kind == WaifuKind.ARANA || kind == WaifuKind.ENDERMAN) return false;
+        if (kind.noFall()) return false;
         return super.causeFallDamage(dist, mult, src);
     }
 
@@ -288,7 +311,45 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
             t.setDeltaMovement(t.getDeltaMovement().add(0, 0.7, 0));
             playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 1.2F);
         }
+        if (hit) MobGirls.onHit(this, t);
         return hit;
+    }
+
+    @Override
+    public boolean isPushable() {
+        return !isSitting() && super.isPushable();
+    }
+
+    // ------------------------------------------------------------------ Brisa se puede montar
+    @Nullable
+    @Override
+    public LivingEntity getControllingPassenger() {
+        if (kind == WaifuKind.CABALLO && getFirstPassenger() instanceof Player p) return p;
+        return super.getControllingPassenger();
+    }
+
+    @Override
+    protected void tickRidden(Player p, net.minecraft.world.phys.Vec3 in) {
+        super.tickRidden(p, in);
+        setRot(p.getYRot(), p.getXRot() * 0.5F);
+        yRotO = yBodyRot = yHeadRot = getYRot();
+    }
+
+    @Override
+    protected net.minecraft.world.phys.Vec3 getRiddenInput(Player p, net.minecraft.world.phys.Vec3 in) {
+        float side = p.xxa * 0.5F, fwd = p.zza;
+        if (fwd <= 0) fwd *= 0.35F;
+        return new net.minecraft.world.phys.Vec3(side, 0, fwd);
+    }
+
+    @Override
+    protected float getRiddenSpeed(Player p) {
+        return (float) getAttributeValue(Attributes.MOVEMENT_SPEED) * 1.6F;
+    }
+
+    @Override
+    public double getPassengersRidingOffset() {
+        return getBbHeight() * 0.72;
     }
 
     @Override
@@ -329,7 +390,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
             return InteractionResult.CONSUME;
         }
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        if (!p.isShiftKeyDown()) {
+        if (!p.isShiftKeyDown() && isOwner(p)) {
             InteractionResult r = WaifuWork.interact(this, sp, held);
             if (r != null) return r;
         }
@@ -364,6 +425,8 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
                 p.openMenu(new SimpleMenuProvider((id, inv, pl) -> ChestMenu.sixRows(id, inv, chest), title));
             }
             case SHIORI -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new WaifuEnchantMenu(id, inv, access, this), title));
+            case CAMA -> Sleep.start(p, this);
+            default -> { }
         }
     }
 
@@ -393,6 +456,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         t.putIntArray("FurnaceData", furnaceData);
         t.putInt("Xp", storedXp);
         t.putFloat("FurnaceXp", furnaceXp);
+        t.putInt("ModeBeforeSleep", modeBeforeSleep);
     }
 
     @Override
@@ -411,6 +475,8 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         System.arraycopy(fd, 0, furnaceData, 0, Math.min(4, fd.length));
         storedXp = t.getInt("Xp");
         furnaceXp = t.getFloat("FurnaceXp");
+        modeBeforeSleep = t.getInt("ModeBeforeSleep");
+        if (sleeper == null) setSitting(false);
     }
 
     private static ListTag save(Container c) {

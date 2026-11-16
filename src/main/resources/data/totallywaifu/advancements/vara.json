@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "totallywaifu:vara_de_transformacion"
+    },
+    "title": {
+      "text": "¡La Vara de Transformación!"
+    },
+    "description": {
+      "text": "Te la entregaron... y caíste del cielo con una explosión"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "totallywaifu:root"
+}

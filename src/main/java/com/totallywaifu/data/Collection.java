@@ -65,6 +65,94 @@ public final class Collection {
         return t.hasUUID("Uuid") || t.contains("Stored");
     }
 
+    /** La chica volvió a ser su bloque: guarda su mochila y todo lo suyo para cuando vuelva a despertar. */
+    public static void markBlock(Player p, WaifuEntity w, @Nullable BlockPos a, @Nullable BlockPos b) {
+        CompoundTag data = new CompoundTag();
+        w.saveWithoutId(data);
+        CompoundTag t = rec(p, w.kind);
+        t.put("Saved", data);
+        if (a != null) t.putLong("BlockA", a.asLong());
+        if (b != null) t.putLong("BlockB", b.asLong());
+        markBlock(p, w.kind);
+    }
+
+    /** Lo que tenía guardado la última vez que fue bloque (o null). */
+    @Nullable
+    public static CompoundTag saved(Player p, WaifuKind k) {
+        CompoundTag t = rec(p, k);
+        return t.contains("Saved") ? t.getCompound("Saved") : null;
+    }
+
+    public static boolean isHerBed(Player p, BlockPos pos) {
+        CompoundTag t = rec(p, WaifuKind.CAMA);
+        return t.getBoolean("Block") && (pos.asLong() == t.getLong("BlockA") || pos.asLong() == t.getLong("BlockB"));
+    }
+
+    // ------------------------------------------------------------------ Yume: el último lugar donde dormiste con ella
+    public static void setHome(Player p, String dim, BlockPos pos) {
+        CompoundTag t = rec(p, WaifuKind.CAMA);
+        t.putString("HomeDim", dim);
+        t.putLong("HomePos", pos.asLong());
+    }
+
+    public static boolean hasHome(Player p) {
+        return rec(p, WaifuKind.CAMA).contains("HomePos");
+    }
+
+    public static void goHome(ServerPlayer p) {
+        CompoundTag t = rec(p, WaifuKind.CAMA);
+        if (!t.contains("HomePos")) {
+            p.sendSystemMessage(Component.literal("§9Todavía no has dormido con Yume."));
+            return;
+        }
+        ServerLevel lv = p.server.getLevel(dim(t.getString("HomeDim")));
+        if (lv == null) return;
+        BlockPos at = BlockPos.of(t.getLong("HomePos"));
+        BlockPos stand = at;
+        for (int dy = 0; dy < 6; dy++) {
+            BlockPos q = at.above(dy);
+            if (lv.getBlockState(q).getCollisionShape(lv, q).isEmpty() && lv.getBlockState(q.above()).getCollisionShape(lv, q.above()).isEmpty()) { stand = q; break; }
+        }
+        p.teleportTo(lv, stand.getX() + 0.5, stand.getY() + 0.05, stand.getZ() + 0.5, p.getYRot(), p.getXRot());
+        lv.sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 1, p.getZ(), 40, 0.4, 0.9, 0.4, 0.05);
+        lv.playSound(null, p.blockPosition(), SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 1.0F, 1.4F);
+        p.sendSystemMessage(Component.literal("§9Yume§7: ¡Bienvenido de vuelta a donde dormimos juntos! ♥"));
+    }
+
+    // ------------------------------------------------------------------ colección completa → sorpresas
+    public static boolean surprisesUnlocked(Player p) {
+        return root(p).getBoolean("Complete");
+    }
+
+    private static void newGirl(ServerPlayer p, WaifuKind k) {
+        Ach.grant(p, "primera");
+        if (k.surprise()) {
+            Ach.grant(p, "sorpresa");
+            com.totallywaifu.network.Fx.send(p, com.totallywaifu.network.Fx.SURPRISE, k.ordinal());
+        }
+        if (k == WaifuKind.WARDEN) Ach.grant(p, "guardiana");
+        CompoundTag r = root(p);
+        if (r.getBoolean("Complete")) return;
+        int got = 0, total = 0;
+        for (WaifuKind q : WaifuKind.values()) {
+            if (q.surprise()) continue;
+            total++;
+            if (rec(p, q).getBoolean("Got")) got++;
+        }
+        if (got < total) {
+            p.displayClientMessage(Component.literal("§d♥ Nueva waifu: " + k.color + k.display + " §7(" + got + "/" + total + ")"), true);
+            return;
+        }
+        r.putBoolean("Complete", true);
+        Ach.grant(p, "coleccion");
+        com.totallywaifu.network.Fx.send(p, com.totallywaifu.network.Fx.COLLECTION, total);
+        ServerLevel lv = p.serverLevel();
+        for (int i = 0; i < 6; i++) Ach.firework(lv, p.position().add((i - 2.5) * 1.6, 0.5, (i % 2 == 0 ? 2 : -2)), i);
+        lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
+        p.sendSystemMessage(Component.literal("§6§l♥ ¡COLECCIÓN COMPLETA! ♥ §r§eSe desbloquearon §d4 waifus sorpresa§e: búscalas por el mundo y transfórmalas con la vara."));
+        p.sendSystemMessage(Component.literal("§7  Pistas: §6la astuta de los bosques fríos§7 · §dla rosada que nada en las cuevas§7 · §bla azul que ama la música§7 · §2la que croa en los pantanos"));
+    }
+
     /** La chica volvió a ser su bloque (sigue desbloqueada). */
     public static void markBlock(Player p, WaifuKind k) {
         CompoundTag t = rec(p, k);
@@ -77,7 +165,9 @@ public final class Collection {
     /** Registra a la chica como tuya (y dónde está). */
     public static void track(ServerPlayer p, WaifuEntity w) {
         CompoundTag t = rec(p, w.kind);
+        boolean fresh = !t.getBoolean("Got");
         t.putBoolean("Got", true);
+        if (fresh) newGirl(p, w.kind);
         t.putUUID("Uuid", w.getUUID());
         t.putString("Dim", w.level().dimension().location().toString());
         t.putLong("Pos", w.blockPosition().asLong());
@@ -190,9 +280,10 @@ public final class Collection {
     /** Envía al jugador el estado de su colección (y abre / refresca la pestaña). */
     public static void send(ServerPlayer p) {
         List<CollectionData.Entry> out = new ArrayList<>();
+        boolean sur = surprisesUnlocked(p);
         for (WaifuKind k : WaifuKind.values()) {
             CompoundTag t = rec(p, k);
-            int status = !t.getBoolean("Got") ? 0 : t.contains("Stored") ? 2 : t.hasUUID("Uuid") ? 1 : 3;
+            int status = !t.getBoolean("Got") ? (k.surprise() && !sur ? -1 : 0) : t.contains("Stored") ? 2 : t.hasUUID("Uuid") ? 1 : 3;
             String where = "";
             if (status == 1) {
                 WaifuEntity w = find(p, k);
@@ -208,7 +299,7 @@ public final class Collection {
             }
             out.add(new CollectionData.Entry(k.ordinal(), status, where));
         }
-        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new CollectionData(out));
+        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new CollectionData(out, sur, hasHome(p)));
     }
 
     private static String modeName(int m) {

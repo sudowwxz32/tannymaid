@@ -156,12 +156,19 @@ def sole(c, top_accent=None):
 
 
 # ================================================================== cuerpo
+# Silueta: ancho de pecho, busto (ancho, fondo), cintura y cadera. Cada chica elige una.
+SHAPES = {"std": (1.0, 1.0, 1.0, 1.0, 1.0), "curvy": (1.0, 1.04, 1.55, 0.94, 1.07), "slim": (0.95, 0.95, 0.65, 0.96, 0.96),
+          "petite": (0.92, 0.9, 0.5, 0.92, 0.93), "athletic": (1.07, 1.0, 0.9, 1.06, 1.0), "busty": (1.02, 1.06, 1.8, 0.92, 1.08)}
+SHAPE = SHAPES["std"]
+
+
 def figure(top, waist, hips, sleeve, upper, fore, hand, thigh, calf, bust=None):
+    cw, bw, bd, ww, hw = SHAPE
     return [Part("neck", "body", (0, 0, 0), (0, 0, 0), [Box(-1.1, -1.3, -1.0, 2.2, 1.7, 2.0, skin_p)]),
-            Part("chest", "body", (0, 0, 0), (0, 0, 0), [Box(-3.3, 0.0, -1.7, 6.6, 4.4, 3.4, top)]),
-            Part("bust", "body", (0, 1.55, -1.65), (-0.32, 0, 0), [Box(-2.9, 0.0, -1.0, 5.8, 2.5, 1.1, bust or top)]),
-            Part("waist", "body", (0, 0, 0), (0, 0, 0), [Box(-2.7, 4.2, -1.5, 5.4, 2.4, 3.0, waist)]),
-            Part("hips", "body", (0, 0, 0), (0, 0, 0), [Box(-3.6, 6.4, -1.85, 7.2, 3.2, 3.7, hips)]),
+            Part("chest", "body", (0, 0, 0), (0, 0, 0), [Box(-3.3 * cw, 0.0, -1.7, 6.6 * cw, 4.4, 3.4, top)]),
+            Part("bust", "body", (0, 1.55, -1.65), (-0.32 - 0.04 * (bd - 1), 0, 0), [Box(-2.9 * bw, 0.0, -1.1 * bd + 0.1, 5.8 * bw, 2.5 + 0.25 * (bd - 1), 1.1 * bd, bust or top)]),
+            Part("waist", "body", (0, 0, 0), (0, 0, 0), [Box(-2.7 * ww, 4.2, -1.5, 5.4 * ww, 2.4, 3.0, waist)]),
+            Part("hips", "body", (0, 0, 0), (0, 0, 0), [Box(-3.6 * hw, 6.4, -1.85, 7.2 * hw, 3.2, 3.7, hips)]),
             Part("shoulder_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-1.5, -1.6, -1.4, 2.8, 2.4, 2.8, sleeve)]),
             Part("upper_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-1.2, 0.6, -1.1, 2.2, 4.6, 2.2, upper)]),
             Part("fore_r", "right_arm", (0, 0, 0), (0, 0, 0), [Box(-1.1, 5.0, -1.0, 2.0, 4.4, 2.0, fore)]),
@@ -186,10 +193,11 @@ def skirt(paint, hem, length=4.6, y=6.6, flare=0.32):
 
     def panel(name, pivot, rot, w):
         return Part(name, "body", pivot, rot, [Box(-w / 2, 0, -0.4, w, length, 0.8, paint), Box(-w / 2 + 0.1, length - 0.3, -0.3, w - 0.2, 0.7, 0.6, hem)])
-    P.append(panel("skirt_front", (0, y, -1.95), (-flare, 0, 0), 7.4))
-    P.append(panel("skirt_back", (0, y, 1.95), (-flare, math.pi, 0), 7.4))
-    P.append(panel("skirt_right", (-3.65, y, 0), (-flare, math.pi / 2, 0), 4.0))
-    P.append(panel("skirt_left", (3.65, y, 0), (-flare, -math.pi / 2, 0), 4.0))
+    hw = SHAPE[4]
+    P.append(panel("skirt_front", (0, y, -1.95), (-flare, 0, 0), 7.4 * hw))
+    P.append(panel("skirt_back", (0, y, 1.95), (-flare, math.pi, 0), 7.4 * hw))
+    P.append(panel("skirt_right", (-3.65 * hw, y, 0), (-flare, math.pi / 2, 0), 4.0))
+    P.append(panel("skirt_left", (3.65 * hw, y, 0), (-flare, -math.pi / 2, 0), 4.0))
     return P
 
 
@@ -233,7 +241,32 @@ MOUTH = {"normal": ["....", ".MM."], "focused": ["....", ".MM."], "tired": ["...
 EXPRS = [("normal", ""), ("blink", "_blink"), ("happy", "_happy"), ("surprised", "_surprised"), ("focused", "_focused"), ("tired", "_tired")]
 
 
-def face_tex(expr, iris, lash, hair, blush=(240, 170, 190)):
+# Formas de ojo (fila 0 arriba). "focused"/"tired" se derivan de "normal".
+EYES = {"round": (["LLLLLL", ".DTTHW", ".TTTTW", "..ttt."], 8),
+        "sharp": (["LL....", ".LLLLL", ".DTTHW", "..ttt."], 8),
+        "sleepy": (["......", "LLLLLL", ".TTTHW", "..tt.."], 8),
+        "big": (["LLLLLL", "LDTTHW", ".TTTTW", ".TttHW", "..ttt."], 7),
+        "cat": (["LLLLLL", ".DTKTW", ".TTKTW", "..tKt."], 8),
+        "gentle": (["..LLLL", ".LDTHW", ".TTTTW", "..tt.."], 8),
+        "blind": (["......"], 8)}
+
+
+def eye_rows(expr, style):
+    rows, ey = EYES.get(style, EYES["round"])
+    if style == "blind":
+        return [], ey
+    if expr == "normal":
+        return rows, ey
+    if expr == "focused":
+        return ["......", "LLLLLL"] + rows[-3:-1] if len(rows) >= 4 else EYE["focused"], 8
+    if expr == "tired":
+        return ["......", "......", "LLLLLL", rows[-1]], 8
+    if expr == "surprised":
+        return EYE["surprised"], 7
+    return EYE[expr], 8
+
+
+def face_tex(expr, iris, lash, hair, blush=(240, 170, 190), eye="round", marks=(), fang=False):
     dk, mid, hi = iris
     N = 16
     g = [[SKIN] * N for _ in range(N)]
@@ -247,10 +280,14 @@ def face_tex(expr, iris, lash, hair, blush=(240, 170, 190)):
             if y >= 15:
                 c = SKIN_SH
             g[y][x] = c
-    col = {"L": lash, "D": mix(lash, mid, 0.4), "T": dk, "t": mid, "H": hi, "W": (240, 240, 246),
+    col = {"K": lash, "L": lash, "D": mix(lash, mid, 0.4), "T": dk, "t": mid, "H": hi, "W": (240, 240, 246),
            "M": (196, 128, 146), "m": (222, 184, 196), "o": (130, 60, 80)}
-    ey = 8 - (1 if expr == "surprised" else 0)
-    for j, row in enumerate(EYE[expr]):
+    for (mx, my, mc) in marks:
+        g[my][mx] = mc
+    rows, ey = eye_rows(expr, eye)
+    if eye == "blind":
+        rows = []
+    for j, row in enumerate(rows):
         for i, ch in enumerate(row):
             if ch != ".":
                 g[ey + j][1 + i] = col[ch]
@@ -262,6 +299,8 @@ def face_tex(expr, iris, lash, hair, blush=(240, 170, 190)):
         for i, ch in enumerate(row):
             if ch != ".":
                 g[12 + j][6 + i] = col[ch]
+    if fang:
+        g[14][8] = (250, 250, 250)
     img = Image.new("RGBA", (N, N))
     for y in range(N):
         for x in range(N):

@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -66,7 +67,7 @@ public final class WaifuWork {
         long t = w.tickCount;
         // recoge lo que tenga muy cerca
         if (t % 5 == 0) {
-            double r = w.kind == WaifuKind.KURA ? 3.0 : 2.0;
+            double r = w.kind == WaifuKind.KURA || w.kind == WaifuKind.PERRO || w.kind == WaifuKind.ZORRO || w.kind == WaifuKind.ALLAY ? 3.5 : 2.0;
             for (ItemEntity ie : w.level().getEntitiesOfClass(ItemEntity.class, w.getBoundingBox().inflate(r, 1, r),
                     ie -> ie.isAlive() && !ie.hasPickUpDelay())) {
                 pick(ie);
@@ -75,8 +76,13 @@ public final class WaifuWork {
         switch (w.kind) {
             case KOZUE -> { if (t % 30 == 0) craftOrder(); }
             case HOMURA -> { if (t % 20 == 0) feedFurnace(); }
-            case KURA -> { if (t % 100 == 0) collectFromOthers(); }
+            case KURA -> {
+                if (t % 100 == 0) collectFromOthers();
+                if (t % 80 == 0) feedOwner();
+                if (t % 2400 == 0) sortChest(w);
+            }
             case SHIORI -> shioriAlways(t);
+            case CAMA -> { }
             default -> MobGirls.always(w, this, t);
         }
         if (cooldown > 0) cooldown--;
@@ -122,9 +128,10 @@ public final class WaifuWork {
                 block = findBlock(s -> s.is(Tags.Blocks.ORES), true);
                 if (block == null) block = findBlock(st -> st.is(BlockTags.LOGS), false);
             }
-            case HOMURA -> {
-                if (foodCount() < 24) prey = findPrey();
-                if (prey == null && count(Items.COAL) < 64) block = findBlock(s -> s.is(Tags.Blocks.ORES_COAL), true);
+            case HOMURA -> {                         // menas de todo tipo y, si no hay, piedra
+                block = findBlock(s -> s.is(Tags.Blocks.ORES), true);
+                if (block == null && count(Items.COBBLESTONE) + count(Items.COBBLED_DEEPSLATE) < 192)
+                    block = findBlock(s -> s.is(Tags.Blocks.STONE) || s.is(net.minecraft.world.level.block.Blocks.STONE), true);
             }
             case SHIORI -> block = findBlock(s -> s.is(Tags.Blocks.ORES_LAPIS), true);
             default -> { }
@@ -203,6 +210,7 @@ public final class WaifuWork {
             ItemStack tool = new ItemStack(st.is(BlockTags.LOGS) ? Items.DIAMOND_AXE : Items.DIAMOND_PICKAXE);
             List<ItemStack> drops = Block.getDrops(st, lv(), block, w.level().getBlockEntity(block), w, tool);
             w.level().destroyBlock(block, false, w);
+            if (w.kind == WaifuKind.KOZUE && st.is(BlockTags.LOGS)) replant(block);
             for (ItemStack d : drops) {
                 ItemStack rest = w.store(d);
                 if (!rest.isEmpty()) Block.popResource(w.level(), block, rest);
@@ -271,69 +279,148 @@ public final class WaifuWork {
         return "WaifuWork";
     }
 
-    // ================================================================== Kozue: pedidos de crafteo
-    private void craftOrder() {
-        ItemStack want = w.order.getItem(0);
-        if (want.isEmpty()) return;
-        RecipeManager rm = w.level().getRecipeManager();
-        for (CraftingRecipe r : rm.getAllRecipesFor(RecipeType.CRAFTING)) {
-            ItemStack out = r.getResultItem(w.level().registryAccess());
-            if (out.isEmpty() || !out.is(want.getItem()) || r.isSpecial()) continue;
-            if (tryCraft(r, out)) {
-                w.swing(InteractionHand.MAIN_HAND);
-                w.playSound(SoundEvents.VILLAGER_WORK_TOOLSMITH, 0.6F, 1.3F);
-                lv().sendParticles(ParticleTypes.HAPPY_VILLAGER, w.getX(), w.getY() + 1.2, w.getZ(), 4, 0.3, 0.3, 0.3, 0);
+    // ================================================================== Kozue: pedidos de crafteo (cualquier objeto vanilla)
+    /** Si el tronco era la base del árbol, planta un brote de su mochila. */
+    private void replant(BlockPos log) {
+        BlockState below = w.level().getBlockState(log.below());
+        if (!below.is(BlockTags.DIRT)) return;
+        for (int i = 0; i < w.bag.getContainerSize(); i++) {
+            ItemStack s = w.bag.getItem(i);
+            if (s.is(ItemTags.SAPLINGS) && s.getItem() instanceof net.minecraft.world.item.BlockItem bi) {
+                w.level().setBlock(log, bi.getBlock().defaultBlockState(), 3);
+                s.shrink(1);
+                lv().sendParticles(ParticleTypes.HAPPY_VILLAGER, log.getX() + 0.5, log.getY() + 0.5, log.getZ() + 0.5, 6, 0.3, 0.3, 0.3, 0);
                 return;
             }
         }
     }
 
-    /** Toma los ingredientes de la mochila; si están todos, fabrica el objeto. */
-    private boolean tryCraft(CraftingRecipe r, ItemStack out) {
-        NonNullList<Ingredient> ings = r.getIngredients();
-        int n = w.bag.getContainerSize();
-        int[] use = new int[n];
-        for (Ingredient ing : ings) {
-            if (ing.isEmpty()) continue;
-            boolean found = false;
-            for (int i = 0; i < n; i++) {
-                ItemStack s = w.bag.getItem(i);
-                if (!s.isEmpty() && s.getCount() - use[i] > 0 && ing.test(s)) { use[i]++; found = true; break; }
+    private static Map<net.minecraft.world.item.Item, List<CraftingRecipe>> byResult;
+    private static RecipeManager cachedFor;
+
+    private List<CraftingRecipe> recipesFor(net.minecraft.world.item.Item it) {
+        RecipeManager rm = w.level().getRecipeManager();
+        if (byResult == null || cachedFor != rm) {
+            byResult = new HashMap<>();
+            for (CraftingRecipe r : rm.getAllRecipesFor(RecipeType.CRAFTING)) {
+                if (r.isSpecial()) continue;
+                ItemStack out = r.getResultItem(w.level().registryAccess());
+                if (!out.isEmpty()) byResult.computeIfAbsent(out.getItem(), k -> new ArrayList<>()).add(r);
             }
-            if (!found) return false;
+            cachedFor = rm;
         }
-        // ¿cabe el resultado?
-        SimpleCheck check = new SimpleCheck(w.bag, use);
-        if (!check.fits(out)) return false;
-        for (int i = 0; i < n; i++) {
-            if (use[i] == 0) continue;
-            ItemStack s = w.bag.getItem(i);
-            ItemStack remain = s.getCraftingRemainingItem();
-            s.shrink(use[i]);
-            if (!remain.isEmpty()) {
-                remain.setCount(use[i]);
-                ItemStack r2 = w.bag.addItem(remain);
-                if (!r2.isEmpty()) w.spawnAtLocation(r2);
-            }
-        }
-        ItemStack rest = w.bag.addItem(out.copy());
-        if (!rest.isEmpty()) w.spawnAtLocation(rest);
-        w.bag.setChanged();
-        return true;
+        return byResult.getOrDefault(it, List.of());
     }
 
-    /** Comprueba si un objeto cabría en la mochila después de gastar los ingredientes. */
-    private record SimpleCheck(net.minecraft.world.SimpleContainer bag, int[] use) {
-        boolean fits(ItemStack out) {
-            int left = out.getCount();
-            for (int i = 0; i < bag.getContainerSize() && left > 0; i++) {
-                ItemStack s = bag.getItem(i);
-                int cnt = s.getCount() - use[i];
-                if (s.isEmpty() || cnt <= 0) left -= out.getMaxStackSize();
-                else if (ItemStack.isSameItemSameTags(s, out)) left -= s.getMaxStackSize() - cnt;
+    /** Inventario simulado: su mochila + el cofre de Kura (si está cerca) + lo que va fabricando. */
+    private static final class Pool {
+        final List<net.minecraft.world.Container> src = new ArrayList<>();
+        final List<Integer> slot = new ArrayList<>();
+        final List<ItemStack> items = new ArrayList<>();
+        final List<ItemStack> extra = new ArrayList<>();
+
+        void add(net.minecraft.world.Container c) {
+            for (int i = 0; i < c.getContainerSize(); i++) {
+                src.add(c);
+                slot.add(i);
+                items.add(c.getItem(i).copy());
             }
-            return left <= 0;
         }
+
+        List<ItemStack> snapshot() {
+            List<ItemStack> l = new ArrayList<>();
+            for (ItemStack s : items) l.add(s.copy());
+            l.add(ItemStack.EMPTY);
+            for (ItemStack s : extra) l.add(s.copy());
+            return l;
+        }
+
+        void restore(List<ItemStack> l) {
+            for (int i = 0; i < items.size(); i++) items.set(i, l.get(i));
+            extra.clear();
+            for (int i = items.size() + 1; i < l.size(); i++) extra.add(l.get(i));
+        }
+
+        boolean take(Ingredient ing) {
+            for (List<ItemStack> l : List.of(extra, items)) {
+                for (ItemStack s : l) {
+                    if (!s.isEmpty() && ing.test(s)) {
+                        ItemStack rem = s.getCraftingRemainingItem();
+                        s.shrink(1);
+                        if (!rem.isEmpty()) extra.add(rem);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        void commit(WaifuEntity w) {
+            for (int i = 0; i < items.size(); i++) src.get(i).setItem(slot.get(i), items.get(i));
+            for (ItemStack s : extra) {
+                if (s.isEmpty()) continue;
+                ItemStack rest = w.bag.addItem(s);
+                if (!rest.isEmpty()) w.spawnAtLocation(rest);
+            }
+            for (net.minecraft.world.Container c : new HashSet<>(src)) c.setChanged();
+        }
+    }
+
+    /** Intenta fabricar 'it' dentro del inventario simulado, fabricando antes lo que falte (hasta 'depth' niveles). */
+    private boolean craft(Pool pool, net.minecraft.world.item.Item it, int depth, Set<net.minecraft.world.item.Item> busy) {
+        if (depth < 0 || !busy.add(it)) return false;
+        try {
+            for (CraftingRecipe r : recipesFor(it)) {
+                List<ItemStack> snap = pool.snapshot();
+                boolean ok = true;
+                for (Ingredient ing : r.getIngredients()) {
+                    if (ing.isEmpty() || pool.take(ing)) continue;
+                    boolean made = false;
+                    if (depth > 0) {
+                        ItemStack[] opts = ing.getItems();
+                        for (int o = 0; o < opts.length && o < 4 && !made; o++) {
+                            if (opts[o].is(it)) continue;
+                            if (craft(pool, opts[o].getItem(), depth - 1, busy) && pool.take(ing)) made = true;
+                        }
+                    }
+                    if (!made) { ok = false; break; }
+                }
+                if (ok) {
+                    pool.extra.add(r.getResultItem(w.level().registryAccess()).copy());
+                    return true;
+                }
+                pool.restore(snap);
+            }
+            return false;
+        } finally {
+            busy.remove(it);
+        }
+    }
+
+    private void craftOrder() {
+        ItemStack want = w.order.getItem(0);
+        if (want.isEmpty()) return;
+        Pool pool = new Pool();
+        pool.add(w.bag);
+        WaifuEntity kura = kura();
+        if (kura != null) pool.add(kura.chest);
+        if (!craft(pool, want.getItem(), 3, new HashSet<>())) {
+            if (w.tickCount % 600 == 0 && w.ownerPlayer() != null && w.ownerPlayer().distanceToSqr(w) < 16 * 16)
+                w.ownerPlayer().displayClientMessage(net.minecraft.network.chat.Component.literal("§6Kozue§7: me faltan materiales para " + want.getHoverName().getString()
+                        + " (ponlos en mi mochila o en el cofre de Kura)"), true);
+            return;
+        }
+        pool.commit(w);
+        w.swing(InteractionHand.MAIN_HAND);
+        w.playSound(SoundEvents.VILLAGER_WORK_TOOLSMITH, 0.6F, 1.3F);
+        lv().sendParticles(ParticleTypes.HAPPY_VILLAGER, w.getX(), w.getY() + 1.2, w.getZ(), 4, 0.3, 0.3, 0.3, 0);
+    }
+
+    @Nullable
+    private WaifuEntity kura() {
+        if (w.getOwner() == null) return null;
+        return w.level().getEntitiesOfClass(WaifuEntity.class, w.getBoundingBox().inflate(16),
+                o -> o.kind == WaifuKind.KURA && w.getOwner().equals(o.getOwner())).stream().findFirst().orElse(null);
     }
 
     // ================================================================== Homura: horno, carbón y caza
@@ -371,17 +458,16 @@ public final class WaifuWork {
             ItemStack rest = w.bag.addItem(out.copy());
             w.furnace.setItem(2, rest);
         }
-        // pone algo para cocinar (primero comida cruda)
-        if (w.furnace.getItem(0).isEmpty()) {
-            int best = -1;
+        // SOLO cocina lo que le pidas: su pedido (panel) saca eso de su mochila. Lo que pongas en su horno, también.
+        ItemStack want = w.order.getItem(0);
+        if (w.furnace.getItem(0).isEmpty() && !want.isEmpty()) {
             for (int i = 0; i < w.bag.getContainerSize(); i++) {
                 ItemStack s = w.bag.getItem(i);
-                if (s.isEmpty() || !f.smeltable(w.level(), s)) continue;
-                if (best < 0 || (s.isEdible() && !w.bag.getItem(best).isEdible())) best = i;
-            }
-            if (best >= 0) {
-                w.furnace.setItem(0, w.bag.getItem(best).copy());
-                w.bag.setItem(best, ItemStack.EMPTY);
+                if (!s.isEmpty() && s.is(want.getItem()) && f.smeltable(w.level(), s)) {
+                    w.furnace.setItem(0, s.copy());
+                    w.bag.setItem(i, ItemStack.EMPTY);
+                    break;
+                }
             }
         }
         // y combustible
@@ -471,6 +557,25 @@ public final class WaifuWork {
         }
     }
 
+    /** Si tienes hambre, Kura te pasa la mejor comida de su cofre. */
+    private void feedOwner() {
+        Player p = w.ownerPlayer();
+        if (p == null || p.distanceToSqr(w) > 10 * 10 || p.getFoodData().getFoodLevel() > 12) return;
+        int best = -1, bestN = 0;
+        for (int i = 0; i < w.chest.getContainerSize(); i++) {
+            ItemStack s = w.chest.getItem(i);
+            if (!s.isEdible() || s.getItem().getFoodProperties(s, p) == null) continue;
+            int n = s.getItem().getFoodProperties(s, p).getNutrition();
+            if (s.is(Items.ROTTEN_FLESH) || s.is(Items.SPIDER_EYE) || s.is(Items.POISONOUS_POTATO) || s.is(Items.PUFFERFISH)) continue;
+            if (n > bestN) { best = i; bestN = n; }
+        }
+        if (best < 0) return;
+        ItemStack food = w.chest.getItem(best).split(Math.min(4, w.chest.getItem(best).getCount()));
+        if (!p.getInventory().add(food)) p.drop(food, false);
+        w.say(p, "¡Tienes hambre! Toma, de mi cofre ♥");
+        w.cheer(40);
+    }
+
     /** Ordena el cofre de Kura: junta montones y los acomoda por tipo. */
     public static void sortChest(WaifuEntity w) {
         List<ItemStack> all = new ArrayList<>();
@@ -514,6 +619,15 @@ public final class WaifuWork {
             if (target != null) {
                 bolt(target);
                 cooldown = 22;
+            }
+        }
+        // escudo mágico si estás en apuros
+        if (t % 40 == 0) {
+            Player p = w.ownerPlayer();
+            if (p != null && p.distanceToSqr(w) < 12 * 12 && p.getHealth() < p.getMaxHealth() * 0.4F && !p.hasEffect(net.minecraft.world.effect.MobEffects.ABSORPTION)) {
+                p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.ABSORPTION, 600, 1));
+                lv().sendParticles(ParticleTypes.ENCHANT, p.getX(), p.getY() + 1, p.getZ(), 40, 0.5, 0.8, 0.5, 0.5);
+                w.say(p, "¡Escudo mágico! ✦");
             }
         }
         // repara tu equipo con su experiencia (2 de durabilidad por punto)

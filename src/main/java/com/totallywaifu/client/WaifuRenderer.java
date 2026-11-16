@@ -11,10 +11,13 @@ import net.minecraft.resources.ResourceLocation;
 /** Dibuja a una waifu de bloques: cuerpo alto y esbelto con la ropa de su oficio, cara con expresiones y accesorios. */
 public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> {
     private final ResourceLocation body;
+    private final WaifuKind kind;
 
     public WaifuRenderer(EntityRendererProvider.Context ctx, WaifuKind kind) {
         super(ctx, new WaifuModel(ctx.bakeLayer(WaifuLayers.body(kind)), kind), 0.45F);
         body = tex(kind, "body");
+        this.kind = kind;
+        shadowRadius = 0.45F * kind.scale;
         addLayer(new WaifuLayers.Face(this, ctx.getModelSet(), kind));
         if (kind == WaifuKind.SHIORI) addLayer(new WaifuLayers.Book(this, ctx.getModelSet()));
     }
@@ -30,6 +33,11 @@ public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> 
 
     @Override
     protected void scale(WaifuEntity e, PoseStack pose, float partial) {
-        pose.scale(0.98F, 0.98F, 0.98F);
+        float s = 0.98F * kind.scale;
+        pose.scale(s, s, s);
+        if (e.isSitting()) pose.translate(0, 0.86F, 0);
+        if (kind == WaifuKind.BLAZE || kind == WaifuKind.GHAST || kind == WaifuKind.ALLAY) {   // flotan un poquito
+            pose.translate(0, -0.12F - net.minecraft.util.Mth.sin((e.tickCount + partial) * 0.08F) * 0.06F, 0);
+        }
     }
 }

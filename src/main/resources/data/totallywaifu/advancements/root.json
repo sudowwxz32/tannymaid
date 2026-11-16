@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "totallywaifu:vara_de_transformacion"
+    },
+    "title": {
+      "text": "Totally Waifu?"
+    },
+    "description": {
+      "text": "Un mundo donde las cosas sueñan con ser chicas"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/block/pink_wool.png"
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
