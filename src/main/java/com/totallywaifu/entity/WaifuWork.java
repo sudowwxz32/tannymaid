@@ -77,6 +77,7 @@ public final class WaifuWork {
             case HOMURA -> { if (t % 20 == 0) feedFurnace(); }
             case KURA -> { if (t % 100 == 0) collectFromOthers(); }
             case SHIORI -> shioriAlways(t);
+            default -> MobGirls.always(w, this, t);
         }
         if (cooldown > 0) cooldown--;
     }
@@ -87,6 +88,14 @@ public final class WaifuWork {
         w.take(ie, ie.getItem().getCount() - rest.getCount());
         if (rest.isEmpty()) ie.discard(); else ie.setItem(rest);
         w.playSound(SoundEvents.ITEM_PICKUP, 0.3F, 1.4F + w.getRandom().nextFloat() * 0.4F);
+    }
+
+    int cooldown() { return cooldown; }
+    void cooldown(int c) { cooldown = c; }
+
+    /** Interacciones especiales con clic derecho (tijeras, cubo, hierro, comercio...). null = la normal. */
+    static net.minecraft.world.InteractionResult interact(WaifuEntity w, net.minecraft.server.level.ServerPlayer p, ItemStack held) {
+        return MobGirls.interact(w, p, held);
     }
 
     // ================================================================== modo Trabajar

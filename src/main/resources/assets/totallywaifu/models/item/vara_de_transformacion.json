@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "totallywaifu:item/vara_de_transformacion"
+  }
+}

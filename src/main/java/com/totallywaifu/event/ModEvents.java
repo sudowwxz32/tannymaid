@@ -14,6 +14,6 @@ public final class ModEvents {
 
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent e) {
-        for (WaifuKind k : WaifuKind.values()) e.put(ModRegistry.TYPES.get(k).get(), WaifuEntity.attributes().build());
+        for (WaifuKind k : WaifuKind.values()) e.put(ModRegistry.TYPES.get(k).get(), WaifuEntity.attributes(k).build());
     }
 }

@@ -17,12 +17,7 @@ public class WaifuModel extends HumanoidModel<WaifuEntity> {
     public WaifuModel(ModelPart root, WaifuKind kind) {
         super(root);
         this.kind = kind;
-        Map<String, ModelPart> parts = switch (kind) {
-            case KOZUE -> WaifuModels.bakeBodyKozue(root);
-            case HOMURA -> WaifuModels.bakeBodyHomura(root);
-            case KURA -> WaifuModels.bakeBodyKura(root);
-            case SHIORI -> WaifuModels.bakeBodyShiori(root);
-        };
+        Map<String, ModelPart> parts = WaifuModels.bake(kind.id(), root);
         for (Map.Entry<String, ModelPart> en : parts.entrySet()) {
             String n = en.getKey();
             ModelPart p = en.getValue();
@@ -77,6 +72,31 @@ public class WaifuModel extends HumanoidModel<WaifuEntity> {
                 }
                 case SHIORI -> {              // una mano en alto con magia
                     leftArm.xRot = -0.9F + breath * 0.05F; leftArm.yRot = 0.2F; leftArm.zRot = -0.1F;
+                }
+                case ZOMBIE -> {              // brazos al frente, como zombi (pero tierna)
+                    rightArm.xRot = -1.35F + breath * 0.04F; leftArm.xRot = -1.35F - breath * 0.04F;
+                    rightArm.yRot = -0.1F; leftArm.yRot = 0.1F;
+                    tilt = 0.12F;
+                }
+                case BRUJA -> {               // mano en el sombrero
+                    rightArm.xRot = -0.5F; rightArm.zRot = 0.25F;
+                    leftArm.xRot = 0.1F; leftArm.zRot = -0.55F; leftArm.yRot = 0.35F;
+                }
+                case GATO, OVEJA, GALLINA -> { // manitas juntas
+                    rightArm.xRot = -0.55F; rightArm.yRot = 0.4F;
+                    leftArm.xRot = -0.55F; leftArm.yRot = -0.4F;
+                    tilt = Mth.sin(age * 0.06F) * 0.08F;
+                }
+                case GOLEM, ESQUELETO -> {    // firmes
+                    rightArm.zRot = 0.08F; leftArm.zRot = -0.08F;
+                }
+                case ENDERMAN -> {            // brazos largos, relajados
+                    rightArm.zRot = 0.12F; leftArm.zRot = -0.12F;
+                    tilt = Mth.sin(age * 0.04F) * 0.1F;
+                }
+                default -> {                  // una mano en la cintura
+                    leftArm.xRot = 0.1F; leftArm.zRot = -0.55F; leftArm.yRot = 0.35F;
+                    rightArm.zRot = 0.06F;
                 }
             }
             body.zRot = 0.03F;

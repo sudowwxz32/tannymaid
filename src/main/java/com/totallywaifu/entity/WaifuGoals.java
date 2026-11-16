@@ -131,5 +131,32 @@ public final class WaifuGoals {
         }
     }
 
+    /** Las peleadoras (perro, gólem, zombi, araña, enderman) cazan monstruos cercanos cuando te siguen o trabajan. */
+    public static class Hunt extends TargetGoal {
+        private final WaifuEntity w;
+        private LivingEntity found;
+
+        public Hunt(WaifuEntity w) {
+            super(w, false);
+            this.w = w;
+            setFlags(EnumSet.of(Flag.TARGET));
+        }
+
+        @Override
+        public boolean canUse() {
+            if (!w.kind.fighter() || w.getMode() == WaifuEntity.STAY || w.tickCount % 10 != 0) return false;
+            found = w.level().getEntitiesOfClass(Mob.class, w.getBoundingBox().inflate(12, 5, 12),
+                            m -> m instanceof Enemy && m.isAlive() && !(m instanceof net.minecraft.world.entity.monster.Creeper) && w.hasLineOfSight(m))
+                    .stream().min(java.util.Comparator.comparingDouble(w::distanceToSqr)).orElse(null);
+            return found != null;
+        }
+
+        @Override
+        public void start() {
+            w.setTarget(found);
+            super.start();
+        }
+    }
+
     static final TargetingConditions ANY = TargetingConditions.forCombat().ignoreLineOfSight();
 }

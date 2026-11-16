@@ -44,7 +44,7 @@ import java.util.UUID;
  * Una waifu: nació de una mesa de crafteo, un horno, un cofre o una mesa de encantamientos.
  * Clic derecho abre el menú de su mesa; Shift + clic derecho abre su panel (mochila y modos).
  */
-public class WaifuEntity extends PathfinderMob {
+public class WaifuEntity extends PathfinderMob implements net.minecraft.world.item.trading.Merchant {
     public static final int FOLLOW = 0, STAY = 1, WORK = 2;
     private static final EntityDataAccessor<Integer> MODE = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> HAPPY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
@@ -80,9 +80,58 @@ public class WaifuEntity extends PathfinderMob {
         for (EquipmentSlot s : EquipmentSlot.values()) setDropChance(s, 0.0F);
     }
 
-    public static AttributeSupplier.Builder attributes() {
-        return PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, 40.0).add(Attributes.MOVEMENT_SPEED, 0.32)
-                .add(Attributes.ATTACK_DAMAGE, 6.0).add(Attributes.FOLLOW_RANGE, 32.0).add(Attributes.ARMOR, 4.0);
+    public static AttributeSupplier.Builder attributes(WaifuKind k) {
+        AttributeSupplier.Builder b = PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, k.health).add(Attributes.MOVEMENT_SPEED, k.speed)
+                .add(Attributes.ATTACK_DAMAGE, k.attack).add(Attributes.FOLLOW_RANGE, 32.0).add(Attributes.ARMOR, k.armor);
+        if (k == WaifuKind.GOLEM) b.add(Attributes.KNOCKBACK_RESISTANCE, 1.0).add(Attributes.ATTACK_KNOCKBACK, 1.5);
+        return b;
+    }
+
+    // ------------------------------------------------------------------ comercio (Elena, la aldeana)
+    @Nullable private Player trader;
+    private net.minecraft.world.item.trading.MerchantOffers offers;
+    private long restockDay = -1;
+    private int merchantXp;
+
+    @Override public void setTradingPlayer(@Nullable Player p) { trader = p; }
+    @Nullable @Override public Player getTradingPlayer() { return trader; }
+    @Override public void overrideOffers(net.minecraft.world.item.trading.MerchantOffers o) { offers = o; }
+    @Override public void notifyTradeUpdated(ItemStack st) {}
+    @Override public int getVillagerXp() { return merchantXp; }
+    @Override public void overrideXp(int xp) { merchantXp = xp; }
+    @Override public boolean showProgressBar() { return false; }
+    @Override public net.minecraft.sounds.SoundEvent getNotifyTradeSound() { return SoundEvents.VILLAGER_YES; }
+    @Override public boolean isClientSide() { return level().isClientSide; }
+
+    @Override
+    public void notifyTrade(net.minecraft.world.item.trading.MerchantOffer o) {
+        o.increaseUses();
+        merchantXp += o.getXp();
+        cheer(40);
+        playSound(SoundEvents.VILLAGER_YES, 1.0F, 1.3F);
+        if (o.shouldRewardExp()) level().addFreshEntity(new ExperienceOrb(level(), getX(), getY() + 0.5, getZ(), 3 + random.nextInt(4)));
+    }
+
+    @Override
+    public net.minecraft.world.item.trading.MerchantOffers getOffers() {
+        if (offers == null) offers = new net.minecraft.world.item.trading.MerchantOffers();
+        if (offers.isEmpty()) defaultOffers();
+        long day = level().getDayTime() / 24000L;
+        if (day != restockDay) {                    // se reabastece cada día
+            restockDay = day;
+            offers.forEach(net.minecraft.world.item.trading.MerchantOffer::resetUses);
+        }
+        return offers;
+    }
+
+    private void defaultOffers() {
+        net.minecraft.world.item.Item E = net.minecraft.world.item.Items.EMERALD;
+        offers.add(new net.minecraft.world.item.trading.MerchantOffer(new ItemStack(net.minecraft.world.item.Items.WHEAT, 20), new ItemStack(E), 16, 2, 0.05F));
+        offers.add(new net.minecraft.world.item.trading.MerchantOffer(new ItemStack(net.minecraft.world.item.Items.PAPER, 24), new ItemStack(E), 16, 2, 0.05F));
+        offers.add(new net.minecraft.world.item.trading.MerchantOffer(new ItemStack(E), new ItemStack(net.minecraft.world.item.Items.BREAD, 6), 16, 1, 0.05F));
+        offers.add(new net.minecraft.world.item.trading.MerchantOffer(new ItemStack(E, 2), new ItemStack(net.minecraft.world.item.Items.GOLDEN_CARROT, 3), 12, 3, 0.05F));
+        offers.add(new net.minecraft.world.item.trading.MerchantOffer(new ItemStack(E, 3), new ItemStack(net.minecraft.world.item.Items.BOOKSHELF), 12, 3, 0.05F));
+        offers.add(new net.minecraft.world.item.trading.MerchantOffer(new ItemStack(E, 8), new ItemStack(net.minecraft.world.item.Items.NAME_TAG), 6, 5, 0.05F));
     }
 
     @Override
@@ -98,7 +147,9 @@ public class WaifuEntity extends PathfinderMob {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.15, true) {
-            @Override public boolean canUse() { return kind != WaifuKind.SHIORI && getMode() != STAY && super.canUse(); }
+            @Override public boolean canUse() {
+                return kind != WaifuKind.SHIORI && kind != WaifuKind.ESQUELETO && kind != WaifuKind.BRUJA && getMode() != STAY && super.canUse();
+            }
         });
         goalSelector.addGoal(3, new WaifuGoals.Work(this));
         goalSelector.addGoal(4, new WaifuGoals.Follow(this));
@@ -109,6 +160,7 @@ public class WaifuEntity extends PathfinderMob {
         goalSelector.addGoal(9, new RandomLookAroundGoal(this));
         targetSelector.addGoal(1, new HurtByTargetGoal(this, WaifuEntity.class));
         targetSelector.addGoal(2, new WaifuGoals.Protect(this));
+        targetSelector.addGoal(3, new WaifuGoals.Hunt(this));
     }
 
     // ------------------------------------------------------------------ estado
@@ -171,15 +223,20 @@ public class WaifuEntity extends PathfinderMob {
                 level().addParticle(ParticleTypes.ENCHANT, getX() + (random.nextDouble() - 0.5) * 1.6, getY() + 1.6 + random.nextDouble() * 0.6,
                         getZ() + (random.nextDouble() - 0.5) * 1.6, 0, -0.4, 0);
             }
+            if (kind == WaifuKind.ENDERMAN && random.nextInt(2) == 0) {
+                level().addParticle(ParticleTypes.PORTAL, getRandomX(0.5), getRandomY() - 0.25, getRandomZ(0.5), (random.nextDouble() - 0.5) * 2, -random.nextDouble(),
+                        (random.nextDouble() - 0.5) * 2);
+            }
+            if (kind == WaifuKind.BRUJA && random.nextInt(10) == 0) level().addParticle(ParticleTypes.WITCH, getRandomX(0.5), getY() + 2.2, getRandomZ(0.5), 0, 0, 0);
             if (isHappy() && random.nextInt(12) == 0) level().addParticle(ParticleTypes.HEART, getX(), getY() + 2.1, getZ(), 0, 0.05, 0);
             return;
         }
         int h = entityData.get(HAPPY);
         if (h > 0) entityData.set(HAPPY, h - 1);
-        if (tickCount % 40 == 0 && getHealth() < getMaxHealth()) heal(1.0F);
+        if (tickCount % (kind == WaifuKind.ZOMBIE ? 15 : 40) == 0 && getHealth() < getMaxHealth()) heal(1.0F);
         if (kind == WaifuKind.HOMURA) WaifuWork.furnaceTick(this);
         work.always();
-        if (tickCount % 40 == 0 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.track(sp, this);
+        if (tickCount % 40 == 0 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.refresh(sp, this);
     }
 
     @Override
@@ -209,6 +266,32 @@ public class WaifuEntity extends PathfinderMob {
     }
 
     @Override
+    protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level lv) {
+        return ModRegistry.kindOf(getType()) == WaifuKind.ARANA ? new net.minecraft.world.entity.ai.navigation.WallClimberNavigation(this, lv) : super.createNavigation(lv);
+    }
+
+    @Override
+    public boolean onClimbable() {
+        return super.onClimbable() || (kind == WaifuKind.ARANA && horizontalCollision);
+    }
+
+    @Override
+    public boolean causeFallDamage(float dist, float mult, DamageSource src) {
+        if (kind == WaifuKind.GALLINA || kind == WaifuKind.GATO || kind == WaifuKind.ARANA || kind == WaifuKind.ENDERMAN) return false;
+        return super.causeFallDamage(dist, mult, src);
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity t) {
+        boolean hit = super.doHurtTarget(t);
+        if (hit && kind == WaifuKind.GOLEM) {                 // ¡por los aires!
+            t.setDeltaMovement(t.getDeltaMovement().add(0, 0.7, 0));
+            playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 1.2F);
+        }
+        return hit;
+    }
+
+    @Override
     public boolean removeWhenFarAway(double d) {
         return false;
     }
@@ -226,6 +309,7 @@ public class WaifuEntity extends PathfinderMob {
     @Override
     protected InteractionResult mobInteract(Player p, InteractionHand hand) {
         ItemStack held = p.getItemInHand(hand);
+        if (held.is(ModRegistry.WAND.get())) return InteractionResult.PASS;     // la vara se encarga
         if (level().isClientSide) return InteractionResult.SUCCESS;
         ServerPlayer sp = (ServerPlayer) p;
         if (owner == null) {
@@ -245,7 +329,11 @@ public class WaifuEntity extends PathfinderMob {
             return InteractionResult.CONSUME;
         }
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        if (p.isShiftKeyDown()) {
+        if (!p.isShiftKeyDown()) {
+            InteractionResult r = WaifuWork.interact(this, sp, held);
+            if (r != null) return r;
+        }
+        if (p.isShiftKeyDown() || !kind.station()) {
             if (!isOwner(p)) {
                 say(p, "Solo mi dueño puede ver mi mochila.");
                 return InteractionResult.CONSUME;
@@ -294,6 +382,8 @@ public class WaifuEntity extends PathfinderMob {
     public void addAdditionalSaveData(CompoundTag t) {
         super.addAdditionalSaveData(t);
         t.putInt("Mode", getMode());
+        if (offers != null && !offers.isEmpty()) t.put("Offers", offers.createTag());
+        t.putInt("MerchantXp", merchantXp);
         if (owner != null) t.putUUID("Owner", owner);
         if (anchor != null) t.putLong("Anchor", anchor.asLong());
         t.put("Bag", save(bag));
@@ -309,6 +399,8 @@ public class WaifuEntity extends PathfinderMob {
     public void readAdditionalSaveData(CompoundTag t) {
         super.readAdditionalSaveData(t);
         entityData.set(MODE, t.getInt("Mode"));
+        if (t.contains("Offers")) offers = new net.minecraft.world.item.trading.MerchantOffers(t.getCompound("Offers"));
+        merchantXp = t.getInt("MerchantXp");
         owner = t.hasUUID("Owner") ? t.getUUID("Owner") : null;
         anchor = t.contains("Anchor") ? BlockPos.of(t.getLong("Anchor")) : null;
         load(bag, t.getList("Bag", Tag.TAG_COMPOUND));

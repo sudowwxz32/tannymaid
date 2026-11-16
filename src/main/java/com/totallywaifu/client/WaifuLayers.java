@@ -34,12 +34,7 @@ public final class WaifuLayers {
     }
 
     public static Supplier<LayerDefinition> bodyDef(WaifuKind k) {
-        return switch (k) {
-            case KOZUE -> WaifuModels::bodyKozue;
-            case HOMURA -> WaifuModels::bodyHomura;
-            case KURA -> WaifuModels::bodyKura;
-            case SHIORI -> WaifuModels::bodyShiori;
-        };
+        return () -> WaifuModels.layer(k.id());
     }
 
     // ------------------------------------------------------------------ cara

@@ -1,33 +1,45 @@
-# Totally Waifu? 2.0 (Forge 1.20.1)
+# Totally Waifu? 3.0 (Forge 1.20.1)
 
-La mesa de crafteo, el horno, el cofre y la mesa de encantamientos ahora son **chicas**. Esos cuatro bloques **ya no se fabrican**: en su lugar consigues a cada chica una sola vez.
+Las recetas vanilla vuelven: puedes fabricar mesas, hornos y cofres normalmente. La magia ahora está en la **Vara de Transformación**.
 
-## Cómo conseguirlas (una vez cada una)
-| Chica | Oficio | Corazón |
+## La Vara de Transformación
+- La recibes **al aparecer en el mundo** (una vez).
+- Receta: fragmento de amatista (arriba a la derecha), tinte rosa + lingote de oro (centro), palo (abajo a la izquierda).
+
+## Mesas → chicas (y al revés)
+| Bloque | Chica | Oficio |
 |---|---|---|
-| **Kozue** | Mesa de crafteo | Regalo al entrar al mundo · o 3 tablones + tinte rosa (2x2) |
-| **Homura** | Horno | 8 piedra labrada alrededor de un tinte rosa |
-| **Kura** | Cofre | 8 tablones alrededor de un tinte rosa |
-| **Shiori** | Mesa de encantamientos | libro arriba · diamante, tinte rosa, diamante · 3 obsidiana |
+| Mesa de crafteo | **Kozue** | crafteo, tala y mina |
+| Horno | **Homura** | cocina sola, busca carbón |
+| Cofre | **Kura** | recoge y ordena |
+| Mesa de encantamientos | **Shiori** | magia, experiencia y reparación |
 
-Usa su corazón en cualquier lugar y despertará. Si ya la tienes, el corazón no se gasta.
+Pon el bloque y haz **clic derecho con la vara**: se transforma en la chica y queda desbloqueada. Lo que tenía dentro el horno o el cofre pasa con ella.
+Usa la vara **sobre ella** y vuelve a ser el bloque (con sus cosas). Solo puede haber una de cada a la vez.
+
+## Animales y monstruos → chicas para siempre
+Clic derecho con la vara a la criatura. **Ya no pueden volver a su forma anterior.** Conservan sus habilidades:
+
+| Criatura | Chica | Habilidad |
+|---|---|---|
+| Oveja | Lana | da lana sola; con tijeras, más lana |
+| Vaca | Bella | cuero; con un cubo te da leche |
+| Cerdo | Rosita | desentierra zanahorias, papas, remolachas y hongos |
+| Gallina | Pía | huevos y plumas; sin daño por caída |
+| Lobo/perro | Luna | caza monstruos y te defiende |
+| Gato | Mika | espanta creepers y phantoms; regalos al amanecer |
+| Gólem de hierro | Ferra | muy fuerte, lanza por los aires; se cura con lingotes de hierro; amapolas |
+| Aldeano | Elena | comercia contigo (conserva los tratos del aldeano) |
+| Zombi | Zoe | pelea y se regenera rápido |
+| Esqueleto | Nyra | dispara flechas a los monstruos |
+| Creeper | Cree | explosión controlada que solo daña a los monstruos |
+| Araña | Aracne | trepa paredes, ralentiza enemigos |
+| Bruja | Morgana | te cura y lanza magia (veneno y debilidad) |
+| Enderman | Endra | se teletransporta detrás de sus enemigos |
 
 ## ♥ Mis Waifus (botón en tu inventario)
-- Muestra a las cuatro: las que tienes, dónde están y en qué modo.
-- **Traer / Llamar**: viene a tu lado (aunque esté en otra dimensión, si su zona está cargada).
-- **Guardar**: se guarda en tu colección con todas sus cosas (mochila, horno, cofre, experiencia).
-- Si la derrotan, vuelve sola a tu colección.
+Las 18 chicas: cuáles tienes, dónde están, **Traer/Llamar** y **Guardar** (⬇). Si la derrotan, vuelve sola a tu colección.
 
 ## Con cada chica
-- **Clic derecho**: el menú de su mesa (crafteo, horno, cofre doble o encantamientos con poder máximo).
-- **Shift + clic derecho**: su panel, con mochila, modos Seguir / Quieta / Trabajar y Guardar.
-- Sus oficios no cambian: Kozue craftea pedidos, tala y mina; Homura cocina sola, busca carbón y caza; Kura recoge y ordena; Shiori hace magia, guarda experiencia y repara tu equipo.
-
-## Aspecto (2.0)
-Las cuatro rehechas en estilo de bloques (basado en el modelo de Noa): más altas, cuerpo delgado, cintura, cadera y piernas largas, cabello de bloques y la ropa de su oficio:
-- **Kozue**: coleta castaña, pañuelo verde, blusa abullonada, overol de roble, cinturón de herramientas y botas de trabajo.
-- **Homura**: coletas rojas, gafas de forja, top con borde de fuego, corsé, falda de piedra con llamas, delantal de cuero, guanteletes y botas con puntera de metal.
-- **Kura**: cabello rubio largo, cofia, vestido de sirvienta, delantal, lazo, mochila-cofre, medias blancas y zapatos.
-- **Shiori**: corte hime índigo, diadema con diamante, orejas de elfa, túnica de obsidiana con runas, capa roja, botas altas y libro flotante.
-
-Generador: `tools/gen_blocky.py`.
+- **Clic derecho**: el menú de su mesa (las de mesa) o su habilidad / su panel.
+- **Shift + clic derecho**: su panel, con mochila y modos Seguir / Quieta / Trabajar.

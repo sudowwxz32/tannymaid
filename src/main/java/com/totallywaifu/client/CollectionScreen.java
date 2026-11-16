@@ -19,13 +19,21 @@ import java.util.Map;
 
 /** ♥ Mis Waifus: las chicas que has conseguido, dónde están, y botones para llamarlas o guardarlas. */
 public class CollectionScreen extends Screen {
-    private static final int CW = 82, CH = 150, GAP = 6;
+    private static final int COLS = 6, CW = 64, CH = 70, GAP = 4;
+    private static final String WAND = "Vara de Transformación sobre ";
     private static final String[] HOW = {
-            "Corazón de Kozue: 3 tablones + tinte rosa (o el regalo de bienvenida)",
-            "Corazón de Homura: 8 piedra labrada + tinte rosa en el centro",
-            "Corazón de Kura: 8 tablones + tinte rosa en el centro",
-            "Corazón de Shiori: libro, 2 diamantes, tinte rosa y 3 obsidiana"};
-    private static final int[] COLOR = {0xFF8A6238, 0xFF5A5A62, 0xFFA27034, 0xFF3A2A56};
+            WAND + "una mesa de crafteo (puede volver a ser mesa)",
+            WAND + "un horno (puede volver a ser horno)",
+            WAND + "un cofre (puede volver a ser cofre)",
+            WAND + "una mesa de encantamientos (puede volver a ser mesa)",
+            WAND + "una oveja · para siempre", WAND + "una vaca · para siempre", WAND + "un cerdo · para siempre",
+            WAND + "una gallina · para siempre", WAND + "un lobo/perro · para siempre", WAND + "un gato · para siempre",
+            WAND + "un gólem de hierro · para siempre", WAND + "un aldeano · para siempre (conserva sus tratos)",
+            WAND + "un zombi · para siempre", WAND + "un esqueleto · para siempre", WAND + "un creeper · para siempre",
+            WAND + "una araña · para siempre", WAND + "una bruja · para siempre", WAND + "un enderman · para siempre"};
+    private static final int[] COLOR = {0xFF8A6238, 0xFF5A5A62, 0xFFA27034, 0xFF3A2A56,
+            0xFFB8A8B0, 0xFF4A3A30, 0xFFC07080, 0xFFB0A890, 0xFF6E6A66, 0xFFB07830,
+            0xFF8C8880, 0xFF6A4A30, 0xFF2E6A3A, 0xFF7A7A7A, 0xFF3E8A3A, 0xFF4A2E2E, 0xFF4A2A5A, 0xFF2A1A3C};
     private CollectionData data;
     private final Map<WaifuKind, WaifuEntity> dolls = new EnumMap<>(WaifuKind.class);
 
@@ -44,20 +52,23 @@ public class CollectionScreen extends Screen {
         }
     }
 
-    private int left() { return (width - (4 * CW + 3 * GAP)) / 2; }
-    private int top() { return (height - CH) / 2 + 6; }
+    private int rows() { return (WaifuKind.values().length + COLS - 1) / COLS; }
+    private int left() { return (width - (COLS * CW + (COLS - 1) * GAP)) / 2; }
+    private int top() { return Math.max(18, (height - (rows() * CH + (rows() - 1) * GAP)) / 2 + 6); }
+    private int cx(WaifuKind k) { return left() + (k.ordinal() % COLS) * (CW + GAP); }
+    private int cy(WaifuKind k) { return top() + (k.ordinal() / COLS) * (CH + GAP); }
 
     @Override
     protected void init() {
         for (CollectionData.Entry e : data.entries()) {
             WaifuKind k = WaifuKind.byId(e.kind());
-            int x = left() + k.ordinal() * (CW + GAP), y = top() + CH - 44;
-            if (e.status() == 0) continue;
+            int x = cx(k), y = cy(k) + CH - 15;
+            if (e.status() == 0 || e.status() == 3) continue;
             Button call = Button.builder(Component.literal(e.status() == 2 ? "Llamar" : "Traer"),
                             b -> Net.CHANNEL.sendToServer(new CollectionAction(k.ordinal(), CollectionAction.SUMMON)))
-                    .bounds(x + 4, y, CW - 8, 18).tooltip(Tooltip.create(Component.literal(e.status() == 2 ? "Aparece a tu lado" : "Viene a tu lado"))).build();
-            Button store = Button.builder(Component.literal("Guardar"), b -> Net.CHANNEL.sendToServer(new CollectionAction(k.ordinal(), CollectionAction.STORE)))
-                    .bounds(x + 4, y + 20, CW - 8, 18).tooltip(Tooltip.create(Component.literal("Se guarda en tu colección con todas sus cosas"))).build();
+                    .bounds(x + 2, y, 38, 13).tooltip(Tooltip.create(Component.literal(e.status() == 2 ? "Aparece a tu lado" : "Viene a tu lado"))).build();
+            Button store = Button.builder(Component.literal("⬇"), b -> Net.CHANNEL.sendToServer(new CollectionAction(k.ordinal(), CollectionAction.STORE)))
+                    .bounds(x + 42, y, CW - 44, 13).tooltip(Tooltip.create(Component.literal("Guardar en tu colección con todas sus cosas"))).build();
             store.active = e.status() == 1;
             addRenderableWidget(call);
             addRenderableWidget(store);
@@ -71,27 +82,32 @@ public class CollectionScreen extends Screen {
     @Override
     public void render(GuiGraphics g, int mx, int my, float partial) {
         renderBackground(g);
-        g.drawCenteredString(font, "§d§l♥ Mis Waifus", width / 2, top() - 18, 0xFFFFFFFF);
+        int got = 0;
+        for (CollectionData.Entry e : data.entries()) if (e.status() != 0) got++;
+        g.drawCenteredString(font, "§d§l♥ Mis Waifus §r§7(" + got + "/" + data.entries().size() + ")", width / 2, top() - 13, 0xFFFFFFFF);
         String tip = null;
         for (CollectionData.Entry e : data.entries()) {
             WaifuKind k = WaifuKind.byId(e.kind());
-            int x = left() + k.ordinal() * (CW + GAP), y = top();
-            int c = COLOR[k.ordinal()];
-            g.fill(x - 1, y - 1, x + CW + 1, y + CH + 1, 0xFFFFC0E0);
+            int x = cx(k), y = cy(k);
+            int c = COLOR[k.ordinal() % COLOR.length];
+            boolean hover = mx >= x && mx < x + CW && my >= y && my < y + CH - 16;
+            g.fill(x - 1, y - 1, x + CW + 1, y + CH + 1, hover ? 0xFFFFFFFF : 0xFFFFC0E0);
             g.fillGradient(x, y, x + CW, y + CH, c, 0xFF1A1420);
-            g.drawCenteredString(font, k.color + "§l" + k.display, x + CW / 2, y + 4, 0xFFFFFFFF);
-            g.drawCenteredString(font, "§7" + k.role, x + CW / 2, y + 14, 0xFFFFFFFF);
+            g.drawCenteredString(font, k.color + k.display, x + CW / 2, y + 2, 0xFFFFFFFF);
             WaifuEntity d = doll(k);
             if (e.status() == 0) {
-                g.drawCenteredString(font, "§8?", x + CW / 2, y + 50, 0xFFFFFFFF);
-                g.drawCenteredString(font, "§7No la tienes", x + CW / 2, y + 74, 0xFFFFFFFF);
-                g.drawCenteredString(font, "§8(pasa el ratón)", x + CW / 2, y + 86, 0xFFFFFFFF);
-                if (mx >= x && mx < x + CW && my >= y && my < y + CH) tip = HOW[k.ordinal()];
+                g.drawCenteredString(font, "§8?", x + CW / 2, y + 26, 0xFFFFFFFF);
+                g.drawCenteredString(font, "§7Bloqueada", x + CW / 2, y + CH - 12, 0xFFFFFFFF);
+                if (hover) tip = k.role + " · " + HOW[k.ordinal()];
             } else {
-                if (d != null) InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + CW / 2, y + 96, 30, (float) (x + CW / 2 - mx), (float) (y + 40 - my), d);
-                String st = e.status() == 2 ? "§bGuardada" : "§aEn el mundo";
-                g.drawCenteredString(font, st, x + CW / 2, y + 98, 0xFFFFFFFF);
-                if (!e.where().isEmpty() && mx >= x && mx < x + CW && my >= y && my < y + 100) tip = e.where();
+                if (d != null) {
+                    g.enableScissor(x, y + 11, x + CW, y + CH - 15);
+                    InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + CW / 2, y + CH - 16, 20, (float) (x + CW / 2 - mx), (float) (y + 20 - my), d);
+                    g.disableScissor();
+                }
+                if (e.status() == 3) g.drawCenteredString(font, "§6Es un bloque", x + CW / 2, y + CH - 12, 0xFFFFFFFF);
+                if (hover) tip = k.role + " · " + k.job + (e.status() == 2 ? " · §bGuardada" : e.status() == 3 ? " · §6Ahora es un bloque: usa la vara para despertarla"
+                        : e.where().isEmpty() ? "" : " · §a" + e.where());
             }
         }
         super.render(g, mx, my, partial);

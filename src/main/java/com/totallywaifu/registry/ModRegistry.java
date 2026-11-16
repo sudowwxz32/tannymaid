@@ -34,32 +34,26 @@ public final class ModRegistry {
     public static final Map<WaifuKind, RegistryObject<Item>> EGGS = new EnumMap<>(WaifuKind.class);
 
     static {
-        int[][] colors = {{0xB08452, 0x54943F}, {0x707074, 0xF08C28}, {0xA27034, 0xDEB03C}, {0x241A34, 0x5CDCD6}};
         for (WaifuKind k : WaifuKind.values()) {
             RegistryObject<EntityType<WaifuEntity>> t = ENTITIES.register(k.id(), () -> EntityType.Builder.<WaifuEntity>of(WaifuEntity::new, MobCategory.CREATURE)
                     .sized(0.6F, 1.95F).clientTrackingRange(10).build(k.id()));
             TYPES.put(k, t);
-            int[] c = colors[k.ordinal()];
-            EGGS.put(k, ITEMS.register(k.id() + "_spawn_egg", () -> new ForgeSpawnEggItem(t, c[0], c[1], new Item.Properties())));
+            EGGS.put(k, ITEMS.register(k.id() + "_spawn_egg", () -> new ForgeSpawnEggItem(t, k.eggA, k.eggB, new Item.Properties())));
         }
     }
 
     public static final RegistryObject<Item> HEART = ITEMS.register("corazon_waifu",
             () -> new HeartItem(null, new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
-    public static final Map<WaifuKind, RegistryObject<Item>> HEARTS = new EnumMap<>(WaifuKind.class);
-
-    static {
-        for (WaifuKind k : WaifuKind.values())
-            HEARTS.put(k, ITEMS.register("corazon_" + k.id(), () -> new HeartItem(k, new Item.Properties().stacksTo(1).rarity(Rarity.EPIC))));
-    }
+    public static final RegistryObject<Item> WAND = ITEMS.register("vara_de_transformacion",
+            () -> new com.totallywaifu.item.WandItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
 
     public static final RegistryObject<MenuType<WaifuMenu>> PANEL = MENUS.register("panel", () -> IForgeMenuType.create(WaifuMenu::fromNetwork));
 
     public static final RegistryObject<CreativeModeTab> TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.literal("Totally Waifu?"))
-            .icon(() -> new ItemStack(HEARTS.get(WaifuKind.KOZUE).get()))
+            .icon(() -> new ItemStack(WAND.get()))
             .displayItems((p, out) -> {
-                for (WaifuKind k : WaifuKind.values()) out.accept(HEARTS.get(k).get());
+                out.accept(WAND.get());
                 for (WaifuKind k : WaifuKind.values()) out.accept(EGGS.get(k).get());
             }).build());
 

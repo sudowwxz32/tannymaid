@@ -51,12 +51,27 @@ public final class Collection {
         return rec(p, k).getBoolean("Got");
     }
 
-    /** Regalo de bienvenida (una sola vez): el corazón de Kozue, para poder craftear. */
+    /** Regalo de bienvenida (una sola vez): la Vara de Transformación. */
     public static boolean takeGift(Player p) {
         CompoundTag r = root(p);
-        if (r.getBoolean("Gift")) return false;
-        r.putBoolean("Gift", true);
+        if (r.getBoolean("GiftWand")) return false;
+        r.putBoolean("GiftWand", true);
         return true;
+    }
+
+    /** ¿Ya hay una (en el mundo o guardada)? Las de las mesas solo pueden existir una vez. */
+    public static boolean active(Player p, WaifuKind k) {
+        CompoundTag t = rec(p, k);
+        return t.hasUUID("Uuid") || t.contains("Stored");
+    }
+
+    /** La chica volvió a ser su bloque (sigue desbloqueada). */
+    public static void markBlock(Player p, WaifuKind k) {
+        CompoundTag t = rec(p, k);
+        t.putBoolean("Got", true);
+        t.putBoolean("Block", true);
+        t.remove("Uuid");
+        t.remove("Stored");
     }
 
     /** Registra a la chica como tuya (y dónde está). */
@@ -67,11 +82,21 @@ public final class Collection {
         t.putString("Dim", w.level().dimension().location().toString());
         t.putLong("Pos", w.blockPosition().asLong());
         t.remove("Stored");
+        t.remove("Block");
+    }
+
+    /** Actualiza dónde está (solo si es la chica registrada; puede haber varias ovejas, por ejemplo). */
+    public static void refresh(ServerPlayer p, WaifuEntity w) {
+        CompoundTag t = rec(p, w.kind);
+        if (t.hasUUID("Uuid") ? !t.getUUID("Uuid").equals(w.getUUID()) : t.contains("Stored") || t.getBoolean("Block")) return;
+        track(p, w);
     }
 
     /** Si la derrotan y su dueño está conectado, vuelve guardada a la colección. */
     public static boolean onDefeat(WaifuEntity w) {
         if (!(w.ownerPlayer() instanceof ServerPlayer p)) return false;
+        CompoundTag cur = rec(p, w.kind);
+        if (cur.contains("Stored") || (cur.hasUUID("Uuid") && !cur.getUUID("Uuid").equals(w.getUUID()))) return false;
         w.setHealth(w.getMaxHealth());
         CompoundTag data = new CompoundTag();
         w.saveWithoutId(data);
@@ -98,6 +123,10 @@ public final class Collection {
     public static void summon(ServerPlayer p, WaifuKind k) {
         CompoundTag t = rec(p, k);
         if (!t.getBoolean("Got")) return;
+        if (t.getBoolean("Block") && !t.contains("Stored") && !t.hasUUID("Uuid")) {
+            p.sendSystemMessage(Component.literal("§d" + k.display + " ahora es un bloque. Pon un " + k.role.toLowerCase() + " y usa la Vara de Transformación sobre él."));
+            return;
+        }
         ServerLevel lv = p.serverLevel();
         double x = p.getX() + p.getLookAngle().x * 1.5, z = p.getZ() + p.getLookAngle().z * 1.5;
         if (t.contains("Stored")) {
@@ -163,7 +192,7 @@ public final class Collection {
         List<CollectionData.Entry> out = new ArrayList<>();
         for (WaifuKind k : WaifuKind.values()) {
             CompoundTag t = rec(p, k);
-            int status = !t.getBoolean("Got") ? 0 : t.contains("Stored") ? 2 : 1;
+            int status = !t.getBoolean("Got") ? 0 : t.contains("Stored") ? 2 : t.hasUUID("Uuid") ? 1 : 3;
             String where = "";
             if (status == 1) {
                 WaifuEntity w = find(p, k);

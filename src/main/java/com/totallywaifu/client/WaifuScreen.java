@@ -18,7 +18,21 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
             {0xFF8A6238, 0xFF3A2814, 0xFF54943F},   // Kozue: roble y verde hoja
             {0xFF56565C, 0xFF242428, 0xFFF08C28},   // Homura: piedra y fuego
             {0xFFA27034, 0xFF46300F, 0xFFDEB03C},   // Kura: cofre y oro
-            {0xFF3A2A56, 0xFF120C1E, 0xFF5CDCD6}};  // Shiori: obsidiana y diamante
+            {0xFF3A2A56, 0xFF120C1E, 0xFF5CDCD6},   // Shiori: obsidiana y diamante
+            {0xFFEDE6E6, 0xFF8C7F86, 0xFFF4A9C8},   // Lana
+            {0xFF4A3A30, 0xFF1A120E, 0xFFF0F0F0},   // Bella
+            {0xFFF29CB0, 0xFF7A3848, 0xFFFFD0DC},   // Rosita
+            {0xFFF2F0E6, 0xFF8A8270, 0xFFE8402C},   // Pía
+            {0xFF8E8A86, 0xFF2C2A28, 0xFFC8342C},   // Luna
+            {0xFFE0A050, 0xFF5A3A14, 0xFF7AD06A},   // Mika
+            {0xFFC8C4BC, 0xFF4A4844, 0xFFC83228},   // Ferra
+            {0xFF8A5A3A, 0xFF2E1E12, 0xFF3CB04C},   // Elena
+            {0xFF3E7A48, 0xFF14281A, 0xFF5AB4C8},   // Zoe
+            {0xFFBEBEBE, 0xFF3A3A3A, 0xFFE8E8E8},   // Nyra
+            {0xFF4EA84A, 0xFF143A14, 0xFF222222},   // Cree
+            {0xFF3A2E2E, 0xFF120C0C, 0xFFD02828},   // Aracne
+            {0xFF4A2A5A, 0xFF180C20, 0xFF6ACC48},   // Morgana
+            {0xFF221A2C, 0xFF08060C, 0xFFD66AF0}};  // Endra
     private Button follow, stay, work;
 
     public WaifuScreen(WaifuMenu menu, Inventory inv, Component title) {
@@ -62,7 +76,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
 
     @Override
     protected void renderBg(GuiGraphics g, float partial, int mx, int my) {
-        int[] th = THEME[menu.kind.ordinal()];
+        int[] th = THEME[Math.min(menu.kind.ordinal(), THEME.length - 1)];
         int x = leftPos, y = topPos;
         g.fill(x - 1, y - 1, x + imageWidth + 1, y + imageHeight + 1, th[1]);
         g.fill(x, y, x + imageWidth, y + imageHeight, th[2]);
