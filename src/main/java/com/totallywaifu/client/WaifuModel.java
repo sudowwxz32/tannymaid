@@ -120,10 +120,15 @@ public class WaifuModel extends HumanoidModel<WaifuEntity> {
                     rightArm.zRot = 0.12F; leftArm.zRot = -0.12F;
                     tilt = Mth.sin(age * 0.04F) * 0.1F;
                 }
-                case DINA, MITA -> {          // pose de "¡boom!"
-                    rightArm.xRot = -2.6F + breath * 0.06F; rightArm.zRot = 0.25F;
-                    leftArm.xRot = 0.1F; leftArm.zRot = -0.55F; leftArm.yRot = 0.35F;
-                    tilt = kind == WaifuKind.DINA ? -0.1F : 0.12F;
+                case DINA -> {                // la mayor: manos en la cintura, segura de sí misma
+                    rightArm.xRot = 0.1F; rightArm.zRot = 0.5F; rightArm.yRot = -0.3F;
+                    leftArm.xRot = 0.1F; leftArm.zRot = -0.5F; leftArm.yRot = 0.3F;
+                    tilt = -0.06F;
+                }
+                case MITA -> {                // la menor: manos atrás, juguetona
+                    rightArm.xRot = 0.3F + breath * 0.03F; rightArm.zRot = 0.12F;
+                    leftArm.xRot = 0.3F - breath * 0.03F; leftArm.zRot = -0.12F;
+                    tilt = 0.1F + Mth.sin(age * 0.06F) * 0.05F;
                 }
                 case WARDEN -> {              // guardiana: brazos abiertos, alerta
                     rightArm.zRot = 0.3F; leftArm.zRot = -0.3F;

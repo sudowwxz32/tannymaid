@@ -25,7 +25,7 @@ public final class ClientForgeEvents {
         tab = null;
         if (!(e.getScreen() instanceof InventoryScreen) && !(e.getScreen() instanceof CreativeModeInventoryScreen)) return;
         tab = Button.builder(Component.literal("§d♥ Mis Waifus"), b -> Net.CHANNEL.sendToServer(new CollectionAction(0, CollectionAction.OPEN)))
-                .bounds(0, 0, 80, 16).tooltip(Tooltip.create(Component.literal("Tu colección de waifus: llámalas o guárdalas"))).build();
+                .bounds(0, 0, 80, 16).tooltip(Tooltip.create(Component.literal("Tu colección de waifus: llámalas o guárdalas (tecla K)"))).build();
         place(e.getScreen());
         e.addListener(tab);
     }
