@@ -19,7 +19,7 @@ TEXR = os.path.join(ROOT, "src/main/resources/assets/totallywaifu/textures/entit
 JAVA_DIR = os.path.join(ROOT, "src/main/java/com/totallywaifu/client")
 T = (0, 0, 0, 0)
 mix = G.mix
-ARM_X, ARM_Y, LEG_X, LEG_Y, HEAD_SCALE = 4.3, 1.4, 1.85, 10.6, 0.9
+ARM_X, ARM_Y, LEG_X, LEG_Y, HEAD_SCALE = 3.75, 1.3, 1.75, 10.0, 0.86
 BONES = {"head": 0, "body": 1, "right_arm": 2, "left_arm": 3, "right_leg": 4, "left_leg": 5}
 ANCHORS = [("head", (0, 0, 0)), ("hat", (0, 0, 0)), ("body", (0, 0, 0)), ("right_arm", (-ARM_X, ARM_Y, 0)), ("left_arm", (ARM_X, ARM_Y, 0)),
            ("right_leg", (-LEG_X, LEG_Y, 0)), ("left_leg", (LEG_X, LEG_Y, 0))]
@@ -117,25 +117,28 @@ def shade_y(c, y, ya, yb, a=0.1):
 
 # ================================================================== cuerpo base (proporciones)
 def torso_rings():
-    return smooth_rings([(-0.3, 2.6, 1.55, 0, 0.05), (0.5, 3.45, 1.85, 0, 0), (1.9, 3.35, 2.15, 0, -0.25), (3.0, 3.25, 2.4, 0, -0.5),
-                         (4.2, 2.95, 1.95, 0, -0.15), (5.6, 2.6, 1.65, 0, 0), (7.1, 3.15, 1.85, 0, 0.05), (8.8, 3.6, 2.05, 0, 0.1),
-                         (10.2, 3.45, 1.95, 0, 0.05), (11.0, 2.4, 1.5, 0, 0.05)], 3)
+    # hombros y espalda estrechos, busto, cintura de avispa y cadera ancha (figura de reloj de arena)
+    return smooth_rings([(-0.3, 2.2, 1.3, 0, 0.05), (0.5, 2.85, 1.5, 0, 0.02), (1.9, 2.85, 1.85, 0, -0.25), (3.0, 2.8, 2.15, 0, -0.5),
+                         (4.2, 2.5, 1.65, 0, -0.15), (5.6, 2.2, 1.38, 0, 0), (7.1, 2.85, 1.62, 0, 0.05), (8.8, 3.4, 1.9, 0, 0.12),
+                         (10.2, 3.25, 1.8, 0, 0.06), (11.0, 2.2, 1.35, 0, 0.05)], 3)
 
 
 def arm_rings():
-    return smooth_rings([(-1.7, 0.35, 0.35, 0, 0), (-1.25, 1.1, 1.1, 0, 0), (-0.2, 1.3, 1.3, 0, 0), (1.4, 1.12, 1.12, 0, 0),
-                         (4.6, 0.95, 0.98, 0, 0), (5.4, 0.9, 0.92, 0, 0), (6.6, 0.98, 0.98, 0, 0), (8.9, 0.72, 0.68, 0, 0),
-                         (9.6, 0.86, 0.6, 0, 0), (10.7, 0.8, 0.55, 0, -0.05), (11.3, 0.3, 0.3, 0, -0.05)], 2)
+    # brazos finos y largos
+    return smooth_rings([(-1.6, 0.3, 0.3, 0, 0), (-1.2, 0.95, 0.95, 0, 0), (-0.2, 1.12, 1.12, 0, 0), (1.4, 0.98, 0.98, 0, 0),
+                         (4.9, 0.82, 0.85, 0, 0), (5.7, 0.78, 0.8, 0, 0), (6.9, 0.85, 0.85, 0, 0), (9.4, 0.62, 0.58, 0, 0),
+                         (10.1, 0.76, 0.52, 0, 0), (11.3, 0.7, 0.48, 0, -0.05), (11.9, 0.26, 0.26, 0, -0.05)], 2)
 
 
 def leg_rings():
-    return smooth_rings([(-0.9, 1.75, 1.8, 0.05, 0), (0.6, 2.0, 2.0, 0.0, 0), (3.4, 1.72, 1.72, 0, 0), (5.9, 1.25, 1.3, 0, -0.05),
-                         (7.4, 1.35, 1.42, 0, 0.15), (10.4, 0.92, 0.95, 0, 0.05), (11.9, 0.8, 0.85, 0, 0),
-                         (12.4, 0.9, 1.25, 0, -0.45), (13.0, 0.95, 1.55, 0, -0.7), (13.4, 0.6, 1.2, 0, -0.65)], 2)
+    # piernas largas: muslo lleno, rodilla fina, pantorrilla marcada, tobillo delgado
+    return smooth_rings([(-0.9, 1.7, 1.75, 0.05, 0), (0.6, 1.92, 1.92, 0.0, 0), (3.6, 1.62, 1.65, 0, 0), (6.3, 1.12, 1.18, 0, -0.05),
+                         (7.9, 1.25, 1.32, 0, 0.15), (11.0, 0.82, 0.86, 0, 0.05), (12.5, 0.72, 0.76, 0, 0),
+                         (13.0, 0.82, 1.18, 0, -0.45), (13.6, 0.88, 1.5, 0, -0.7), (14.0, 0.55, 1.15, 0, -0.65)], 2)
 
 
 def neck_rings():
-    return [(-1.9, 0.95, 0.95, 0, 0.1), (-0.6, 1.0, 1.0, 0, 0.1), (0.4, 1.25, 1.15, 0, 0.1)]
+    return [(-2.2, 0.82, 0.86, 0, 0.1), (-0.6, 0.86, 0.9, 0, 0.1), (0.4, 1.1, 1.02, 0, 0.1)]
 
 
 def base_body(torso, arm, leg, neck=None):
@@ -184,11 +187,11 @@ def legwear(stock, top_y, garter=None, garter_h=0.6):
 
 def boots(c, hi, sole, top_y, lace=None, cuff=None, toe=None):
     def fn(u, y):
-        if y > 12.95:
+        if y > 13.6:
             return sole, 6
         if cuff and y < top_y + 0.6:
             return cuff, 4
-        if toe and y > 11.9 and F(u) > 0.3:
+        if toe and y > 12.5 and F(u) > 0.3:
             return toe, 5
         if lace and F(u) > 0.82 and int((y - top_y) * 2.2) % 2 == 0 and y > top_y + 0.6:
             return lace, 7
@@ -238,8 +241,8 @@ def band_loft(name, bone, at, y0, y1, paint, extra=0.12, sides=20, pxu=96, p=2.0
 
 
 def puff_sleeve(paint, cuff_c):
-    rings = smooth_rings([(-1.85, 0.4, 0.4, 0, 0), (-1.45, 1.55, 1.55, 0, 0), (0.2, 1.85, 1.85, 0, 0), (1.6, 1.6, 1.6, 0, 0),
-                          (2.3, 1.3, 1.3, 0, 0)], 2)
+    rings = smooth_rings([(-1.75, 0.35, 0.35, 0, 0), (-1.35, 1.35, 1.35, 0, 0), (0.2, 1.6, 1.6, 0, 0), (1.6, 1.4, 1.4, 0, 0),
+                          (2.3, 1.12, 1.12, 0, 0)], 2)
     def fn(u, y):
         if y > 1.9:
             return cuff_c, 4
@@ -263,111 +266,120 @@ def head_rings():
 HEAD = Loft("head", "head", head_rings(), None, sides=24, p=3.0, cap=(True, True))
 
 
-# ================================================================== cara de anime (128 px)
-def make_face(iris, lash, brow, hair, mouth=(194, 90, 104), blush=(255, 150, 160), sharp=False):
+# ================================================================== cara estilo skin detallada (32x32 → 128 px)
+# Ojo izquierdo (el borde de afuera a la izquierda). L pestaña, S sombra de párpado, W blanco, U iris oscuro, I iris,
+# J iris claro, P pupila, H brillo, l pestaña inferior suave, D borde exterior del ojo.
+EYES = {
+    "normal": ["LSSSSSSSS..",
+               ".LLLLLLLLL.",
+               "LLWUUUUUWL.",
+               ".DWIIPPHIW.",
+               "..WJIPPIJl.",
+               "...lJJJJl..",
+               "....llll..."],
+    "focused": ["...........",
+                "LSSSSSSSSS.",
+                ".LLLLLLLLLL",
+                "LLWUUPPUUWL",
+                "..WJIPPHJl.",
+                "...lllllll."],
+    "tired": ["...........",
+              "...........",
+              "LSSSSSSSSS.",
+              ".LLLLLLLLLL",
+              "LDWIIPPIIWl",
+              "..WJJJJJJl.",
+              "...llllll.."],
+    "surprised": ["LSSSSSSSS..",
+                  ".LLLLLLLLL.",
+                  "LLWWUUUWWL.",
+                  ".DWUIPPUW..",
+                  "..WIIPHIW..",
+                  "..WJIIIJW..",
+                  "...lJJJl...",
+                  "....lll...."],
+    "blink": ["...........",
+              "...........",
+              "...SSSSS...",
+              "L.SSSSSSS..",
+              ".LLLLLLLLL.",
+              "..l.l.l.l.."],
+    "happy": ["...........",
+              "...........",
+              "...LLLLL...",
+              ".LL.....LL.",
+              "L..........",
+              "..........."],
+}
+BROWS = {"normal": [".BBBBBB...", "B.....BB.."], "focused": ["...BBBBBB.", ".BBB......"], "tired": ["BBBBB.....", ".....BBB.."],
+         "surprised": ["..BBBBB...", ".B.....B.."], "blink": [".BBBBBB...", "B.....BB.."], "happy": [".BBBBBB...", "B.....BB.."]}
+MOUTHS = {"normal": [".mMMMMm.", "..pPPp.."], "focused": [".mMMMMM.", "........"], "tired": ["..mMMm..", "..pPPp.."],
+          "surprised": ["..mMMm..", "..MooM..", "..mMMm.."], "blink": [".mMMMMm.", "..pPPp.."],
+          "happy": ["m......m", ".mMMMMm.", "..pPPp.."]}
+
+
+def make_face(iris, lash, brow, hair, lip=(204, 108, 116), blush=(240, 168, 168), shadow=(176, 122, 120), sharp=False):
     dk, mid, hi = iris
-    SS = 4
-    N = 128 * SS
+    N = 32
 
     def face(expr):
-        img = Image.new("RGBA", (N, N), SKIN + (255,))
-        d = ImageDraw.Draw(img)
-        k = lambda v: int(v * SS)
-        # sombra suave bajo el flequillo y en los costados
-        sh = Image.new("RGBA", (N, N), T)
-        sd = ImageDraw.Draw(sh)
-        sd.rectangle([0, 0, N, k(26)], fill=SKIN_SH + (150,))
-        sd.rectangle([0, 0, k(6), N], fill=SKIN_SH + (90,))
-        sd.rectangle([N - k(6), 0, N, N], fill=SKIN_SH + (90,))
-        sh = sh.filter(ImageFilter.GaussianBlur(k(10)))
-        img.alpha_composite(sh)
+        g = [[SKIN for _ in range(N)] for _ in range(N)]
+        # sombreado de la piel: frente bajo el cabello, mejillas, mandíbula y cuello
+        for y in range(N):
+            for x in range(N):
+                c = SKIN
+                if y < 9:
+                    c = mix(SKIN_SH, SKIN, y / 9)
+                side = min(x, N - 1 - x)
+                if side < 3:
+                    c = mix(c, SKIN_SH, (3 - side) / 4)
+                if y > 27:
+                    c = mix(c, SKIN_SH, (y - 27) / 5)
+                if y > 22 and side < 7:
+                    c = mix(c, SKIN_SH, 0.25 * (7 - side) / 7)
+                g[y][x] = c
+        col = {"L": lash, "S": mix(SKIN, shadow, 0.55), "W": (246, 244, 246), "U": dk, "I": mid, "J": hi,
+               "P": mix(dk, (0, 0, 0), 0.55), "H": (255, 255, 255), "l": mix(lash, SKIN, 0.45), "D": mix(lash, SKIN, 0.2),
+               "B": brow, "m": mix(lip, SKIN, 0.5), "M": lip, "p": mix(lip, (255, 200, 200), 0.35), "P_": lip, "o": (110, 40, 56)}
+
+        def stamp(rows, x0, y0, flip, special=None):
+            for j, row in enumerate(rows):
+                for i, ch in enumerate(row):
+                    if ch == ".":
+                        continue
+                    x = x0 + ((len(row) - 1 - i) if flip else i)
+                    c = col["P_"] if (ch == "P" and special == "mouth") else col[ch]
+                    if 0 <= x < N and 0 <= y0 + j < N:
+                        g[y0 + j][x] = c
+        eye = EYES[expr]
+        ey = 16 - (1 if expr == "surprised" else 0)
+        stamp(BROWS[expr], 4, 12 - (1 if expr == "surprised" else 0), False)
+        stamp(BROWS[expr], 18, 12 - (1 if expr == "surprised" else 0), True)
+        stamp(eye, 3, ey - 1, False)
+        stamp(eye, 18, ey - 1, True)
         # rubor
-        if expr != "focused":
-            bl = Image.new("RGBA", (N, N), T)
-            bd = ImageDraw.Draw(bl)
-            for cx in (k(33), k(95)):
-                bd.ellipse([cx - k(13), k(86), cx + k(13), k(98)], fill=blush + (130 if expr == "happy" else 85,))
-            img.alpha_composite(bl.filter(ImageFilter.GaussianBlur(k(4))))
-        d = ImageDraw.Draw(img)
-        for side in (0, 1):
-            cx = k(38) if side == 0 else k(90)
-            out = -1 if side == 0 else 1
-            cy = k(76)
-            # ceja fina y afilada
-            by = cy - k(22 if expr != "surprised" else 27)
-            if expr == "focused":
-                pts = [(cx - out * k(12), by + k(5)), (cx + out * k(12), by - k(1)), (cx + out * k(12), by + k(2)), (cx - out * k(12), by + k(7))]
-            elif expr == "tired":
-                pts = [(cx - out * k(12), by - k(1)), (cx + out * k(12), by + k(5)), (cx + out * k(12), by + k(7)), (cx - out * k(12), by + k(2))]
-            else:
-                pts = [(cx - out * k(11), by + k(3)), (cx, by - k(1)), (cx + out * k(13), by + k(2)), (cx, by + k(2)), (cx - out * k(11), by + k(5))]
-            d.polygon(pts, fill=brow + (255,))
-            if expr in ("blink", "happy"):
-                if expr == "happy":
-                    d.arc([cx - k(12), cy - k(6), cx + k(12), cy + k(12)], 200, 340, fill=lash + (255,), width=k(3))
-                else:
-                    d.arc([cx - k(13), cy - k(14), cx + k(13), cy + k(6)], 20, 160, fill=lash + (255,), width=k(3))
-                    d.polygon([(cx + out * k(12), cy - k(1)), (cx + out * k(17), cy - k(5)), (cx + out * k(14), cy + k(1))], fill=lash + (255,))
-                continue
-            # ---- ojo grande de anime
-            ew, eh = k(15), k(13 if expr != "surprised" else 15)
-            lid = k(6) if expr == "focused" else k(9) if expr == "tired" else 0
-            eye = Image.new("L", (N, N), 0)
-            ImageDraw.Draw(eye).ellipse([cx - ew, cy - eh, cx + ew, cy + eh], fill=255)
-            if lid:
-                ImageDraw.Draw(eye).rectangle([cx - ew - k(2), cy - eh - k(2), cx + ew + k(2), cy - eh + lid], fill=0)
-            img.paste(Image.new("RGBA", (N, N), (252, 252, 255, 255)), (0, 0), eye)
-            # sombra suave del párpado sobre el blanco
-            sh2 = Image.new("RGBA", (N, N), T)
-            ImageDraw.Draw(sh2).ellipse([cx - ew, cy - eh - k(6), cx + ew, cy - eh + k(6) + lid], fill=(196, 200, 226, 255))
-            img.paste(sh2, (0, 0), Image.composite(eye, Image.new("L", (N, N), 0), sh2.split()[3]))
-            # iris con degradado (oscuro arriba, brillante abajo)
-            iw = k(10) if expr != "surprised" else k(8)
-            ih = eh
-            icx = cx - out * k(1)
-            irs = Image.new("RGBA", (N, N), T)
-            idr = ImageDraw.Draw(irs)
-            for yy in range(cy - ih, cy + ih + 1):
-                t = (yy - (cy - ih)) / max(1, 2 * ih)
-                c = mix(dk, mid, t * 1.8) if t < 0.5 else mix(mid, hi, (t - 0.5) * 2.0)
-                idr.line([(icx - iw, yy), (icx + iw, yy)], fill=c + (255,))
-            idr.ellipse([icx - iw, cy - ih, icx + iw, cy + ih], outline=mix(dk, (0, 0, 0), 0.35) + (255,), width=k(1.3))
-            pw = k(3.4) if not sharp else k(2.0)
-            idr.ellipse([icx - pw, cy - k(6), icx + pw, cy + k(4)], fill=mix(dk, (0, 0, 0), 0.55) + (255,))
-            im = Image.new("L", (N, N), 0)
-            ImageDraw.Draw(im).ellipse([icx - iw, cy - ih, icx + iw, cy + ih], fill=255)
-            img.paste(irs, (0, 0), Image.composite(im, Image.new("L", (N, N), 0), eye))
-            d = ImageDraw.Draw(img)
-            # brillos
-            hy = cy - k(6) + lid // 2
-            d.ellipse([icx + out * k(3) - k(3.2), hy - k(3.5), icx + out * k(3) + k(3.2), hy + k(3.5)], fill=(255, 255, 255, 255))
-            d.ellipse([icx - out * k(4) - k(1.6), cy + k(4), icx - out * k(4) + k(1.6), cy + k(7)], fill=(255, 255, 255, 230))
-            # pestaña superior gruesa (con alita hacia afuera), pliegue del párpado y pestaña inferior
-            top = cy - eh + lid
-            d.arc([cx - ew - k(1.5), top - k(0.5), cx + ew + k(1.5), top + 2 * eh - lid], 190, 350, fill=lash + (255,), width=k(3.4))
-            d.polygon([(cx + out * (ew - k(4)), top + k(2)), (cx + out * (ew + k(5)), top + k(0.5)), (cx + out * (ew + k(0.5)), top + k(6))], fill=lash + (255,))
-            d.arc([cx - ew, top - k(6), cx + ew, top + 2 * eh], 215, 325, fill=mix(lash, SKIN, 0.7) + (255,), width=k(1))
-            d.arc([cx - ew + k(2), cy - eh, cx + ew + k(1), cy + eh + k(0.5)], 25 if side == 1 else 40, 140 if side == 1 else 155,
-                  fill=mix(lash, SKIN, 0.35) + (255,), width=k(1.3))
-        # nariz y boca
-        d.line([(k(64), k(92)), (k(65.5), k(94))], fill=SKIN_SH + (255,), width=k(1.4))
-        if expr == "happy":
-            d.chord([k(56), k(100), k(72), k(112)], 0, 180, fill=(160, 54, 72, 255))
-            d.chord([k(59), k(105), k(69), k(112)], 0, 180, fill=(240, 124, 136, 255))
-        elif expr == "surprised":
-            d.ellipse([k(60), k(101), k(68), k(111)], fill=(150, 48, 68, 255))
-        elif expr == "focused":
-            d.line([(k(59), k(106)), (k(69), k(104))], fill=mouth + (255,), width=k(1.6))
-        elif expr == "tired":
-            d.arc([k(57), k(103), k(71), k(110)], 200, 340, fill=mouth + (255,), width=k(1.6))
-        else:
-            d.arc([k(57), k(98), k(71), k(106)], 25, 155, fill=mouth + (255,), width=k(1.6))
-        small = img.resize((128, 128), Image.LANCZOS)
+        if expr in ("normal", "happy", "blink", "surprised"):
+            for (cx, cy) in ((8, 23), (23, 23)):
+                for dx in range(-2, 3):
+                    for dy in range(0, 2):
+                        k = 0.45 if expr == "happy" else 0.28
+                        g[cy + dy][cx + dx] = mix(g[cy + dy][cx + dx], blush, k * (1 - abs(dx) / 3))
+        # nariz: sombra suave a un lado y punta
+        g[21][16] = mix(SKIN, shadow, 0.35)
+        g[22][16] = mix(SKIN, shadow, 0.55)
+        g[22][15] = mix(SKIN, shadow, 0.25)
+        # boca
+        m = MOUTHS[expr]
+        stamp([r.replace("P", "M") if False else r for r in m], 12, 25, False, "mouth")
+        img = Image.new("RGBA", (N, N))
+        for y in range(N):
+            for x in range(N):
+                img.putpixel((x, y), g[y][x] + (255,))
+        small = img.resize((128, 128), Image.NEAREST)
         tex = Image.new("RGBA", (256, 128), T)
         tex.paste(small, (0, 0))
-        hc = hair[0]
-        tex.paste(Image.new("RGBA", (32, 32), hc + (255,)), (160, 16))         # parche de cabello
-        tex.paste(Image.new("RGBA", (32, 32), SKIN_SH + (255,)), (160, 64))    # parche de piel (debajo de la barbilla)
+        tex.paste(Image.new("RGBA", (32, 32), hair[0] + (255,)), (160, 16))
+        tex.paste(Image.new("RGBA", (32, 32), SKIN_SH + (255,)), (160, 64))
         return tex
     return face
 
@@ -396,18 +408,18 @@ def kozue_parts():
                 return GOLD, 5                                                         # botones
             return fold(OAK, u, 14, 0.05), 2
         return shade_y(fold(CREAM, u, 16, 0.04), y, -0.3, 7, 0.06), 1
-    L = base_body(torso, skin_arm(glove=LEAF, glove_from=8.7), legwear(SOCK, 4.1, garter=LEAF, garter_h=0.55))
+    L = base_body(torso, skin_arm(glove=LEAF, glove_from=9.3), legwear(SOCK, 4.1, garter=LEAF, garter_h=0.55))
     L.append(puff_sleeve(lambda u, y: (fold(CREAM, u, 8, 0.07), 1), CREAM_SH))
-    L.append(Loft("skirt", "body", skirt_rings(6.9, 11.6, 3.3, 4.7), lambda u, y: (fold(OAK, u, 18, 0.12), 1) if y < 11.3 else (OAK_DK, 2),
+    L.append(Loft("skirt", "body", skirt_rings(6.8, 11.6, 3.05, 4.5), lambda u, y: (fold(OAK, u, 18, 0.12), 1) if y < 11.3 else (OAK_DK, 2),
                   sides=24, cap=(False, False), skirt=True, pxu=160))
     L.append(band_loft("belt", "body", torso_at, 7.0, 7.8, lambda u, y: ((GOLD, 2) if F(u) > 0.93 else ((96, 62, 36), 1)), extra=0.55))
-    L.append(boot_loft(boots((118, 76, 44), (150, 100, 62), (52, 36, 28), 9.0, lace=CREAM, cuff=(96, 62, 36)), 9.0))
+    L.append(boot_loft(boots((118, 76, 44), (150, 100, 62), (52, 36, 28), 9.6, lace=CREAM, cuff=(96, 62, 36)), 9.6))
     L.append(band_loft("bandana", "head", lambda y: (y, 4.25, 4.25, 0, 0), -6.6, -5.4,
                        lambda u, y: ((LEAF_DK if (int(u * 40) + int(y * 6)) % 5 == 0 else LEAF), 1), extra=0.0, sides=24, p=3.0))
     P = []
-    P.append(W1.Part("hammer", "body", (3.7, 7.6, -0.4), (0, 0, -0.18), [W1.Box(-0.28, 0, -0.28, 0.56, 3.6, 0.56, flatp((128, 86, 50))),
+    P.append(W1.Part("hammer", "body", (3.45, 7.6, -0.4), (0, 0, -0.18), [W1.Box(-0.28, 0, -0.28, 0.56, 3.6, 0.56, flatp((128, 86, 50))),
                                                                        W1.Box(-0.65, 3.4, -1.1, 1.3, 1.0, 2.2, flatp((170, 176, 186)))]))
-    P.append(W1.Part("pouch_r", "body", (-2.7, 7.7, -2.0), (0, 0.35, 0), [W1.Box(-1.0, 0, -0.9, 2.0, 2.0, 1.1, flatp((112, 74, 44)))]))
+    P.append(W1.Part("pouch_r", "body", (-2.5, 7.7, -1.8), (0, 0.35, 0), [W1.Box(-1.0, 0, -0.9, 2.0, 2.0, 1.1, flatp((112, 74, 44)))]))
     P.append(W1.Part("knot", "head", (1.8, -6.1, 4.0), (0.3, 0, 0.3), [W1.Box(-0.8, -0.8, -0.45, 1.6, 1.6, 0.9, flatp(LEAF)),
                                                                       W1.Box(-1.5, 0.3, 0.0, 1.0, 2.4, 0.4, flatp(LEAF_HI)),
                                                                       W1.Box(0.4, 0.3, 0.0, 1.0, 2.1, 0.4, flatp(LEAF_HI))]))
@@ -446,8 +458,8 @@ def homura_parts():
             t = (y - edge) / max(0.1, 12.6 - edge)
             return (FIRE1 if t > 0.7 else FIRE2 if t > 0.35 else FIRE3), 3
         return c, 1
-    L.append(Loft("skirt", "body", skirt_rings(6.9, 12.6, 3.3, 4.8), skirt, sides=24, cap=(False, False), skirt=True, pxu=192))
-    L.append(boot_loft(boots((36, 32, 38), (66, 62, 72), (50, 50, 56), 8.6, lace=FIRE2, cuff=(110, 112, 122), toe=(120, 124, 134)), 8.6))
+    L.append(Loft("skirt", "body", skirt_rings(6.8, 12.6, 3.05, 4.6), skirt, sides=24, cap=(False, False), skirt=True, pxu=192))
+    L.append(boot_loft(boots((36, 32, 38), (66, 62, 72), (50, 50, 56), 9.2, lace=FIRE2, cuff=(110, 112, 122), toe=(120, 124, 134)), 9.2))
     L.append(band_loft("belt", "body", torso_at, 7.1, 7.8, lambda u, y: (LEATHER_DK, 1), extra=0.5))
     P = []
     def apron(f, x, y, w, h):
@@ -455,8 +467,8 @@ def homura_parts():
         if f == "front" and ((x - cx) ** 2 / (w * 0.13) ** 2 + (y - cy) ** 2 / (h * 0.2) ** 2) < 1:
             return FIRE2
         return LEATHER
-    P.append(W1.Part("apron", "body", (0, 7.4, -2.25), (-0.3, 0, 0), [W1.Box(-2.4, 0, -0.3, 4.8, 4.8, 0.3, apron)]))
-    P.append(W1.Part("ember", "body", (0, -0.7, -1.2), (0, 0, 0.78), [W1.Box(-0.4, -0.4, -0.3, 0.8, 0.8, 0.45, W1.gem(FIRE3, FIRE1))]))
+    P.append(W1.Part("apron", "body", (0, 7.4, -2.0), (-0.3, 0, 0), [W1.Box(-2.4, 0, -0.3, 4.8, 4.8, 0.3, apron)]))
+    P.append(W1.Part("ember", "body", (0, -0.7, -1.05), (0, 0, 0.78), [W1.Box(-0.4, -0.4, -0.3, 0.8, 0.8, 0.45, W1.gem(FIRE3, FIRE1))]))
     P.append(W1.Part("goggles", "head", (0, -7.6, -2.6), (-0.4, 0, 0), [W1.Box(-4.3, -0.4, -0.3, 8.6, 0.8, 0.6, flatp((40, 32, 30)))]))
     P.append(W1.Part("lens_r", "goggles", (-1.7, 0, -0.5), (0, 0.1, 0), [W1.Box(-1.2, -1.0, -0.6, 2.4, 2.0, 1.2,
               lambda f, x, y, w, h: (255, 220, 160) if f == "front" and x < w * 0.35 and y < h * 0.35 else (226, 120, 40) if f == "front" else (110, 90, 60))]))
@@ -483,22 +495,22 @@ def kura_parts():
             frill = abs(abs(s) - (0.42 - max(0, y - 4) * 0.04)) < 0.05
             return (WHITE_SH if frill else WHITE), 2                                   # pechera blanca
         return shade_y(fold(CHEST, u, 18, 0.07), y, 0, 7, 0.08), 1
-    L = base_body(torso, skin_arm(band=(8.4, 9.0, WHITE)), legwear(WHITE, 4.0, garter=CHEST_DK, garter_h=0.55))
+    L = base_body(torso, skin_arm(band=(9.0, 9.6, WHITE)), legwear(WHITE, 4.0, garter=CHEST_DK, garter_h=0.55))
     L.append(puff_sleeve(lambda u, y: (fold(CHEST, u, 8, 0.1), 1), WHITE))
     def skirt(u, y):
         if y > 11.6:
             return (WHITE if (int(u * 64) % 2 == 0 or y < 11.85) else WHITE_SH), 2
         return fold(CHEST, u, 20, 0.14), 1
-    L.append(Loft("petticoat", "body", skirt_rings(8.0, 12.2, 3.6, 5.0), lambda u, y: ((WHITE if int(u * 80) % 2 else WHITE_SH), 1),
+    L.append(Loft("petticoat", "body", skirt_rings(8.0, 12.2, 3.4, 4.8), lambda u, y: ((WHITE if int(u * 80) % 2 else WHITE_SH), 1),
                   sides=24, cap=(False, False), skirt=True, pxu=128))
-    L.append(Loft("skirt", "body", skirt_rings(6.9, 12.0, 3.3, 5.3), skirt, sides=24, cap=(False, False), skirt=True, pxu=192))
-    L.append(boot_loft(boots((74, 44, 28), (112, 72, 48), (40, 26, 20), 11.2, cuff=(74, 44, 28)), 11.2))
+    L.append(Loft("skirt", "body", skirt_rings(6.8, 12.0, 3.05, 5.0), skirt, sides=24, cap=(False, False), skirt=True, pxu=192))
+    L.append(boot_loft(boots((74, 44, 28), (112, 72, 48), (40, 26, 20), 11.8, cuff=(74, 44, 28)), 11.8))
     L.append(band_loft("headband", "head", lambda y: (y, 4.25, 4.25, 0, 0), -7.6, -7.0, lambda u, y: (CHEST_DK, 1), extra=0.0, sides=24, p=3.0))
     P = []
     P.append(W1.Part("latch", "body", (0, 1.4, -2.45), (0.15, 0, 0), [W1.Box(-0.75, -0.4, -0.35, 1.5, 1.8, 0.5, flatp(GOLD)),
                                                                      W1.Box(-0.28, 0.25, -0.5, 0.56, 0.56, 0.2, flatp((60, 40, 20)))]))
-    P += [p for p in W1.bow("back_bow", "body", (0, 6.6, 1.95), (0, 0, 0), flatp(WHITE), 1.4)]
-    P.append(W1.Part("apron", "body", (0, 7.2, -2.35), (-0.32, 0, 0), [W1.Box(-2.4, 0, -0.3, 4.8, 4.4, 0.3, flatp(WHITE)),
+    P += [p for p in W1.bow("back_bow", "body", (0, 6.6, 1.65), (0, 0, 0), flatp(WHITE), 1.3)]
+    P.append(W1.Part("apron", "body", (0, 7.2, -2.05), (-0.32, 0, 0), [W1.Box(-2.4, 0, -0.3, 4.8, 4.4, 0.3, flatp(WHITE)),
                                                                        W1.Box(-2.6, 4.3, -0.35, 5.2, 0.7, 0.4, W1.frill(WHITE, WHITE_SH))]))
     def chestbox(f, x, y, w, h):
         if y < 6 or abs(y - h * 0.38) < 3:
@@ -506,7 +518,7 @@ def kura_parts():
         if f == "back" and abs(x - w / 2) < 5 and abs(y - h * 0.45) < 7:
             return GOLD
         return CHEST if (x // 6) % 2 else CHEST_HI
-    P.append(W1.Part("backpack", "body", (0, 0.9, 1.9), (0.06, 0, 0), [W1.Box(-2.9, 0, 0, 5.8, 5.2, 2.7, chestbox)]))
+    P.append(W1.Part("backpack", "body", (0, 0.9, 1.6), (0.06, 0, 0), [W1.Box(-2.6, 0, 0, 5.2, 4.8, 2.5, chestbox)]))
     P.append(W1.Part("headdress", "head", (0, -7.6, -1.5), (-0.45, 0, 0), [W1.Box(-3.4, -1.5, -0.4, 6.8, 1.7, 0.8, W1.frill(WHITE, WHITE_SH))]))
     P += W1.bow("hair_bow", "head", (3.2, -7.0, 1.6), (0, -0.6, 0), flatp(CHEST_DK), 0.8)
     return L, P
@@ -531,7 +543,7 @@ def shiori_parts():
                 return DIA, 5
             return OBS_DK, 2                                                           # corsé
         return shade_y(fold(OBS, u, 16, 0.08), y, 0, 7, 0.08), 1
-    L = base_body(torso, lambda u, y: ((SKIN, 0) if y > 8.9 else (fold(OBS, u, 8, 0.08), 1)),
+    L = base_body(torso, lambda u, y: ((SKIN, 0) if y > 9.5 else (fold(OBS, u, 8, 0.08), 1)),
                   legwear((30, 24, 40), 0.2), neck=lambda u, y: ((DIA_DK, 2) if y > -1.0 else (SKIN, 0)))
     def skirt(u, y):
         if y > 14.0 and int(u * 48) % 3 != 0:
@@ -539,14 +551,14 @@ def shiori_parts():
         if 13.6 < y <= 14.0:
             return DIA_DK, 3
         return fold(OBS, u, 18, 0.12), 1
-    L.append(Loft("skirt", "body", skirt_rings(6.9, 14.6, 3.3, 4.7, 0.78), skirt, sides=24, cap=(False, False), skirt=True, pxu=192))
-    L.append(Loft("bell_r", "right_arm", [(5.0, 1.05, 1.05, 0, 0), (7.0, 1.4, 1.4, 0, 0), (8.6, 2.0, 2.0, 0, 0.05)],
-                  lambda u, y: ((DIA, 2) if y > 8.2 else (fold(OBS_HI, u, 8, 0.1), 1)), sides=16, cap=(False, False), pxu=64))
-    L.append(boot_loft(boots(OBS, OBS_HI, (20, 16, 28), 8.4, lace=DIA, cuff=DIA_DK), 8.4))
+    L.append(Loft("skirt", "body", skirt_rings(6.8, 14.6, 3.05, 4.5, 0.78), skirt, sides=24, cap=(False, False), skirt=True, pxu=192))
+    L.append(Loft("bell_r", "right_arm", [(5.2, 0.92, 0.92, 0, 0), (7.4, 1.25, 1.25, 0, 0), (9.2, 1.8, 1.8, 0, 0.05)],
+                  lambda u, y: ((DIA, 2) if y > 8.8 else (fold(OBS_HI, u, 8, 0.1), 1)), sides=16, cap=(False, False), pxu=64))
+    L.append(boot_loft(boots(OBS, OBS_HI, (20, 16, 28), 9.0, lace=DIA, cuff=DIA_DK), 9.0))
     L.append(band_loft("circlet", "head", lambda y: (y, 4.25, 4.25, 0, 0), -7.0, -6.5, lambda u, y: (GOLD, 1), extra=0.0, sides=24, p=3.0))
     P = []
-    P.append(W1.Part("brooch", "body", (0, 0.7, -2.1), (0, 0, 0.78), [W1.Box(-0.65, -0.65, -0.35, 1.3, 1.3, 0.55, W1.gem(DIA, DIA_HI))]))
-    P.append(W1.Part("cape", "body", (0, -0.4, 1.95), (0.1, 0, 0), [W1.Box(-4.0, 0, 0, 8.0, 14.8, 0.4,
+    P.append(W1.Part("brooch", "body", (0, 0.7, -1.85), (0, 0, 0.78), [W1.Box(-0.65, -0.65, -0.35, 1.3, 1.3, 0.55, W1.gem(DIA, DIA_HI))]))
+    P.append(W1.Part("cape", "body", (0, -0.4, 1.7), (0.1, 0, 0), [W1.Box(-3.5, 0, 0, 7.0, 15.4, 0.4,
               lambda f, x, y, w, h: RED_DK if y >= h - 6 else RED)]))
     P.append(W1.Part("tiara_gem", "head", (0, -6.9, -4.35), (0, 0, 0.78), [W1.Box(-0.8, -0.8, -0.35, 1.6, 1.6, 0.6, W1.gem(DIA, DIA_HI))]))
     P.append(W1.Part("earring_r", "head", (-4.25, -2.6, -0.6), (0, 0, 0), [W1.Box(-0.25, 0, -0.25, 0.5, 1.3, 0.5, W1.gem(DIA, DIA_HI))]))
@@ -569,15 +581,40 @@ def flatp(c):
     return fn
 
 
+def enrich(L, seed):
+    """Cabello más rico: cada mechón con su propio tono y mechones finos extra entre ellos (capas y volumen)."""
+    rnd = random.Random(seed)
+    out = []
+    for lk in L:
+        lk = list(lk)
+        kind = int(lk[10])
+        lk[9] = round(rnd.uniform(0.86, 1.1), 3)
+        out.append(lk)
+        if lk[3] > 1.5 and kind in (H.KIND_LONG, H.KIND_BOB, H.KIND_BANG, H.KIND_SOFTBANG):
+            for sgn in (-1, 1):
+                if kind in (H.KIND_BANG, H.KIND_SOFTBANG) and sgn > 0:
+                    continue
+                t = list(lk)
+                t[0] = lk[0] + sgn * rnd.uniform(0.05, 0.09)
+                t[3] = lk[3] * rnd.uniform(0.82, 1.04)
+                t[4] = lk[4] + rnd.uniform(0.0, 0.08)
+                t[6] = lk[6] * 0.55
+                t[7] = lk[7] * 0.85
+                t[8] = lk[8] + rnd.uniform(0.05, 0.2)
+                t[9] = round(rnd.uniform(0.8, 1.16), 3)
+                out.append(t)
+    return out
+
+
 WAIFUS = {
-    "kozue": dict(hair=KZ, parts=kozue_parts, locks=W1.kozue_locks,
+    "kozue": dict(hair=KZ, parts=kozue_parts, locks=lambda: enrich(W1.kozue_locks(), 1),
                   face=make_face(((30, 90, 40), (84, 170, 76), (190, 240, 150)), (54, 30, 22), (110, 66, 38), KZ)),
-    "homura": dict(hair=HM, parts=homura_parts, locks=W1.homura_locks,
+    "homura": dict(hair=HM, parts=homura_parts, locks=lambda: enrich(W1.homura_locks(), 2),
                    face=make_face(((140, 46, 10), (236, 140, 32), (255, 224, 128)), (64, 18, 16), (160, 44, 28), HM, sharp=True)),
-    "kura": dict(hair=KR, parts=kura_parts, locks=W1.kura_locks,
+    "kura": dict(hair=KR, parts=kura_parts, locks=lambda: enrich(W1.kura_locks(), 3),
                  face=make_face(((24, 60, 150), (72, 134, 228), (176, 220, 255)), (104, 70, 38), (196, 156, 86), KR)),
-    "shiori": dict(hair=SH, parts=shiori_parts, locks=W1.shiori_locks,
-                   face=make_face(((18, 98, 112), (58, 202, 202), (206, 255, 250)), (34, 20, 66), (64, 44, 128), SH, blush=(236, 150, 186))),
+    "shiori": dict(hair=SH, parts=shiori_parts, locks=lambda: enrich(W1.shiori_locks(), 4),
+                   face=make_face(((18, 98, 112), (58, 202, 202), (206, 255, 250)), (34, 20, 66), (64, 44, 128), SH, blush=(236, 160, 190))),
 }
 EXPRS = [("normal", ""), ("blink", "_blink"), ("happy", "_happy"), ("surprised", "_surprised"), ("focused", "_focused"), ("tired", "_tired")]
 

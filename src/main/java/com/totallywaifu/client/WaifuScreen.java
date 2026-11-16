@@ -23,7 +23,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
 
     public WaifuScreen(WaifuMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        imageWidth = 196;
+        imageWidth = 176;
         imageHeight = 242;
         inventoryLabelY = WaifuMenu.INV_Y - 11;
     }
@@ -31,7 +31,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
     @Override
     protected void init() {
         super.init();
-        int x = leftPos + 82, y = topPos + 18;
+        int x = leftPos + 64, y = topPos + 18;
         follow = addRenderableWidget(btn("Seguir", WaifuMenu.B_FOLLOW, x, y, "Te sigue a todas partes (y te defiende)"));
         stay = addRenderableWidget(btn("Quieta", WaifuMenu.B_STAY, x + 36, y, "Se queda aquí sin moverse"));
         work = addRenderableWidget(btn("Trabajar", WaifuMenu.B_WORK, x + 72, y, "Hace su oficio alrededor de este lugar"));
@@ -41,7 +41,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
             case SHIORI -> addRenderableWidget(btn("Dar XP", WaifuMenu.B_XP, x, y2, "Te entrega la experiencia que ha guardado"));
             default -> { }
         }
-        addRenderableWidget(btn("♥ Guardar", WaifuMenu.B_HEART, leftPos + 138, y2, "Se guarda en un Corazón de Waifu (con todo) para llevarla contigo"));
+        addRenderableWidget(btn("♥ Guardar", WaifuMenu.B_HEART, leftPos + 116, y2, "Se guarda en un Corazón de Waifu (con todo) para llevarla contigo"));
     }
 
     private Button btn(String text, int id, int x, int y, String tip) {
@@ -69,14 +69,14 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
         g.fillGradient(x + 1, y + 1, x + imageWidth - 1, y + imageHeight - 1, th[0], th[1]);
         g.fill(x + 1, y + 14, x + imageWidth - 1, y + 15, th[2]);
         // retrato
-        g.fill(x + 6, y + 16, x + 58, y + 90, 0x60000000);
-        if (menu.waifu != null) InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + 32, y + 86, 30, (float) (x + 32 - mx), (float) (y + 40 - my), menu.waifu);
+        g.fill(x + 6, y + 18, x + 60, y + 86, 0x60000000);
+        if (menu.waifu != null) InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + 33, y + 82, 30, (float) (x + 33 - mx), (float) (y + 36 - my), menu.waifu);
         // información
         String modeName = switch (menu.mode()) { case WaifuEntity.STAY -> "Quieta"; case WaifuEntity.WORK -> "Trabajando"; default -> "Siguiéndote"; };
-        g.drawString(font, "Modo: §f" + modeName, x + 82, y + 62, 0xFFFFE0F0, false);
-        if (menu.kind == WaifuKind.SHIORI) g.drawString(font, "XP guardada: §a" + menu.xp(), x + 82, y + 74, 0xFFFFE0F0, false);
+        g.drawString(font, "Modo: §f" + modeName, x + 64, y + 62, 0xFFFFE0F0, false);
+        if (menu.kind == WaifuKind.SHIORI) g.drawString(font, "XP guardada: §a" + menu.xp(), x + 64, y + 74, 0xFFFFE0F0, false);
         if (menu.kind == WaifuKind.KOZUE) {
-            g.drawString(font, "Pedido →", x + 126, y + 74, 0xFFFFE0F0, false);
+            g.drawString(font, "Pedido →", x + 106, y + 74, 0xFFFFE0F0, false);
             g.fill(x + WaifuMenu.ORDER_X - 2, y + WaifuMenu.ORDER_Y - 2, x + WaifuMenu.ORDER_X + 18, y + WaifuMenu.ORDER_Y + 18, th[2]);
         }
         g.drawString(font, "Mochila §7(la 1.ª fila es su reserva)", x + 8, y + WaifuMenu.BAG_Y - 10, 0xFFFFE0F0, false);

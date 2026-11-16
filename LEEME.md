@@ -49,36 +49,14 @@ En modo **Seguir** te acompañan y te defienden.
 - La falda se abre de verdad al caminar: se deforma la malla.
 - Generador: `tools/gen_smooth.py` (la vista previa usa la misma geometría que el juego).
 
-## Novedades 1.3.0: estilo cúbico detallado con cara de anime
-Las cuatro comparten ahora la misma base de diseño:
-- Complexión delgada y atlética.
-- Melena **bob** en bloques, con flequillo suave, volumen a los lados y algún mechón rebelde.
-- Ojos grandes de anime con brillos marcados.
-- **Orejas puntiagudas de elfa** con la punta de color.
-- Piel pálida y limpia.
-
-Cada una conserva su color y su ropa de oficio:
-| Waifu | Cabello | Ojos | Puntas de las orejas |
-|---|---|---|---|
-| **Shiori** (la descripción exacta) | negro | turquesa | lavanda |
-| Kozue | castaño | verdes | verde hoja |
-| Homura | rojo, con dos coletitas | ámbar | naranja |
-| Kura | rubio | azules | rosa |
-
-**Estilo**: geometría estrictamente cúbica (low-poly Minecraft), con texturas pintadas en alta resolución, limpias y sin ruido.
-
-**Capas separadas**, cada una con su textura:
-- `skin*.png`: cuerpo y cara, con 6 expresiones.
-- `clothes.png`: la ropa 3D.
-- `hair.png`: el cabello, las orejas y los accesorios.
-- La **armadura** del juego: el panel tiene 4 ranuras (casco, pechera, grebas, botas). La ropa que tapa la armadura se oculta sola.
-
-**Pose**: en reposo están de pie, con los brazos un poco levantados, sosteniendo su objeto frente al pecho:
-- Kozue: una mesa de crafteo.
-- Homura: un horno.
-- Kura: un cofre.
-- Shiori: un libro encantado.
-
-**Skins de jugador**: la carpeta `skins/` tiene la skin de cada una en formato "slim" (brazos delgados):
-- 64x64, para usarla como jugador.
-- 512x512 (HD).
+## Novedades 1.4.0 (sobre el estilo de la 1.2.0)
+- **Caras nuevas al estilo de las skins detalladas** (no anime):
+  - Ojos almendrados y entrecerrados con pestaña gruesa y alita, sombra de párpado, iris de tres tonos con pupila y brillo, y pestaña inferior.
+  - Cejas finas, nariz sombreada, labios con dos tonos y rubor suave.
+  - Seis expresiones.
+- **Más altas y estilizadas**: piernas más largas y finas (muslo, rodilla, pantorrilla y tobillo), cabeza un poco más pequeña y tamaño general mayor.
+- **Torso femenino**: hombros y espalda más estrechos, cintura de avispa y cadera ancha; brazos más finos y largos y cuello esbelto.
+- **Cabello mejorado**:
+  - Mechones finos extra entre los mechones, en capas, para dar más volumen.
+  - Cada mechón tiene su propio tono.
+  - Degradado de la raíz a las puntas y brillo en la coronilla.

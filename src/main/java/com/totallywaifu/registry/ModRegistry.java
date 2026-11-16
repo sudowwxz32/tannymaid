@@ -37,7 +37,7 @@ public final class ModRegistry {
         int[][] colors = {{0xB08452, 0x54943F}, {0x707074, 0xF08C28}, {0xA27034, 0xDEB03C}, {0x241A34, 0x5CDCD6}};
         for (WaifuKind k : WaifuKind.values()) {
             RegistryObject<EntityType<WaifuEntity>> t = ENTITIES.register(k.id(), () -> EntityType.Builder.<WaifuEntity>of(WaifuEntity::new, MobCategory.CREATURE)
-                    .sized(0.6F, 1.8F).clientTrackingRange(10).build(k.id()));
+                    .sized(0.6F, 1.95F).clientTrackingRange(10).build(k.id()));
             TYPES.put(k, t);
             int[] c = colors[k.ordinal()];
             EGGS.put(k, ITEMS.register(k.id() + "_spawn_egg", () -> new ForgeSpawnEggItem(t, c[0], c[1], new Item.Properties())));
