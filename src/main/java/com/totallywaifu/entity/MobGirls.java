@@ -366,47 +366,6 @@ final class MobGirls {
             case GOLEM -> {
                 if (p != null && t % 100 == 0) buff(p, MobEffects.DAMAGE_RESISTANCE, 160, 0);
             }
-            case CABALLO -> {
-                if (held.isEmpty() && !w.isVehicle() && !p.isPassenger()) {
-                    w.getNavigation().stop();
-                    p.startRiding(w);
-                    w.say(p, "¡Sube! ¡Agárrate fuerte! ♥");
-                    w.cheer(60);
-                    return InteractionResult.CONSUME;
-                }
-            }
-            case PIGLIN -> {
-                if (held.is(Items.GOLD_INGOT)) {
-                    if (!p.getAbilities().instabuild) held.shrink(1);
-                    ServerLevel lv = (ServerLevel) w.level();
-                    net.minecraft.world.level.storage.loot.LootTable lt = lv.getServer().getLootData().getLootTable(net.minecraft.world.level.storage.loot.BuiltInLootTables.PIGLIN_BARTERING);
-                    List<ItemStack> got = lt.getRandomItems(new net.minecraft.world.level.storage.loot.LootParams.Builder(lv)
-                            .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, w)
-                            .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.PIGLIN_BARTER));
-                    for (ItemStack g : got) if (!p.getInventory().add(g)) p.drop(g, false);
-                    w.playSound(SoundEvents.PIGLIN_ADMIRING_ITEM, 1.0F, 1.3F);
-                    w.cheer(60);
-                    w.say(p, "¡Oro! ♥ Toma, un trato justo.");
-                    return InteractionResult.CONSUME;
-                }
-            }
-            case ALLAY -> {
-                if (!held.isEmpty() && !held.is(Items.POPPY)) {
-                    w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, held.copyWithCount(1));
-                    w.say(p, "¡Entendido! Buscaré todos los " + held.getHoverName().getString() + " que encuentre ♪");
-                    w.playSound(SoundEvents.ALLAY_ITEM_GIVEN, 1.0F, 1.0F);
-                    return InteractionResult.CONSUME;
-                }
-            }
-            case PANDA -> {
-                if (held.is(Items.BAMBOO) && w.getHealth() < w.getMaxHealth()) {
-                    if (!p.getAbilities().instabuild) held.shrink(1);
-                    w.heal(15.0F);
-                    w.playSound(SoundEvents.PANDA_EAT, 1.0F, 1.2F);
-                    w.cheer(60);
-                    return InteractionResult.CONSUME;
-                }
-            }
             case ALDEANA -> {
                 if (p != null && t % 600 == 0) { buff(p, MobEffects.HERO_OF_THE_VILLAGE, 1400, 0); buff(p, MobEffects.LUCK, 1400, 0); }
             }
@@ -560,6 +519,47 @@ final class MobGirls {
                     w.heal(25.0F);
                     w.playSound(SoundEvents.IRON_GOLEM_REPAIR, 1.0F, 1.2F);
                     w.cheer(40);
+                    return InteractionResult.CONSUME;
+                }
+            }
+            case CABALLO -> {
+                if (held.isEmpty() && !w.isVehicle() && !p.isPassenger()) {
+                    w.getNavigation().stop();
+                    p.startRiding(w);
+                    w.say(p, "¡Sube! ¡Agárrate fuerte! ♥");
+                    w.cheer(60);
+                    return InteractionResult.CONSUME;
+                }
+            }
+            case PIGLIN -> {
+                if (held.is(Items.GOLD_INGOT)) {
+                    if (!p.getAbilities().instabuild) held.shrink(1);
+                    ServerLevel lv = (ServerLevel) w.level();
+                    net.minecraft.world.level.storage.loot.LootTable lt = lv.getServer().getLootData().getLootTable(net.minecraft.world.level.storage.loot.BuiltInLootTables.PIGLIN_BARTERING);
+                    List<ItemStack> got = lt.getRandomItems(new net.minecraft.world.level.storage.loot.LootParams.Builder(lv)
+                            .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, w)
+                            .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.PIGLIN_BARTER));
+                    for (ItemStack g : got) if (!p.getInventory().add(g)) p.drop(g, false);
+                    w.playSound(SoundEvents.PIGLIN_ADMIRING_ITEM, 1.0F, 1.3F);
+                    w.cheer(60);
+                    w.say(p, "¡Oro! ♥ Toma, un trato justo.");
+                    return InteractionResult.CONSUME;
+                }
+            }
+            case ALLAY -> {
+                if (!held.isEmpty() && !held.is(Items.POPPY)) {
+                    w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, held.copyWithCount(1));
+                    w.say(p, "¡Entendido! Buscaré todos los " + held.getHoverName().getString() + " que encuentre ♪");
+                    w.playSound(SoundEvents.ALLAY_ITEM_GIVEN, 1.0F, 1.0F);
+                    return InteractionResult.CONSUME;
+                }
+            }
+            case PANDA -> {
+                if (held.is(Items.BAMBOO) && w.getHealth() < w.getMaxHealth()) {
+                    if (!p.getAbilities().instabuild) held.shrink(1);
+                    w.heal(15.0F);
+                    w.playSound(SoundEvents.PANDA_EAT, 1.0F, 1.2F);
+                    w.cheer(60);
                     return InteractionResult.CONSUME;
                 }
             }
