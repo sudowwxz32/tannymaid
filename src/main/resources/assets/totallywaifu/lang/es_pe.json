@@ -72,5 +72,7 @@
   "item.totallywaifu.allay_spawn_egg": "Huevo de Lumi",
   "entity.totallywaifu.rana": "Croa (chica rana)",
   "item.totallywaifu.rana_spawn_egg": "Huevo de Croa",
-  "entity.totallywaifu.disparo": "Disparo de waifu"
+  "entity.totallywaifu.disparo": "Disparo de waifu",
+  "key.categories.totallywaifu": "Totally Waifu?",
+  "key.totallywaifu.coleccion": "Abrir ♥ Mis Waifus"
 }
