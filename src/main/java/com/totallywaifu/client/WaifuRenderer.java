@@ -14,11 +14,25 @@ public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> 
 
     public WaifuRenderer(EntityRendererProvider.Context ctx, WaifuKind kind) {
         super(ctx, new WaifuModel(ctx.bakeLayer(WaifuLayers.body(kind)), kind), 0.45F);
+        this.ctx = ctx;
         body = tex(kind, "props");
         addLayer(new WaifuLayers.Body(this, kind));
         addLayer(new WaifuLayers.Face(this, kind));
         addLayer(new WaifuLayers.Hair(this, kind));
         if (kind == WaifuKind.SHIORI) addLayer(new WaifuLayers.Book(this, ctx.getModelSet()));
+    }
+
+    private NoaRenderer noa;
+    private final EntityRendererProvider.Context ctx;
+
+    @Override
+    public void render(WaifuEntity e, float yaw, float partial, PoseStack pose, net.minecraft.client.renderer.MultiBufferSource buf, int light) {
+        if (e.getLook() == 1) {
+            if (noa == null) noa = new NoaRenderer(ctx);
+            noa.render(e, yaw, partial, pose, buf, light);
+            return;
+        }
+        super.render(e, yaw, partial, pose, buf, light);
     }
 
     public static ResourceLocation tex(WaifuKind k, String n) {

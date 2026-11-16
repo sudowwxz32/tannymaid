@@ -60,3 +60,14 @@ En modo **Seguir** te acompañan y te defienden.
   - Mechones finos extra entre los mechones, en capas, para dar más volumen.
   - Cada mechón tiene su propio tono.
   - Degradado de la raíz a las puntas y brillo en la coronilla.
+
+## Novedades 1.5.0: aspecto "Noa"
+- Aspecto nuevo **Noa**, en estilo de bloques como la hoja de personaje de referencia:
+  - Bob negro con flequillo recto y puntas abultadas a los lados.
+  - Orejas de elfa con interior lavanda, ojos turquesa con pestaña gruesa y piel pálida.
+  - Chaqueta celeste corta con cuello esponjoso, lazo negro, bolsillos y puños.
+  - Enterizo negro con emblema rojo, cinturón y tiras rojas.
+  - Guantes sin dedos, medias oscuras transparentes con liga y botas blancas de plataforma con detalles rojos.
+- En el panel de cualquier waifu (Shift + clic derecho), el botón **Aspecto** cambia entre su ropa y Noa. Sus funciones no cambian y el aspecto se guarda.
+- Cuando está quieta, sostiene las manos frente al pecho.
+- Generador: `tools/gen_noa.py`.

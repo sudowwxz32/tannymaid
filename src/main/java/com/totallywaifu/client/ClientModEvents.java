@@ -17,6 +17,8 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void layers(EntityRenderersEvent.RegisterLayerDefinitions e) {
         for (WaifuKind k : WaifuKind.values()) e.registerLayerDefinition(WaifuLayers.body(k), WaifuLayers.bodyDef(k));
+        e.registerLayerDefinition(NoaRenderer.BODY, NoaModels::body);
+        e.registerLayerDefinition(NoaRenderer.FACE, NoaModels::face);
     }
 
     @SubscribeEvent

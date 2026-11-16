@@ -41,6 +41,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
             case SHIORI -> addRenderableWidget(btn("Dar XP", WaifuMenu.B_XP, x, y2, "Te entrega la experiencia que ha guardado"));
             default -> { }
         }
+        addRenderableWidget(btn("Aspecto", WaifuMenu.B_LOOK, leftPos + 116, topPos + 58, "Cambia su apariencia: la suya o Noa (estilo de bloques)"));
         addRenderableWidget(btn("♥ Guardar", WaifuMenu.B_HEART, leftPos + 116, y2, "Se guarda en un Corazón de Waifu (con todo) para llevarla contigo"));
     }
 
@@ -73,7 +74,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
         if (menu.waifu != null) InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + 33, y + 82, 30, (float) (x + 33 - mx), (float) (y + 36 - my), menu.waifu);
         // información
         String modeName = switch (menu.mode()) { case WaifuEntity.STAY -> "Quieta"; case WaifuEntity.WORK -> "Trabajando"; default -> "Siguiéndote"; };
-        g.drawString(font, "Modo: §f" + modeName, x + 64, y + 62, 0xFFFFE0F0, false);
+        g.drawString(font, "§f" + modeName, x + 64, y + 62, 0xFFFFE0F0, false);
         if (menu.kind == WaifuKind.SHIORI) g.drawString(font, "XP guardada: §a" + menu.xp(), x + 64, y + 74, 0xFFFFE0F0, false);
         if (menu.kind == WaifuKind.KOZUE) {
             g.drawString(font, "Pedido →", x + 106, y + 74, 0xFFFFE0F0, false);
