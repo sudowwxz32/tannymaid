@@ -8,7 +8,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public final class Net {
     private Net() {}
 
-    private static final String VERSION = "4";
+    private static final String VERSION = "5";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(TotallyWaifu.MODID, "main"),
             () -> VERSION, VERSION::equals, VERSION::equals);
 

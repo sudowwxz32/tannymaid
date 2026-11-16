@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:beacon"
+    },
+    "title": {
+      "text": "✦ ¡Extras completos!"
+    },
+    "description": {
+      "text": "Despierta a las 12 waifus extra: eres la leyenda de Totally Waifu?"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "totallywaifu:sorpresa",
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

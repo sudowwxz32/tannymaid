@@ -74,5 +74,21 @@
   "item.totallywaifu.rana_spawn_egg": "Huevo de Croa",
   "entity.totallywaifu.disparo": "Disparo de waifu",
   "key.categories.totallywaifu": "Totally Waifu?",
-  "key.totallywaifu.coleccion": "Abrir ♥ Mis Waifus"
+  "key.totallywaifu.coleccion": "Abrir ♥ Mis Waifus",
+  "entity.totallywaifu.delfin": "Marina (chica delfín)",
+  "item.totallywaifu.delfin_spawn_egg": "Huevo de Marina",
+  "entity.totallywaifu.tortuga": "Tortu (chica tortuga)",
+  "item.totallywaifu.tortuga_spawn_egg": "Huevo de Tortu",
+  "entity.totallywaifu.loro": "Lori (chica lora)",
+  "item.totallywaifu.loro_spawn_egg": "Huevo de Lori",
+  "entity.totallywaifu.oso": "Nevada (chica osa polar)",
+  "item.totallywaifu.oso_spawn_egg": "Huevo de Nevada",
+  "entity.totallywaifu.strider": "Brasa (chica strider)",
+  "item.totallywaifu.strider_spawn_egg": "Huevo de Brasa",
+  "entity.totallywaifu.shulker": "Shula (chica shulker)",
+  "item.totallywaifu.shulker_spawn_egg": "Huevo de Shula",
+  "entity.totallywaifu.phantom": "Noctis (chica phantom)",
+  "item.totallywaifu.phantom_spawn_egg": "Huevo de Noctis",
+  "entity.totallywaifu.guardian": "Abisa (chica guardiana)",
+  "item.totallywaifu.guardian_spawn_egg": "Huevo de Abisa"
 }

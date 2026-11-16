@@ -309,6 +309,28 @@ final class MobGirls {
                 }
                 if (every(w, "berry", 3000)) give(w, new ItemStack(w.getRandom().nextBoolean() ? Items.SWEET_BERRIES : Items.GLOW_BERRIES, 3), "¡bayas para ti!");
             }
+            case SHULKER -> {
+                if (!active || work.cooldown() > 0) return;
+                Mob m = target(w, 16);
+                if (m == null) return;
+                w.getLookControl().setLookAt(m, 30, 30);
+                line(lv, w.position().add(0, 1.4, 0), m.position().add(0, m.getBbHeight() * 0.5, 0), ParticleTypes.END_ROD, 12);
+                m.hurt(w.damageSources().indirectMagic(w, w), 5.0F);
+                m.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 60, 1));
+                w.playSound(SoundEvents.SHULKER_SHOOT, 1.0F, 1.2F);
+                work.cooldown(50);
+            }
+            case GUARDIAN -> {
+                if (!active || work.cooldown() > 0) return;
+                Mob m = target(w, 16);
+                if (m == null) return;
+                w.getLookControl().setLookAt(m, 30, 30);
+                line(lv, w.position().add(0, 1.3, 0), m.position().add(0, m.getBbHeight() * 0.5, 0),
+                        new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(1.0F, 0.6F, 0.2F), 1.2F), 16);
+                m.hurt(w.damageSources().indirectMagic(w, w), 12.0F);
+                w.playSound(SoundEvents.GUARDIAN_ATTACK, 1.0F, 1.2F);
+                work.cooldown(60);
+            }
             case RANA -> {
                 if (!active || work.cooldown() > 0 || t % 10 != 0) return;
                 Mob m = lv.getEntitiesOfClass(Mob.class, w.getBoundingBox().inflate(7), q -> q.isAlive() && q instanceof Enemy && q.getBbHeight() < 1.0F && w.hasLineOfSight(q))
@@ -466,6 +488,55 @@ final class MobGirls {
             }
             case RANA -> {
                 if (p != null && active && t % 100 == 0) buff(p, MobEffects.JUMP, 160, 1);
+            }
+            case DELFIN -> {
+                Player q = near(w, 20);
+                if (q != null && q.isInWater() && t % 60 == 0) { buff(q, MobEffects.DOLPHINS_GRACE, 200, 0); buff(q, MobEffects.WATER_BREATHING, 300, 0); }
+                if (every(w, "sea", 7000)) give(w, new ItemStack(w.getRandom().nextInt(5) == 0 ? Items.NAUTILUS_SHELL : Items.PRISMARINE_SHARD, w.getRandom().nextInt(5) == 0 ? 1 : 4), "¡tesoros del mar! ♥");
+            }
+            case TORTUGA -> {
+                if (p != null && t % 100 == 0 && p.getHealth() < p.getMaxHealth() * 0.5F) {
+                    buff(p, MobEffects.DAMAGE_RESISTANCE, 160, 2);
+                    w.say(p, "¡Escóndete en mi caparazón! (resistencia)");
+                }
+                if (every(w, "scute", 9000)) give(w, new ItemStack(Items.SCUTE), "una escama para ti ♥");
+                if (every(w, "seagrass", 4000)) give(w, new ItemStack(Items.SEAGRASS, 4), null);
+            }
+            case LORO -> {
+                Player q = near(w, 24);
+                if (q != null && t % 40 == 0 && timer(w, "warn") <= 0) {
+                    Mob m = lv.getEntitiesOfClass(Mob.class, q.getBoundingBox().inflate(14, 6, 14), x -> x instanceof Enemy && x.isAlive())
+                            .stream().min(Comparator.comparingDouble(q::distanceToSqr)).orElse(null);
+                    if (m != null) {
+                        q.displayClientMessage(net.minecraft.network.chat.Component.literal("§cLori§f: ¡Cuidado! ¡" + m.getName().getString() + " cerca! ¡Cuidado!"), true);
+                        w.playSound(SoundEvents.PARROT_AMBIENT, 1.0F, 1.4F);
+                        m.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100, 0));
+                        set(w, "warn", 400);
+                    }
+                }
+                if (timer(w, "warn") > 0) set(w, "warn", timer(w, "warn") - 1);
+                if (every(w, "feather", 4000)) give(w, new ItemStack(Items.FEATHER, 3), "¡plumas de colores!");
+            }
+            case OSO -> {
+                if (p != null && t % 20 == 0) p.setTicksFrozen(0);
+                if (every(w, "fish", 5000)) give(w, new ItemStack(w.getRandom().nextBoolean() ? Items.COD : Items.SALMON, 3), "¡pesqué para ti!");
+            }
+            case STRIDER -> {
+                if (p != null && t % 100 == 0 && lv.dimensionType().ultraWarm()) buff(p, MobEffects.FIRE_RESISTANCE, 200, 0);
+                if (every(w, "fungus", 6000)) give(w, new ItemStack(w.getRandom().nextBoolean() ? Items.WARPED_FUNGUS : Items.STRING, 2), "te traje algo del Nether ♥");
+            }
+            case SHULKER -> {
+                if (every(w, "shell", 24000)) give(w, new ItemStack(Items.SHULKER_SHELL), "...un caparazón. ¡Es un regalo especial!");
+            }
+            case PHANTOM -> {
+                if (p != null && p.fallDistance > 3 && t % 5 == 0) buff(p, MobEffects.SLOW_FALLING, 80, 0);
+                if (t % 20 == 0) for (Phantom ph : lv.getEntitiesOfClass(Phantom.class, w.getBoundingBox().inflate(24))) ph.setTarget(null);
+                if (every(w, "membrane", 6000)) give(w, new ItemStack(Items.PHANTOM_MEMBRANE, 2), "membranas para ti");
+            }
+            case GUARDIAN -> {
+                Player q = near(w, 20);
+                if (q != null && q.isInWater() && t % 60 == 0) buff(q, MobEffects.CONDUIT_POWER, 300, 0);
+                if (every(w, "crystal", 6000)) give(w, new ItemStack(Items.PRISMARINE_CRYSTALS, 3), "cristales del océano");
             }
             default -> { }
         }

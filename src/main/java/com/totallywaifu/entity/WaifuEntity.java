@@ -257,6 +257,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         if (sleeper != null || isSitting()) Sleep.tick(this);
         work.always();
         if (tickCount % 40 == 0 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.refresh(sp, this);
+        if (tickCount % 100 == 5 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp && com.totallywaifu.data.Collection.surprisesUnlocked(sp)) bless();
     }
 
     @Override
@@ -313,6 +314,28 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         }
         if (hit) MobGirls.onHit(this, t);
         return hit;
+    }
+
+    private static final UUID BLESS_HP = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b01"), BLESS_ATK = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b02");
+
+    /** Bendición ♥ (colección completa): +20 de vida y +4 de ataque. */
+    private void bless() {
+        var hp = getAttribute(Attributes.MAX_HEALTH);
+        if (hp != null && hp.getModifier(BLESS_HP) == null) {
+            hp.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(BLESS_HP, "Bendición", 20.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+            heal(20.0F);
+        }
+        var atk = getAttribute(Attributes.ATTACK_DAMAGE);
+        if (atk != null && atk.getModifier(BLESS_ATK) == null) {
+            atk.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(BLESS_ATK, "Bendición", 4.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+        }
+    }
+
+    @Override
+    public boolean canStandOnFluid(net.minecraft.world.level.material.FluidState f) {
+        return kind == WaifuKind.STRIDER && f.is(net.minecraft.tags.FluidTags.LAVA);
     }
 
     @Override

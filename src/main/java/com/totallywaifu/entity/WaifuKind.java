@@ -52,7 +52,16 @@ public enum WaifuKind {
     ZORRO("Kitsu", "Zorro", null, "§6", "Sorpresa: rapidísima, salta sobre los monstruos y te trae bayas y objetos", 34, 0.4, 7, 2, 0xE67C2C, 0xFAF6F0, 0.93F),
     AJOLOTE("Ondina", "Ajolote", null, "§d", "Sorpresa: respiración acuática y regeneración en el agua, caza ahogados y guardianes", 34, 0.34, 6, 2, 0xF6B0CC, 0xDE5092, 0.9F),
     ALLAY("Lumi", "Allay", null, "§b", "Sorpresa: recoge objetos de muy lejos, vuela, y su música te cura", 26, 0.38, 2, 1, 0x78D2FA, 0xBEF0FF, 0.75F),
-    RANA("Croa", "Rana", null, "§2", "Sorpresa: lengua que atrapa monstruos pequeños, te da salto y luces de rana", 30, 0.34, 6, 2, 0x6EB046, 0xF8D246, 0.9F);
+    RANA("Croa", "Rana", null, "§2", "Sorpresa: lengua que atrapa monstruos pequeños, te da salto y luces de rana", 30, 0.34, 6, 2, 0x6EB046, 0xF8D246, 0.9F),
+    // ---- 5.0: más extras
+    DELFIN("Marina", "Delfín", null, "§b", "Extra: nadas como un delfín y respiras bajo el agua; te trae tesoros del mar", 40, 0.36, 7, 2, 0x7898C0, 0xC4D6EC, 1.0F),
+    TORTUGA("Tortu", "Tortuga", null, "§2", "Extra: si estás herido te da el poder del maestro tortuga; te regala escamas y algas", 60, 0.26, 4, 10, 0x64A050, 0x78643C, 0.9F),
+    LORO("Lori", "Loro", null, "§c", "Extra: te avisa cuando hay monstruos cerca y te regala plumas de colores", 24, 0.38, 3, 1, 0xE22C28, 0x326EDC, 0.86F),
+    OSO("Nevada", "Oso polar", null, "§f", "Extra: fuerte y abrazable; te protege del frío y te pesca peces", 70, 0.32, 11, 6, 0xF6F8FA, 0x4678C8, 1.08F),
+    STRIDER("Brasa", "Strider", null, "§4", "Extra: camina sobre la lava, te da resistencia al fuego en el Nether y te trae hongos", 40, 0.32, 5, 4, 0xA02C36, 0x6E468C, 1.12F),
+    SHULKER("Shula", "Shulker", null, "§5", "Extra: proyectiles que hacen levitar a los monstruos; a veces te regala un caparazón", 40, 0.3, 4, 12, 0x9664AA, 0xECD896, 1.0F),
+    PHANTOM("Noctis", "Phantom", null, "§9", "Extra: los phantoms huyen de ella; caída lenta y membranas para ti", 34, 0.36, 6, 2, 0x2C4078, 0x5AF0C8, 1.02F),
+    GUARDIAN("Abisa", "Guardián", null, "§3", "Extra: rayo láser contra monstruos y poder del conducto bajo el agua", 50, 0.3, 6, 6, 0x589E92, 0xF08C32, 1.0F);
 
     public final String display, role, color, job;
     @Nullable public final Block block;
@@ -78,7 +87,8 @@ public enum WaifuKind {
 
     /** Orden en la colección: mesas y cama primero, luego granja, compañeras, monstruos, Nether, especiales y sorpresas. */
     public static final WaifuKind[] ORDER = {KOZUE, HOMURA, KURA, SHIORI, CAMA, OVEJA, VACA, CERDO, GALLINA, CONEJO, ABEJA, PANDA, CABALLO, PERRO, GATO, GOLEM,
-            ALDEANA, SLIME, ZOMBIE, ESQUELETO, CREEPER, ARANA, BRUJA, ENDERMAN, PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA};
+            ALDEANA, SLIME, ZOMBIE, ESQUELETO, CREEPER, ARANA, BRUJA, ENDERMAN, PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA,
+            DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN};
 
     public String id() {
         return name().toLowerCase();
@@ -91,29 +101,32 @@ public enum WaifuKind {
 
     /** Se desbloquean al completar la colección. */
     public boolean surprise() {
-        return this == ZORRO || this == AJOLOTE || this == ALLAY || this == RANA;
+        return switch (this) {
+            case ZORRO, AJOLOTE, ALLAY, RANA, DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN -> true;
+            default -> false;
+        };
     }
 
     /** Pelean cuerpo a cuerpo (cazan monstruos cuando te siguen o trabajan). */
     public boolean fighter() {
         return switch (this) {
-            case PERRO, GOLEM, ZOMBIE, ENDERMAN, ARANA, PANDA, PIGLIN, WITHER, WARDEN, ZORRO, AJOLOTE, SLIME -> true;
+            case PERRO, GOLEM, ZOMBIE, ENDERMAN, ARANA, PANDA, PIGLIN, WITHER, WARDEN, ZORRO, AJOLOTE, SLIME, DELFIN, OSO -> true;
             default -> false;
         };
     }
 
     /** Atacan desde lejos (no persiguen cuerpo a cuerpo). */
     public boolean ranged() {
-        return this == SHIORI || this == ESQUELETO || this == BRUJA || this == BLAZE || this == GHAST || this == DINA || this == MITA;
+        return this == SHIORI || this == ESQUELETO || this == BRUJA || this == BLAZE || this == GHAST || this == DINA || this == MITA || this == SHULKER || this == GUARDIAN;
     }
 
     public boolean fireproof() {
-        return this == BLAZE || this == WITHER || this == GHAST || this == PIGLIN || this == HOMURA || this == WARDEN;
+        return this == BLAZE || this == WITHER || this == GHAST || this == PIGLIN || this == HOMURA || this == WARDEN || this == STRIDER;
     }
 
     public boolean noFall() {
         return switch (this) {
-            case GALLINA, GATO, ARANA, ENDERMAN, SLIME, CONEJO, BLAZE, GHAST, ALLAY, RANA, ZORRO, WARDEN, GOLEM -> true;
+            case GALLINA, GATO, ARANA, ENDERMAN, SLIME, CONEJO, BLAZE, GHAST, ALLAY, RANA, ZORRO, WARDEN, GOLEM, SHULKER, PHANTOM, LORO -> true;
             default -> false;
         };
     }
@@ -137,6 +150,14 @@ public enum WaifuKind {
     @Nullable
     public static WaifuKind fromEntity(Entity e) {
         if (e instanceof net.minecraft.world.entity.monster.warden.Warden) return WARDEN;
+        if (e instanceof Dolphin) return DELFIN;
+        if (e instanceof Turtle) return TORTUGA;
+        if (e instanceof Parrot) return LORO;
+        if (e instanceof PolarBear) return OSO;
+        if (e instanceof Strider) return STRIDER;
+        if (e instanceof Shulker) return SHULKER;
+        if (e instanceof Phantom) return PHANTOM;
+        if (e instanceof Guardian) return GUARDIAN;
         if (e instanceof WitherSkeleton) return WITHER;
         if (e instanceof Blaze) return BLAZE;
         if (e instanceof Ghast) return GHAST;

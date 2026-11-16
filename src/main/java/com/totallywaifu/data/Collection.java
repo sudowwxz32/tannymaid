@@ -132,25 +132,56 @@ public final class Collection {
         }
         if (k == WaifuKind.WARDEN) Ach.grant(p, "guardiana");
         CompoundTag r = root(p);
-        if (r.getBoolean("Complete")) return;
-        int got = 0, total = 0;
+        int got = 0, total = 0, eg = 0, et = 0;
         for (WaifuKind q : WaifuKind.values()) {
-            if (q.surprise()) continue;
-            total++;
-            if (rec(p, q).getBoolean("Got")) got++;
+            boolean has = rec(p, q).getBoolean("Got");
+            if (q.surprise()) { et++; if (has) eg++; }
+            else { total++; if (has) got++; }
         }
-        if (got < total) {
-            p.displayClientMessage(Component.literal("§d♥ Nueva waifu: " + k.color + k.display + " §7(" + got + "/" + total + ")"), true);
+        ServerLevel lv = p.serverLevel();
+        if (!r.getBoolean("Complete")) {
+            if (got < total) {
+                p.displayClientMessage(Component.literal("§d♥ Nueva waifu: " + k.color + k.display + " §7(" + got + "/" + total + ")"), true);
+                return;
+            }
+            r.putBoolean("Complete", true);
+            Ach.grant(p, "coleccion");
+            Rewards.give(p, Rewards.collection(), Rewards.COLLECTION_LEVELS);
+            r.putBoolean("RewardC", true);
+            com.totallywaifu.network.Fx.send(p, com.totallywaifu.network.Fx.COLLECTION, total);
+            for (int i = 0; i < 6; i++) Ach.firework(lv, p.position().add((i - 2.5) * 1.6, 0.5, (i % 2 == 0 ? 2 : -2)), i);
+            lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
+            p.sendSystemMessage(Component.literal("§6§l♥ ¡COLECCIÓN COMPLETA! ♥ §r§eRecibiste tus recompensas y la §d" + Rewards.PERK_COLLECTION + "§e."));
+            p.sendSystemMessage(Component.literal("§d✦ Se desbloquearon " + et + " waifus EXTRA: búscalas por el mundo y transfórmalas con la vara (mira ♥ Mis Waifus → Extras)."));
             return;
         }
-        r.putBoolean("Complete", true);
-        Ach.grant(p, "coleccion");
-        com.totallywaifu.network.Fx.send(p, com.totallywaifu.network.Fx.COLLECTION, total);
-        ServerLevel lv = p.serverLevel();
-        for (int i = 0; i < 6; i++) Ach.firework(lv, p.position().add((i - 2.5) * 1.6, 0.5, (i % 2 == 0 ? 2 : -2)), i);
-        lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
-        p.sendSystemMessage(Component.literal("§6§l♥ ¡COLECCIÓN COMPLETA! ♥ §r§eSe desbloquearon §d4 waifus sorpresa§e: búscalas por el mundo y transfórmalas con la vara."));
-        p.sendSystemMessage(Component.literal("§7  Pistas: §6la astuta de los bosques fríos§7 · §dla rosada que nada en las cuevas§7 · §bla azul que ama la música§7 · §2la que croa en los pantanos"));
+        if (!k.surprise() || r.getBoolean("ExtrasComplete")) return;
+        if (eg < et) {
+            p.displayClientMessage(Component.literal("§d✦ Nueva waifu extra: " + k.color + k.display + " §7(" + eg + "/" + et + ")"), true);
+            return;
+        }
+        r.putBoolean("ExtrasComplete", true);
+        Ach.grant(p, "extras");
+        Rewards.give(p, Rewards.extras(), Rewards.EXTRAS_LEVELS);
+        r.putBoolean("RewardE", true);
+        com.totallywaifu.network.Fx.send(p, com.totallywaifu.network.Fx.EXTRAS, et);
+        for (int i = 0; i < 10; i++) Ach.firework(lv, p.position().add(Math.cos(i * 0.628) * 3, 0.5, Math.sin(i * 0.628) * 3), i);
+        lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 0.8F);
+        p.sendSystemMessage(Component.literal("§5§l✦ ¡EXTRAS COMPLETOS! ✦ §r§dEres la leyenda de las waifus. Recibiste tesoros legendarios y la §b" + Rewards.PERK_EXTRAS + "§d."));
+    }
+
+    /** Quien completó la colección antes de que existieran las recompensas, las recibe al entrar. */
+    public static void catchUp(ServerPlayer p) {
+        CompoundTag r = root(p);
+        if (r.getBoolean("Complete") && !r.getBoolean("RewardC")) {
+            r.putBoolean("RewardC", true);
+            Rewards.give(p, Rewards.collection(), Rewards.COLLECTION_LEVELS);
+            p.sendSystemMessage(Component.literal("§6♥ Totally Waifu?: §eya habías completado tu colección: ¡aquí están tus recompensas! §7(y 8 waifus extra nuevas por descubrir)"));
+        }
+    }
+
+    public static boolean extrasComplete(Player p) {
+        return root(p).getBoolean("ExtrasComplete");
     }
 
     /** La chica volvió a ser su bloque (sigue desbloqueada). */
@@ -299,7 +330,7 @@ public final class Collection {
             }
             out.add(new CollectionData.Entry(k.ordinal(), status, where));
         }
-        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new CollectionData(out, sur, hasHome(p)));
+        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new CollectionData(out, sur, hasHome(p), extrasComplete(p)));
     }
 
     private static String modeName(int m) {

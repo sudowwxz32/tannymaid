@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 /** Servidor → cliente: animaciones (intro de la vara, logros, colección completa, dormir en las piernas de Yume). */
 public record Fx(int type, int arg) {
-    public static final int INTRO = 0, WAND = 1, COLLECTION = 2, SLEEP_ON = 3, SLEEP_OFF = 4, SURPRISE = 5, LANDED = 6;
+    public static final int INTRO = 0, WAND = 1, COLLECTION = 2, SLEEP_ON = 3, SLEEP_OFF = 4, SURPRISE = 5, LANDED = 6, EXTRAS = 7;
 
     public static void send(ServerPlayer p, int type, int arg) {
         Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new Fx(type, arg));

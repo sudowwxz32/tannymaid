@@ -1,4 +1,10 @@
-# Totally Waifu? 4.0 (Forge 1.20.1)
+# Totally Waifu? 5.0 (Forge 1.20.1)
+
+## Novedades 5.0
+- **8 waifus extra nuevas** (12 en total): Marina (delfín), Tortu (tortuga), Lori (loro), Nevada (oso polar), Brasa (strider), Shula (shulker), Noctis (phantom) y Abisa (guardián). Se desbloquean al completar la colección.
+- **Recompensas**: colección completa → diamantes, manzanas encantadas, tótem, +30 niveles y la Bendición ♥ (tus waifus +20 vida, +4 ataque). Extras completos → netherita, élitros, estrella del Nether, faro, tótems, +50 niveles y la Bendición ✦.
+- **Nueva animación** al completar los extras.
+- **♥ Mis Waifus (tecla K)**: trofeos con sus recompensas, pestaña Extras, estadísticas de cada chica, rueda del ratón para cambiar de página, flechas para elegir y Enter para llamarla.
 
 ## Novedades 4.0
 - **Intro en un mundo nuevo**: apareces en el cielo, Shiori te entrega la Vara con palabras en pantalla, caes y aterrizas con una explosión (logro).

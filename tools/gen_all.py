@@ -8,12 +8,15 @@ import gen_tanny as G
 import gen_blocky as B
 import gen_mobgirls as M
 import gen_girls4 as N
+import gen_girls5 as N5
+N.LOOK.update(N5.LOOK)
 from PIL import Image, ImageDraw
 
 ALL = dict(B.WAIFUS)
 OLD = set(B.WAIFUS) | set(M.GIRLS)
 ALL.update(M.GIRLS)
 ALL.update(N.GIRLS)
+ALL.update(N5.GIRLS)
 DEFAULT_SKIN = (B.SKIN, B.SKIN_SH)
 
 

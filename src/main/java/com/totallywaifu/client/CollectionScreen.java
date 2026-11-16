@@ -20,6 +20,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
 import java.util.*;
+import java.util.List;
 
 /**
  * ♥ Mis Waifus: álbum de la colección.
@@ -39,7 +40,8 @@ public class CollectionScreen extends Screen {
             new Cat("Monstruos", WaifuKind.ZOMBIE, WaifuKind.ESQUELETO, WaifuKind.CREEPER, WaifuKind.ARANA, WaifuKind.BRUJA, WaifuKind.ENDERMAN, WaifuKind.WARDEN),
             new Cat("Nether", WaifuKind.PIGLIN, WaifuKind.WITHER, WaifuKind.BLAZE, WaifuKind.GHAST),
             new Cat("TNT", WaifuKind.DINA, WaifuKind.MITA),
-            new Cat("✦", WaifuKind.ZORRO, WaifuKind.AJOLOTE, WaifuKind.ALLAY, WaifuKind.RANA)};
+            new Cat("✦ Extras", WaifuKind.ZORRO, WaifuKind.AJOLOTE, WaifuKind.ALLAY, WaifuKind.RANA, WaifuKind.DELFIN, WaifuKind.TORTUGA, WaifuKind.LORO,
+                    WaifuKind.OSO, WaifuKind.STRIDER, WaifuKind.SHULKER, WaifuKind.PHANTOM, WaifuKind.GUARDIAN)};
 
     private static final Map<WaifuKind, String> HOW = new EnumMap<>(WaifuKind.class);
 
@@ -54,7 +56,10 @@ public class CollectionScreen extends Screen {
                 {"PIGLIN", "un piglin (Nether)."}, {"WITHER", "un esqueleto del Nether."}, {"BLAZE", "un blaze (Nether)."}, {"GHAST", "un ghast (Nether)."},
                 {"DINA", "un bloque de TNT: ¡aparecen las dos hermanas!"}, {"MITA", "un bloque de TNT: ¡aparecen las dos hermanas!"},
                 {"WARDEN", "un warden (¡ten mucho cuidado!)."}, {"ZORRO", "un zorro (bosques fríos)."}, {"AJOLOTE", "un ajolote (cuevas frondosas)."},
-                {"ALLAY", "un allay (puestos de saqueadores y mansiones)."}, {"RANA", "una rana (pantanos)."}};
+                {"ALLAY", "un allay (puestos de saqueadores y mansiones)."}, {"RANA", "una rana (pantanos)."},
+                {"DELFIN", "un delfín (océanos)."}, {"TORTUGA", "una tortuga (playas)."}, {"LORO", "un loro (junglas)."},
+                {"OSO", "un oso polar (tierras heladas)."}, {"STRIDER", "un strider (lagos de lava del Nether)."}, {"SHULKER", "un shulker (ciudades del End)."},
+                {"PHANTOM", "un phantom (aparecen si pasas noches sin dormir)."}, {"GUARDIAN", "un guardián (monumentos oceánicos)."}};
         for (String[] e : h) {
             WaifuKind k = WaifuKind.valueOf(e[0]);
             HOW.put(k, WAND + e[1] + (k.station() ? "" : " Se queda así para siempre."));
@@ -89,6 +94,44 @@ public class CollectionScreen extends Screen {
         }
     }
 
+    private int count(WaifuKind[] ks) {
+        int n = 0;
+        for (WaifuKind k : ks) if (status(k) > 0) n++;
+        return n;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mx, double my, double delta) {
+        int np = Mth.clamp(page - (int) Math.signum(delta), 0, pages() - 1);
+        if (np != page) { page = np; rebuildWidgets(); }
+        return true;
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        WaifuKind[] l = list();
+        int i = Arrays.asList(l).indexOf(selected);
+        int ni = i;
+        switch (key) {
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT -> ni = i + 1;
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT -> ni = i - 1;
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN -> ni = i + COLS;
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_UP -> ni = i - COLS;
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER -> {
+                int st = status(selected);
+                if (st == 1 || st == 2) Net.CHANNEL.sendToServer(new CollectionAction(selected.ordinal(), CollectionAction.SUMMON));
+                return true;
+            }
+            default -> { return super.keyPressed(key, scan, mods); }
+        }
+        if (i < 0) ni = 0;
+        ni = Mth.clamp(ni, 0, l.length - 1);
+        selected = l[ni];
+        page = ni / PER;
+        rebuildWidgets();
+        return true;
+    }
+
     private int status(WaifuKind k) {
         CollectionData.Entry e = byKind.get(k);
         return e == null ? 0 : e.status();
@@ -115,12 +158,15 @@ public class CollectionScreen extends Screen {
         int tx = px + 8;
         for (int i = 0; i < CATS.length; i++) {
             final int ci = i;
-            int w = font.width(CATS[i].name) + 10;
-            Button b = Button.builder(Component.literal((i == cat ? "§d" : "") + CATS[i].name), x -> {
+            String label = pw < 400 ? CATS[i].name.replace("Monstruos", "Monstr.") : CATS[i].name;
+            int w = font.width(label) + 8;
+            boolean full = i > 0 && count(CATS[i].kinds) == CATS[i].kinds.length;
+            Button b = Button.builder(Component.literal((i == cat ? "§d" : full ? "§6" : "") + label), x -> {
                 cat = ci;
                 page = 0;
                 rebuildWidgets();
-            }).bounds(tx, py + 32, w, 14).build();
+            }).bounds(tx, py + 32, w, 14).tooltip(Tooltip.create(Component.literal(CATS[i].name + ": " + count(CATS[i].kinds) + " de " + CATS[i].kinds.length
+                    + (full ? " §6✓ ¡completa!" : "")))).build();
             b.active = i != cat;
             addRenderableWidget(b);
             tx += w + 2;
@@ -201,14 +247,35 @@ public class CollectionScreen extends Screen {
             if (status(k) > 0) got++;
         }
         g.drawString(font, "§d§l♥ Mis Waifus", px + 8, py + 6, 0xFFFFFFFF, true);
-        String prog = data.surprise() ? "§6✦ ¡Colección completa! ✦" : "§f" + got + " §7/ " + total;
-        g.drawString(font, prog, px + pw - 8 - font.width(prog), py + 6, 0xFFFFFFFF, true);
+        int eg = 0, et = 0;
+        for (WaifuKind k : WaifuKind.values()) if (k.surprise()) { et++; if (status(k) > 0) eg++; }
+        String t1 = (data.surprise() ? "§6★ ♥ " : "§7★ ♥ ") + got + "/" + total, t2 = (data.extras() ? "§b★ ✦ " : data.surprise() ? "§7★ ✦ " : "§8★ ✦ ") + eg + "/" + et;
+        int x2 = px + pw - 8 - font.width(t2), x1 = x2 - 10 - font.width(t1);
+        g.drawString(font, t1, x1, py + 6, 0xFFFFFFFF, true);
+        g.drawString(font, t2, x2, py + 6, 0xFFFFFFFF, true);
+        List<Component> trophyTip = null;
+        if (my >= py + 4 && my < py + 16 && mx >= x1 && mx < x2 + font.width(t2)) {
+            boolean first = mx < x2 - 5;
+            trophyTip = new ArrayList<>();
+            trophyTip.add(Component.literal(first ? "§6§lRecompensa: colección completa" : "§b§lRecompensa: extras completos"));
+            trophyTip.add(Component.literal((first ? data.surprise() : data.extras()) ? "§a✓ ¡Conseguida!" : first ? "§7Consigue a las " + total + " waifus" : "§7Consigue a las " + et + " extras"));
+            for (net.minecraft.world.item.ItemStack st : first ? com.totallywaifu.data.Rewards.collection() : com.totallywaifu.data.Rewards.extras())
+                trophyTip.add(Component.literal("§f• " + st.getCount() + "× " + st.getHoverName().getString()));
+            trophyTip.add(Component.literal("§a• +" + (first ? com.totallywaifu.data.Rewards.COLLECTION_LEVELS : com.totallywaifu.data.Rewards.EXTRAS_LEVELS) + " niveles"));
+            trophyTip.add(Component.literal("§d• " + (first ? com.totallywaifu.data.Rewards.PERK_COLLECTION : com.totallywaifu.data.Rewards.PERK_EXTRAS)));
+        }
         int bx0 = px + 8, bx1 = px + pw - 8, byy = py + 19;
         g.fill(bx0 - 1, byy - 1, bx1 + 1, byy + 7, 0xFF8A4A86);
         g.fill(bx0, byy, bx1, byy + 6, 0xFF1A0E26);
         int fillW = (int) ((bx1 - bx0) * (got / (float) Math.max(1, total)));
-        g.fillGradient(bx0, byy, bx0 + fillW, byy + 6, 0xFFFF8AD0, 0xFFC04A9A);
+        g.fillGradient(bx0, byy, bx0 + fillW, byy + 6, data.surprise() ? 0xFFFFD24A : 0xFFFF8AD0, data.surprise() ? 0xFFC08A1A : 0xFFC04A9A);
         if (fillW > 4) g.fill(bx0 + fillW - 2, byy, bx0 + fillW, byy + 6, 0xFFFFE0F0);
+        if (data.surprise()) {
+            int ew = (int) ((bx1 - bx0) * (eg / (float) Math.max(1, et)));
+            g.fill(bx0, byy + 4, bx0 + ew, byy + 6, 0xFF7AD8FF);
+        }
+        String pct = (int) (100 * got / (float) Math.max(1, total)) + "%";
+        g.drawString(font, "§8" + pct, bx1 - font.width(pct) - 2, byy - 1, 0xFFFFFFFF, false);
         // tarjetas
         WaifuKind[] l = list();
         String tip = null;
@@ -245,12 +312,13 @@ public class CollectionScreen extends Screen {
             String name = st == -1 ? "???" : k.display;
             g.fill(x, y + CH - 11 - lift, x + CW, y + CH - lift, 0x90000000);
             g.drawCenteredString(font, (st > 0 ? k.color : "§7") + trim(name, CW - 2), x + CW / 2, y + CH - 10 - lift, 0xFFFFFFFF);
-            if (hover) tip = st == -1 ? "§5Sorpresa: completa tu colección" : (st > 0 ? k.color : "§7") + k.display + " §8· §7" + k.role;
+            if (hover) tip = st == -1 ? "§5Extra: completa tu colección para desbloquearla" : (st > 0 ? k.color : "§7") + k.display + " §8· §7" + k.role;
         }
         if (l.length > PER) g.drawCenteredString(font, "§7" + (page + 1) + " / " + pages(), gx() + (COLS * (CW + GAP) - GAP) / 2, gy() + ROWS * (CH + GAP) + 4, 0xFFFFFFFF);
         detail(g, mx, my, t);
         super.render(g, mx, my, partial);
         if (tip != null) g.renderTooltip(font, Component.literal(tip), mx, my);
+        else if (trophyTip != null) g.renderComponentTooltip(font, trophyTip, mx, my);
     }
 
     private String trim(String s, int w) {
@@ -268,7 +336,7 @@ public class CollectionScreen extends Screen {
         g.fillGradient(x, y, x + w, py + ph - 4, st > 0 ? tint(k, 2) : 0xFF1A1226, 0xFF0E0816);
         boolean locked = st == -1;
         // retrato grande
-        int portraitH = 92;
+        int portraitH = 80;
         if (st > 0) {
             float glow = 0.5F + 0.5F * Mth.sin(t * 0.1F);
             int r = 26 + (int) (glow * 4);
@@ -301,7 +369,7 @@ public class CollectionScreen extends Screen {
             ty += 11;
         }
         String state = switch (st) {
-            case -1 -> "§5Waifu sorpresa";
+            case -1 -> "§5Waifu extra";
             case 1 -> "§a● En el mundo";
             case 2 -> "§b● Guardada en tu colección";
             case 3 -> "§6● Ahora es un bloque";
@@ -309,6 +377,19 @@ public class CollectionScreen extends Screen {
         };
         g.drawCenteredString(font, state, x + w / 2, ty, 0xFFFFFFFF);
         ty += 11;
+        if (!locked) {                                              // estadísticas
+            String[] nm = {"Vida", "Ataque", "Defensa", "Rapidez"};
+            float[] v = {(float) Math.min(1, k.health / 120.0), (float) Math.min(1, k.attack / 30.0), (float) Math.min(1, k.armor / 20.0), (float) Math.min(1, k.speed / 0.42)};
+            int[] col = {0xFFFF6A8A, 0xFFFFB040, 0xFF6AC8FF, 0xFF7AE07A};
+            for (int i = 0; i < 4; i++) {
+                int cxs = x + 5 + (i % 2) * (w / 2), cys = ty + (i / 2) * 10, bwid = w / 2 - 34;
+                g.drawString(font, "§7" + nm[i], cxs, cys, 0xFFFFFFFF, false);
+                int bx = cxs + 34 - 5;
+                g.fill(bx, cys + 2, bx + bwid, cys + 6, 0xFF2A1A34);
+                g.fill(bx, cys + 2, bx + (int) (bwid * (st > 0 ? v[i] : v[i] * 0.3F)), cys + 6, st > 0 ? col[i] : 0xFF555060);
+            }
+            ty += 22;
+        }
         CollectionData.Entry e = byKind.get(k);
         if (st == 1 && e != null && !e.where().isEmpty()) {
             for (FormattedCharSequence line : font.split(Component.literal("§a" + e.where()), w - 8)) {

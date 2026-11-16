@@ -49,6 +49,7 @@ public final class ForgeEvents {
     @SubscribeEvent
     public static void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        Collection.catchUp(p);
         CompoundTag d = p.getPersistentData();
         if (Collection.takeGift(p)) {
             d.putInt(INTRO, 1);
@@ -64,6 +65,12 @@ public final class ForgeEvents {
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent e) {
         if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
+        if (p.tickCount % 100 == 0 && Collection.extrasComplete(p)) {           // Bendición ✦
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.LUCK, 260, 0, true, false, true));
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.HERO_OF_THE_VILLAGE, 260, 0, true, false, true));
+            if (p.level().getEntitiesOfClass(WaifuEntity.class, p.getBoundingBox().inflate(16), w -> w.isOwner(p)).size() >= 3)
+                p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 120, 0, true, false, true));
+        }
         CompoundTag d = p.getPersistentData();
         int stage = d.getInt(INTRO);
         if (stage == 0) return;
