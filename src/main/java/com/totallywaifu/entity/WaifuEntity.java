@@ -51,8 +51,8 @@ public class WaifuEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> LIT = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BUSY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> LOOK = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
-    /** Aspectos: 0 el suyo, 1 Noa (estilo de bloques). */
-    public static final int LOOKS = 2;
+    /** Aspectos: 0 el suyo, 1 Noa (estilo de bloques), 2 personalizado (modelo de Blockbench en un paquete de recursos). */
+    public static final int LOOKS = 3;
 
     public final WaifuKind kind;
     /** Mochila (27). La primera fila es su reserva: Kura no se la lleva. */

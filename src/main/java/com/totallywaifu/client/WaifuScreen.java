@@ -41,7 +41,7 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
             case SHIORI -> addRenderableWidget(btn("Dar XP", WaifuMenu.B_XP, x, y2, "Te entrega la experiencia que ha guardado"));
             default -> { }
         }
-        addRenderableWidget(btn("Aspecto", WaifuMenu.B_LOOK, leftPos + 116, topPos + 58, "Cambia su apariencia: la suya o Noa (estilo de bloques)"));
+        addRenderableWidget(btn("Aspecto", WaifuMenu.B_LOOK, leftPos + 116, topPos + 58, "Cambia su apariencia: la suya → Noa → personalizado (modelo de Blockbench en un paquete de recursos)"));
         addRenderableWidget(btn("♥ Guardar", WaifuMenu.B_HEART, leftPos + 116, y2, "Se guarda en un Corazón de Waifu (con todo) para llevarla contigo"));
     }
 

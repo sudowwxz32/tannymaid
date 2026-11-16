@@ -71,3 +71,11 @@ En modo **Seguir** te acompañan y te defienden.
 - En el panel de cualquier waifu (Shift + clic derecho), el botón **Aspecto** cambia entre su ropa y Noa. Sus funciones no cambian y el aspecto se guarda.
 - Cuando está quieta, sostiene las manos frente al pecho.
 - Generador: `tools/gen_noa.py`.
+
+## Novedades 1.6.0: aspecto personalizado (modelos de Blockbench)
+- Tercer aspecto: **personalizado**. El mod carga un modelo de **Blockbench (Bedrock, .geo.json)** y su textura desde cualquier **paquete de recursos**:
+  - `assets/totallywaifu/geo/custom.geo.json`
+  - `assets/totallywaifu/textures/entity/custom/custom.png`
+- Los huesos `head`, `body`, `rightArm`, `leftArm`, `rightLeg` y `leftLeg` se animan; los demás siguen a su padre. Se respetan los pivotes, las rotaciones de huesos y de cubos, `inflate` y `mirror` (con UV de caja).
+- Se recarga con F3 + T, sin reiniciar.
+- `python3 tools/gen_noa.py pack DIR` genera el paquete **TotallyWaifu_Personalizado.zip** con Noa ya exportado para editarlo en Blockbench.

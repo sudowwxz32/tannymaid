@@ -321,6 +321,94 @@ def main():
     return P
 
 
+def export_pack(outdir):
+    """Paquete de recursos editable: el modelo de Noa en formato Blockbench (Bedrock) con la cara incluida en la textura."""
+    import json, zipfile
+    face_img = face_tex("normal").crop((64, 64, 128, 128))
+
+    def face_paint(f, x, y, w, h):
+        if f == "front":
+            return face_img.getpixel((min(63, x), min(63, y)))[:3]
+        if f == "top" or f == "back":
+            return HAIR
+        return SKIN_SH
+    P = parts() + [Part("face", "head", (0, 0, 0), (0, 0, 0), [Box(-4, -8, -4, 8, 8, 8, face_paint)])]
+    G.S = 8
+    G.AO = True
+    G.jit = lambda c, a=4: c
+    w, h = G.pack(P, 64)
+    tex = G.build_texture(P, w, h)
+    names = {"head": "head", "hat": "hat", "body": "body", "right_arm": "rightArm", "left_arm": "leftArm",
+             "right_leg": "rightLeg", "left_leg": "leftLeg"}
+    piv = {a: p for a, p in ANCHORS}
+    absj = dict(piv)
+    bones = []
+    for a, pp in ANCHORS:
+        if a == "hat":
+            continue
+        bones.append({"name": names[a], "pivot": [pp[0], 24 - pp[1], pp[2]]})
+    for p in P:
+        par = absj[p.parent]
+        ap = (par[0] + p.pivot[0], par[1] + p.pivot[1], par[2] + p.pivot[2])
+        absj[p.name] = ap
+        pb = [round(ap[0], 4), round(24 - ap[1], 4), round(ap[2], 4)]
+        bone = {"name": p.name, "parent": names.get(p.parent, p.parent), "pivot": pb}
+        if any(abs(r) > 1e-6 for r in p.rot):
+            bone["rotation"] = [round(-math.degrees(p.rot[0]), 3), round(-math.degrees(p.rot[1]), 3), round(math.degrees(p.rot[2]), 3)]
+        bone["cubes"] = [{"origin": [round(pb[0] + b.x, 4), round(pb[1] - b.y - b.h, 4), round(pb[2] + b.z, 4)],
+                          "size": [round(b.w, 4), round(b.h, 4), round(b.d, 4)], "uv": [b.u, b.v]} for b in p.boxes]
+        bones.append(bone)
+    geo = {"format_version": "1.12.0", "minecraft:geometry": [{
+        "description": {"identifier": "geometry.totallywaifu.custom", "texture_width": 64, "texture_height": h,
+                        "visible_bounds_width": 3, "visible_bounds_height": 3.5, "visible_bounds_offset": [0, 1.25, 0]},
+        "bones": bones}]}
+    root = os.path.join(outdir, "TotallyWaifu_Personalizado")
+    gdir = os.path.join(root, "assets/totallywaifu/geo")
+    tdir = os.path.join(root, "assets/totallywaifu/textures/entity/custom")
+    os.makedirs(gdir, exist_ok=True)
+    os.makedirs(tdir, exist_ok=True)
+    json.dump(geo, open(os.path.join(gdir, "custom.geo.json"), "w"), indent=1)
+    tex.save(os.path.join(tdir, "custom.png"))
+    json.dump({"pack": {"pack_format": 15, "description": "Totally Waifu? — aspecto personalizado (Noa editable)"}},
+              open(os.path.join(root, "pack.mcmeta"), "w"), indent=2)
+    open(os.path.join(root, "LEEME.txt"), "w", encoding="utf-8").write(README)
+    zpath = os.path.join(outdir, "TotallyWaifu_Personalizado.zip")
+    with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
+        for dp, _, fs in os.walk(root):
+            for f in fs:
+                full = os.path.join(dp, f)
+                z.write(full, os.path.relpath(full, root))
+    print("paquete:", zpath, "(%d huesos)" % len(bones))
+    return zpath
+
+
+README = """TOTALLY WAIFU? - ASPECTO PERSONALIZADO
+=====================================
+
+Este paquete de recursos trae el modelo de Noa en formato Blockbench para que lo dejes EXACTAMENTE como quieras
+(por ejemplo, idéntico a tu imagen de referencia).
+
+INSTALAR
+1. Copia el archivo .zip (sin descomprimir) en .minecraft/resourcepacks/
+2. En Minecraft: Opciones > Paquetes de recursos > activa "TotallyWaifu_Personalizado".
+3. En el juego: Shift + clic derecho a una waifu > botón "Aspecto" hasta llegar a "personalizado".
+
+EDITAR EN BLOCKBENCH (gratis: blockbench.net)
+1. Descomprime el .zip.
+2. Blockbench > File > Open Model > assets/totallywaifu/geo/custom.geo.json  (Bedrock Model).
+3. Carga la textura: assets/totallywaifu/textures/entity/custom/custom.png
+4. Modela y pinta lo que quieras. REGLAS:
+   - Usa "UV de caja" (Box UV), que es el modo del archivo.
+   - Mantén los huesos head, body, rightArm, leftArm, rightLeg, leftLeg (son los que se animan).
+     Puedes crear huesos nuevos dentro de ellos (cabello, orejas, chaqueta...).
+   - El piso está en Y = 0; la altura normal es de unos 32 píxeles (2 bloques).
+   - Puedes usar una textura de mayor resolución (por ejemplo 512 px) manteniendo el tamaño de UV.
+5. File > Export > Export Bedrock Geometry -> guarda encima de custom.geo.json. Guarda también la textura.
+6. Vuelve a comprimir (pack.mcmeta debe quedar en la raíz del .zip) o deja la carpeta en resourcepacks.
+7. En el juego pulsa F3 + T para recargar los recursos y ver los cambios.
+"""
+
+
 def preview(outdir):
     os.makedirs(outdir, exist_ok=True)
     P = parts()
@@ -343,5 +431,7 @@ def preview(outdir):
 
 if __name__ == "__main__":
     main()
+    if len(sys.argv) > 2 and sys.argv[1] == "pack":
+        export_pack(sys.argv[2])
     if len(sys.argv) > 2 and sys.argv[1] == "preview":
         preview(sys.argv[2])

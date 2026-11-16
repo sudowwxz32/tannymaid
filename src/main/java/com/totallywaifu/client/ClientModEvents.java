@@ -27,6 +27,11 @@ public final class ClientModEvents {
     }
 
     @SubscribeEvent
+    public static void reload(net.minecraftforge.client.event.RegisterClientReloadListenersEvent e) {
+        e.registerReloadListener(new CustomLook());
+    }
+
+    @SubscribeEvent
     public static void setup(FMLClientSetupEvent e) {
         e.enqueueWork(() -> MenuScreens.register(ModRegistry.PANEL.get(), WaifuScreen::new));
     }

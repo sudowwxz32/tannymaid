@@ -23,10 +23,16 @@ public class WaifuRenderer extends HumanoidMobRenderer<WaifuEntity, WaifuModel> 
     }
 
     private NoaRenderer noa;
+    private CustomLook.Renderer custom;
     private final EntityRendererProvider.Context ctx;
 
     @Override
     public void render(WaifuEntity e, float yaw, float partial, PoseStack pose, net.minecraft.client.renderer.MultiBufferSource buf, int light) {
+        if (e.getLook() == 2 && CustomLook.present()) {
+            if (custom == null || custom.builtFor != CustomLook.version()) custom = new CustomLook.Renderer(ctx);
+            custom.render(e, yaw, partial, pose, buf, light);
+            return;
+        }
         if (e.getLook() == 1) {
             if (noa == null) noa = new NoaRenderer(ctx);
             noa.render(e, yaw, partial, pose, buf, light);

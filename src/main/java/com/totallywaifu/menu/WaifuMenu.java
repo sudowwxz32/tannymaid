@@ -83,7 +83,7 @@ public class WaifuMenu extends AbstractContainerMenu {
             }
             case B_LOOK -> {
                 waifu.setLook(waifu.getLook() + 1);
-                waifu.say(p, waifu.getLook() == 1 ? "¿Qué tal mi nuevo look? ✦" : "De vuelta a mi ropa de siempre.");
+                waifu.say(p, switch (waifu.getLook()) { case 1 -> "¿Qué tal mi nuevo look? Soy Noa ✦"; case 2 -> "¡Aspecto personalizado! (necesita el paquete de recursos)"; default -> "De vuelta a mi ropa de siempre."; });
             }
             case B_HEART -> {
                 p.closeContainer();
