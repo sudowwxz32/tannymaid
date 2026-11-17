@@ -33,8 +33,9 @@ public class CollectionScreen extends Screen {
     private record Cat(String name, WaifuKind... kinds) {}
 
     private static final Cat[] CATS = {
-            new Cat("Todas", WaifuKind.ORDER),
-            new Cat("Mesas", WaifuKind.KOZUE, WaifuKind.HOMURA, WaifuKind.KURA, WaifuKind.SHIORI, WaifuKind.CAMA),
+            new Cat("Todas", WaifuKind.DISPLAY),
+            new Cat("Mesas", WaifuKind.KOZUE, WaifuKind.HOMURA, WaifuKind.KURA, WaifuKind.SHIORI, WaifuKind.CAMA, WaifuKind.YUNQUE, WaifuKind.MUELA, WaifuKind.TELAR,
+                    WaifuKind.CORTAPIEDRAS, WaifuKind.HERRERIA, WaifuKind.CARTOGRAFIA, WaifuKind.AHUMADOR, WaifuKind.ALTO_HORNO),
             new Cat("Granja", WaifuKind.OVEJA, WaifuKind.VACA, WaifuKind.CERDO, WaifuKind.GALLINA, WaifuKind.CONEJO, WaifuKind.ABEJA, WaifuKind.PANDA, WaifuKind.CABALLO),
             new Cat("Amigas", WaifuKind.PERRO, WaifuKind.GATO, WaifuKind.GOLEM, WaifuKind.ALDEANA, WaifuKind.SLIME),
             new Cat("Monstruos", WaifuKind.ZOMBIE, WaifuKind.ESQUELETO, WaifuKind.CREEPER, WaifuKind.ARANA, WaifuKind.BRUJA, WaifuKind.ENDERMAN, WaifuKind.WARDEN),
@@ -48,7 +49,11 @@ public class CollectionScreen extends Screen {
     static {
         String[][] h = {{"KOZUE", "una mesa de crafteo. Puede volver a ser mesa."}, {"HOMURA", "un horno. Puede volver a ser horno."},
                 {"KURA", "un cofre. Puede volver a ser cofre."}, {"SHIORI", "una mesa de encantamientos. Puede volver a ser mesa."},
-                {"CAMA", "una cama. Puede volver a ser cama."}, {"OVEJA", "una oveja."}, {"VACA", "una vaca o champiñaca."}, {"CERDO", "un cerdo."},
+                {"CAMA", "una cama. Puede volver a ser cama."}, {"YUNQUE", "un yunque. Puede volver a ser yunque."},
+                {"MUELA", "una afiladora. Puede volver a ser afiladora."}, {"TELAR", "un telar. Puede volver a ser telar."},
+                {"CORTAPIEDRAS", "un cortapiedras. Puede volver a ser cortapiedras."}, {"HERRERIA", "una mesa de herrería. Puede volver a ser mesa."},
+                {"CARTOGRAFIA", "una mesa de cartografía. Puede volver a ser mesa."}, {"AHUMADOR", "un ahumador. Puede volver a ser ahumador."},
+                {"ALTO_HORNO", "un alto horno. Puede volver a ser alto horno."}, {"OVEJA", "una oveja."}, {"VACA", "una vaca o champiñaca."}, {"CERDO", "un cerdo."},
                 {"GALLINA", "una gallina."}, {"PERRO", "un lobo o perro."}, {"GATO", "un gato u ocelote."}, {"GOLEM", "un gólem de hierro."},
                 {"ALDEANA", "un aldeano (conserva sus tratos)."}, {"ZOMBIE", "un zombi."}, {"ESQUELETO", "un esqueleto."}, {"CREEPER", "un creeper."},
                 {"ARANA", "una araña."}, {"BRUJA", "una bruja."}, {"ENDERMAN", "un enderman."}, {"SLIME", "un slime o cubo de magma."},

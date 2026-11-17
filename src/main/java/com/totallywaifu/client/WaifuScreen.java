@@ -90,8 +90,8 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
         String modeName = switch (menu.mode()) { case WaifuEntity.STAY -> "Quieta"; case WaifuEntity.WORK -> "Trabajando"; default -> "Siguiéndote"; };
         g.drawString(font, "§f" + modeName, x + 64, y + 62, 0xFFFFE0F0, false);
         if (menu.kind == WaifuKind.SHIORI) g.drawString(font, "XP guardada: §a" + menu.xp(), x + 64, y + 74, 0xFFFFE0F0, false);
-        if (menu.kind == WaifuKind.KOZUE || menu.kind == WaifuKind.HOMURA) {
-            g.drawString(font, menu.kind == WaifuKind.HOMURA ? "Cocinar →" : "Pedido →", x + (menu.kind == WaifuKind.HOMURA ? 98 : 106), y + 74, 0xFFFFE0F0, false);
+        if (menu.kind == WaifuKind.KOZUE || menu.kind.cooker()) {
+            g.drawString(font, menu.kind.cooker() ? "Cocinar →" : "Pedido →", x + (menu.kind.cooker() ? 98 : 106), y + 74, 0xFFFFE0F0, false);
             g.fill(x + WaifuMenu.ORDER_X - 2, y + WaifuMenu.ORDER_Y - 2, x + WaifuMenu.ORDER_X + 18, y + WaifuMenu.ORDER_Y + 18, th[2]);
         }
         g.drawString(font, "Mochila §7(la 1.ª fila es su reserva)", x + 8, y + WaifuMenu.BAG_Y - 10, 0xFFFFE0F0, false);
@@ -111,11 +111,11 @@ public class WaifuScreen extends AbstractContainerScreen<WaifuMenu> {
     public void render(GuiGraphics g, int mx, int my, float partial) {
         renderBackground(g);
         super.render(g, mx, my, partial);
-        if ((menu.kind == WaifuKind.KOZUE || menu.kind == WaifuKind.HOMURA) && mx >= leftPos + WaifuMenu.ORDER_X && mx < leftPos + WaifuMenu.ORDER_X + 16
+        if ((menu.kind == WaifuKind.KOZUE || menu.kind.cooker()) && mx >= leftPos + WaifuMenu.ORDER_X && mx < leftPos + WaifuMenu.ORDER_X + 16
                 && my >= topPos + WaifuMenu.ORDER_Y && my < topPos + WaifuMenu.ORDER_Y + 16 && menu.getCarried().isEmpty()
                 && !menu.slots.get(63).hasItem()) {
-            g.renderTooltip(font, font.split(Component.literal(menu.kind == WaifuKind.HOMURA
-                    ? "§cQué cocinar: pon aquí un objeto (ej. hierro crudo) y Homura cocinará SOLO eso, tomándolo de su mochila. También puedes ponerlo en su horno (clic derecho)."
+            g.renderTooltip(font, font.split(Component.literal(menu.kind.cooker()
+                    ? "§cQué cocinar: pon aquí un objeto (ej. hierro crudo) y " + menu.kind.display + " cocinará SOLO eso, tomándolo de su mochila. También puedes ponerlo en su horno (clic derecho)."
                     : "§6Pedido: pon aquí CUALQUIER objeto y Kozue lo fabricará (y las piezas intermedias) con su mochila y el cofre de Kura"), 180), mx, my);
         }
         renderTooltip(g, mx, my);

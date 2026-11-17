@@ -4,12 +4,27 @@ license="All Rights Reserved"
 
 [[mods]]
 modId="totallywaifu"
-version="5.0.0"
+version="6.0.0"
 displayName="Totally Waifu?"
 authors="Totally Waifu"
+logoFile="logo.png"
+credits="Hecho con ♥ para quienes quieren que su mundo tenga más vida."
 description='''
-La mesa de crafteo, el horno, el cofre y la mesa de encantamientos cobran vida como chicas anime.
-Usa un Corazón de Waifu sobre uno de esos bloques: abren su menú y además trabajan para ti.
+§d♥ Totally Waifu? ♥§r — ¿Y si los bloques y las criaturas de Minecraft fueran chicas?
+
+Al empezar un mundo, un misterioso ente de luz (§e???§r) te entrega la §dVara de Transformación§r... y caes del cielo con una explosión.
+
+§6✦ MESAS QUE COBRAN VIDA (reversibles)§r
+Usa la vara sobre una mesa de crafteo, horno, cofre, mesa de encantamientos, cama, yunque, afiladora, telar, cortapiedras, mesa de herrería, mesa de cartografía, ahumador o alto horno: se convierte en una chica que abre su menú, trabaja para ti y vuelve a ser bloque cuando quieras (con todas sus cosas).
+Kozue fabrica cualquier objeto, Homura/Kemuri/Rekka cocinan solo lo que pidas, Kura guarda y ordena, Shiori encanta, Yume te deja dormir en sus piernas y cuida tus sueños, Kana repara tu equipo, Carta encuentra aldeas...
+
+§a✦ ANIMALES Y MONSTRUOS (para siempre)§r
+Ovejas, vacas, lobos, gatos, gólems, aldeanos, zombis, creepers, endermans, blazes, ghasts, piglins, el Warden ¡y más! Cada una con aspecto propio y sus habilidades: Luna caza por ti, Brisa se deja montar, Dina y Mita lanzan explosivos, Umbra es tu guardiana definitiva.
+
+§b✦ COLECCIÓN ♥ Mis Waifus (tecla K)§r
+Llama, guarda y sigue a todas tus chicas. Complétala para ganar recompensas, la Bendición ♥ y desbloquear 12 waifus EXTRA. ¡Complétalas también para la Bendición ✦ y tesoros legendarios!
+
+§c♥ Ninguna waifu puede morir§r, y tu vara nunca se pierde al morir.
 '''
 
 [[dependencies.totallywaifu]]

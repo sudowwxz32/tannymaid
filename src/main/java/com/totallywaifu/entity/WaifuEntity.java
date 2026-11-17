@@ -239,6 +239,8 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
                         (random.nextDouble() - 0.5) * 2);
             }
             if (kind == WaifuKind.BRUJA && random.nextInt(10) == 0) level().addParticle(ParticleTypes.WITCH, getRandomX(0.5), getY() + 2.2, getRandomZ(0.5), 0, 0, 0);
+            if ((kind == WaifuKind.AHUMADOR || kind == WaifuKind.ALTO_HORNO || kind == WaifuKind.HOMURA) && isLit() && random.nextInt(6) == 0)
+                level().addParticle(kind == WaifuKind.AHUMADOR ? ParticleTypes.CAMPFIRE_COSY_SMOKE : ParticleTypes.FLAME, getRandomX(0.4), getY() + getBbHeight() * 0.5, getRandomZ(0.4), 0, 0.02, 0);
             if (kind == WaifuKind.BLAZE && random.nextInt(3) == 0) {
                 level().addParticle(random.nextBoolean() ? ParticleTypes.FLAME : ParticleTypes.SMOKE, getRandomX(0.8), getY() + random.nextDouble() * getBbHeight() * 0.7, getRandomZ(0.8), 0, 0.02, 0);
             }
@@ -253,7 +255,8 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         int h = entityData.get(HAPPY);
         if (h > 0) entityData.set(HAPPY, h - 1);
         if (tickCount % (kind == WaifuKind.ZOMBIE ? 15 : 40) == 0 && getHealth() < getMaxHealth()) heal(1.0F);
-        if (kind == WaifuKind.HOMURA) WaifuWork.furnaceTick(this);
+        if (kind.cooker()) WaifuWork.furnaceTick(this);
+        if (getY() < level().getMinBuildHeight() - 16) rescue(null);          // se cayó al vacío
         if (sleeper != null || isSitting()) Sleep.tick(this);
         work.always();
         if (tickCount % 40 == 0 && ownerPlayer() instanceof net.minecraft.server.level.ServerPlayer sp) com.totallywaifu.data.Collection.refresh(sp, this);
@@ -279,14 +282,47 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     @Override
     public void die(DamageSource src) {
         if (!level().isClientSide) {
-            // no muere de verdad: se refugia en un corazón con todas sus cosas
-            setHealth(getMaxHealth());
-            if (!com.totallywaifu.data.Collection.onDefeat(this)) spawnAtLocation(HeartItem.withWaifu(this));
-            ((ServerLevel) level()).sendParticles(ParticleTypes.HEART, getX(), getY() + 1, getZ(), 12, 0.5, 0.6, 0.5, 0);
-            discard();
+            rescue(src);              // ¡ninguna waifu puede morir!
             return;
         }
         super.die(src);
+    }
+
+    private long lastRescueMsg;
+
+    /** Se desmaya un instante y se recupera: vida, protección y, si está en peligro (vacío, lava), aparece junto a ti. */
+    public void rescue(@Nullable DamageSource src) {
+        ServerLevel lv = (ServerLevel) level();
+        setHealth(Math.max(4.0F, getMaxHealth() * 0.4F));
+        deathTime = 0;
+        clearFire();
+        setDeltaMovement(0, 0, 0);
+        fallDistance = 0;
+        for (net.minecraft.world.effect.MobEffectInstance e : new java.util.ArrayList<>(getActiveEffects()))
+            if (e.getEffect().getCategory() == net.minecraft.world.effect.MobEffectCategory.HARMFUL) removeEffect(e.getEffect());
+        addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 200, 1));
+        addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 100, 4));
+        addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, 200, 0));
+        invulnerableTime = 60;
+        Player o = ownerPlayer();
+        boolean danger = getY() < lv.getMinBuildHeight() || isInLava() || (src != null && (src.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
+                || src.is(net.minecraft.world.damagesource.DamageTypes.FELL_OUT_OF_WORLD) || src.is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)
+                || src.is(net.minecraft.world.damagesource.DamageTypes.DROWN)));
+        if (danger) {
+            if (o != null && o.level() == level()) teleportTo(o.getX(), o.getY(), o.getZ());
+            else {
+                net.minecraft.core.BlockPos sp = lv.getSharedSpawnPos();
+                teleportTo(sp.getX() + 0.5, lv.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, sp.getX(), sp.getZ()), sp.getZ() + 0.5);
+            }
+        }
+        if (getTarget() != null && danger) setTarget(null);
+        lv.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, getX(), getY() + 1, getZ(), 30, 0.4, 0.8, 0.4, 0.3);
+        lv.sendParticles(ParticleTypes.HEART, getX(), getY() + 1.4, getZ(), 6, 0.4, 0.4, 0.4, 0);
+        playSound(SoundEvents.TOTEM_USE, 0.6F, 1.5F);
+        if (o != null && lv.getGameTime() - lastRescueMsg > 200) {
+            lastRescueMsg = lv.getGameTime();
+            o.displayClientMessage(Component.literal(kind.color + kind.display + " §7casi cae... ¡pero las waifus nunca mueren! ♥"), true);
+        }
     }
 
     @Override
@@ -449,6 +485,14 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
             }
             case SHIORI -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new WaifuEnchantMenu(id, inv, access, this), title));
             case CAMA -> Sleep.start(p, this);
+            case AHUMADOR -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new net.minecraft.world.inventory.SmokerMenu(id, inv, furnace, furnaceSync), title));
+            case ALTO_HORNO -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new net.minecraft.world.inventory.BlastFurnaceMenu(id, inv, furnace, furnaceSync), title));
+            case YUNQUE -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new com.totallywaifu.menu.StationMenus.Anvil(id, inv, access, this), title));
+            case MUELA -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new com.totallywaifu.menu.StationMenus.Grind(id, inv, access, this), title));
+            case TELAR -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new com.totallywaifu.menu.StationMenus.Loom(id, inv, access, this), title));
+            case CORTAPIEDRAS -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new com.totallywaifu.menu.StationMenus.Cutter(id, inv, access, this), title));
+            case HERRERIA -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new com.totallywaifu.menu.StationMenus.Smith(id, inv, access, this), title));
+            case CARTOGRAFIA -> p.openMenu(new SimpleMenuProvider((id, inv, pl) -> new com.totallywaifu.menu.StationMenus.Carto(id, inv, access, this), title));
             default -> { }
         }
     }

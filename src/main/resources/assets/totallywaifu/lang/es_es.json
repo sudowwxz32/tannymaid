@@ -90,5 +90,21 @@
   "entity.totallywaifu.phantom": "Noctis (chica phantom)",
   "item.totallywaifu.phantom_spawn_egg": "Huevo de Noctis",
   "entity.totallywaifu.guardian": "Abisa (chica guardiana)",
-  "item.totallywaifu.guardian_spawn_egg": "Huevo de Abisa"
+  "item.totallywaifu.guardian_spawn_egg": "Huevo de Abisa",
+  "entity.totallywaifu.yunque": "Kana (chica yunque)",
+  "item.totallywaifu.yunque_spawn_egg": "Huevo de Kana",
+  "entity.totallywaifu.muela": "Togi (chica afiladora)",
+  "item.totallywaifu.muela_spawn_egg": "Huevo de Togi",
+  "entity.totallywaifu.telar": "Hilda (chica telar)",
+  "item.totallywaifu.telar_spawn_egg": "Huevo de Hilda",
+  "entity.totallywaifu.cortapiedras": "Gema (chica cortapiedras)",
+  "item.totallywaifu.cortapiedras_spawn_egg": "Huevo de Gema",
+  "entity.totallywaifu.herreria": "Tetsu (chica herrera)",
+  "item.totallywaifu.herreria_spawn_egg": "Huevo de Tetsu",
+  "entity.totallywaifu.cartografia": "Carta (chica cartógrafa)",
+  "item.totallywaifu.cartografia_spawn_egg": "Huevo de Carta",
+  "entity.totallywaifu.ahumador": "Kemuri (chica ahumador)",
+  "item.totallywaifu.ahumador_spawn_egg": "Huevo de Kemuri",
+  "entity.totallywaifu.alto_horno": "Rekka (chica alto horno)",
+  "item.totallywaifu.alto_horno_spawn_egg": "Huevo de Rekka"
 }

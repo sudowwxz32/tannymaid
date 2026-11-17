@@ -43,7 +43,7 @@ public class WaifuMenu extends AbstractContainerMenu {
         for (int r = 0; r < 3; r++) for (int c = 0; c < 9; c++) addSlot(new Slot(bag, c + r * 9, 8 + c * 18, BAG_Y + r * 18));
         for (int r = 0; r < 3; r++) for (int c = 0; c < 9; c++) addSlot(new Slot(inv, c + r * 9 + 9, 8 + c * 18, INV_Y + r * 18));
         for (int c = 0; c < 9; c++) addSlot(new Slot(inv, c, 8 + c * 18, HOTBAR_Y));
-        if (kind == WaifuKind.KOZUE || kind == WaifuKind.HOMURA) addSlot(new Slot(order, 0, ORDER_X, ORDER_Y) {
+        if (kind == WaifuKind.KOZUE || kind.cooker()) addSlot(new Slot(order, 0, ORDER_X, ORDER_Y) {
             @Override public int getMaxStackSize() { return 1; }
         });
         addDataSlot(mode);

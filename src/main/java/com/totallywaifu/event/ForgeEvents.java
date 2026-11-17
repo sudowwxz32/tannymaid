@@ -161,6 +161,39 @@ public final class ForgeEvents {
     }
 
     // ================================================================== la vara
+    /** Al morir, la vara no se cae: se queda contigo. */
+    @SubscribeEvent
+    public static void drops(net.minecraftforge.event.entity.living.LivingDropsEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        net.minecraft.nbt.ListTag keep = new net.minecraft.nbt.ListTag();
+        e.getDrops().removeIf(ie -> {
+            if (!ie.getItem().is(ModRegistry.WAND.get())) return false;
+            keep.add(ie.getItem().save(new CompoundTag()));
+            return true;
+        });
+        if (!keep.isEmpty()) persisted(p).put("TW_KeepWand", keep);
+    }
+
+    @SubscribeEvent
+    public static void respawn(PlayerEvent.PlayerRespawnEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p) || e.isEndConquered()) return;
+        CompoundTag d = persisted(p);
+        if (!d.contains("TW_KeepWand")) return;
+        net.minecraft.nbt.ListTag l = d.getList("TW_KeepWand", net.minecraft.nbt.Tag.TAG_COMPOUND);
+        for (int i = 0; i < l.size(); i++) {
+            ItemStack st = ItemStack.of(l.getCompound(i));
+            if (!p.getInventory().add(st)) p.drop(st, false);
+        }
+        d.remove("TW_KeepWand");
+        p.displayClientMessage(Component.literal("§d✦ Tu Vara de Transformación se quedó contigo ♥"), true);
+    }
+
+    private static CompoundTag persisted(Player p) {
+        CompoundTag root = p.getPersistentData();
+        if (!root.contains(Player.PERSISTED_NBT_TAG)) root.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
+        return root.getCompound(Player.PERSISTED_NBT_TAG);
+    }
+
     /** Con la vara en la mano, la mesa/horno/cofre/cama no abre su menú: se transforma. */
     @SubscribeEvent
     public static void useBlock(PlayerInteractEvent.RightClickBlock e) {

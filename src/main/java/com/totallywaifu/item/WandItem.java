@@ -213,7 +213,12 @@ public class WandItem extends Item {
             lv.setBlock(at, foot, 3);
             lv.setBlock(second, foot.setValue(BedBlock.PART, BedPart.HEAD), 3);
         } else {
-            lv.setBlock(at, w.kind.block.defaultBlockState(), 3);
+            BlockState bs = w.kind.block.defaultBlockState();
+            if (bs.hasProperty(net.minecraft.world.level.block.GrindstoneBlock.FACE))
+                bs = bs.setValue(net.minecraft.world.level.block.GrindstoneBlock.FACE, net.minecraft.world.level.block.state.properties.AttachFace.FLOOR);
+            if (bs.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING))
+                bs = bs.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING, p.getDirection().getOpposite());
+            lv.setBlock(at, bs, 3);
             BlockEntity be = lv.getBlockEntity(at);
             if (be instanceof AbstractFurnaceBlockEntity f) {
                 for (int i = 0; i < 3; i++) f.setItem(i, w.furnace.getItem(i).copy());
@@ -256,13 +261,15 @@ public class WandItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack st, @Nullable Level level, List<Component> tip, TooltipFlag flag) {
-        tip.add(Component.literal("§dClic derecho a una mesa de crafteo, horno, cofre, mesa de"));
-        tip.add(Component.literal("§dencantamientos o cama: ¡se transforma en chica! (y la desbloqueas)"));
+        tip.add(Component.literal("§dClic derecho a una mesa de crafteo, horno, cofre, mesa de encantamientos,"));
+        tip.add(Component.literal("§dcama, yunque, afiladora, telar, cortapiedras, mesa de herrería, mesa de"));
+        tip.add(Component.literal("§dcartografía, ahumador o alto horno: ¡se transforma en chica!"));
         tip.add(Component.literal("§7Sobre ella otra vez: vuelve a ser el bloque."));
         tip.add(Component.literal("§5Sobre animales y monstruos: se transforman en chicas PARA SIEMPRE."));
         tip.add(Component.literal("§8Oveja, vaca, cerdo, gallina, perro, gato, gólem, aldeano, zombi,"));
         tip.add(Component.literal("§8esqueleto, creeper, araña, bruja, enderman, slime, conejo, panda,"));
         tip.add(Component.literal("§8caballo, abeja, piglin, esqueleto del Nether, blaze, ghast, warden..."));
         tip.add(Component.literal("§c¡Y sobre un bloque de TNT aparecen las hermanas Dina y Mita!"));
+        tip.add(Component.literal("§8Nunca la pierdes: si mueres, se queda contigo."));
     }
 }

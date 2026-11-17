@@ -62,7 +62,7 @@ public final class ModRegistry {
             .icon(() -> new ItemStack(WAND.get()))
             .displayItems((p, out) -> {
                 out.accept(WAND.get());
-                for (WaifuKind k : WaifuKind.ORDER) out.accept(EGGS.get(k).get());
+                for (WaifuKind k : WaifuKind.DISPLAY) out.accept(EGGS.get(k).get());
             }).build());
 
     private ModRegistry() {}

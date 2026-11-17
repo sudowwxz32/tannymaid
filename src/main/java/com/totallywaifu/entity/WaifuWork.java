@@ -75,7 +75,7 @@ public final class WaifuWork {
         }
         switch (w.kind) {
             case KOZUE -> { if (t % 30 == 0) craftOrder(); }
-            case HOMURA -> { if (t % 20 == 0) feedFurnace(); }
+            case HOMURA, AHUMADOR, ALTO_HORNO -> { if (t % 20 == 0) feedFurnace(); }
             case KURA -> {
                 if (t % 100 == 0) collectFromOthers();
                 if (t % 80 == 0) feedOwner();
@@ -134,6 +134,10 @@ public final class WaifuWork {
                     block = findBlock(s -> s.is(Tags.Blocks.STONE) || s.is(net.minecraft.world.level.block.Blocks.STONE), true);
             }
             case SHIORI -> block = findBlock(s -> s.is(Tags.Blocks.ORES_LAPIS), true);
+            case ALTO_HORNO -> block = findBlock(s -> s.is(Tags.Blocks.ORES), true);
+            case AHUMADOR -> { if (foodCount() < 32) prey = findPrey(); }
+            case TELAR -> prey = w.level().getEntitiesOfClass(Sheep.class, new net.minecraft.world.phys.AABB(center()).inflate(14, 6, 14),
+                    sh -> sh.readyForShearing()).stream().min(Comparator.comparingDouble(w::distanceToSqr)).orElse(null);
             default -> { }
         }
         if (block != null) {
@@ -143,7 +147,7 @@ public final class WaifuWork {
             boolean log = st.is(BlockTags.LOGS);
             w.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(log ? Items.IRON_AXE : Items.IRON_PICKAXE));
         } else if (prey != null) {
-            w.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
+            w.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(w.kind == WaifuKind.TELAR ? Items.SHEARS : Items.IRON_SWORD));
         } else if (w.tickCount % 200 == 0 && w.anchor != null && w.distanceToSqr(Vec3.atCenterOf(w.anchor)) > 10 * 10) {
             w.getNavigation().moveTo(w.anchor.getX() + 0.5, w.anchor.getY(), w.anchor.getZ() + 0.5, 1.0);   // vuelve a su zona
         }
@@ -171,6 +175,15 @@ public final class WaifuWork {
         w.setBusy(true);
         w.getLookControl().setLookAt(prey, 30, 30);
         if (w.tickCount % 10 == 0) w.getNavigation().moveTo(prey, 1.2);
+        if (w.kind == WaifuKind.TELAR && prey instanceof Sheep sh) {          // Hilda esquila, nunca lastima
+            if (w.distanceToSqr(prey) < 2.3 * 2.3) {
+                w.swing(InteractionHand.MAIN_HAND);
+                if (sh.readyForShearing()) sh.shear(net.minecraft.sounds.SoundSource.NEUTRAL);
+                prey = null;
+                w.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            }
+            return;
+        }
         if (w.distanceToSqr(prey) < 2.3 * 2.3 && cooldown == 0) {
             w.swing(InteractionHand.MAIN_HAND);
             prey.hurt(w.damageSources().mobAttack(w), 9.0F);
@@ -451,7 +464,7 @@ public final class WaifuWork {
     }
 
     private void feedFurnace() {
-        SimpleContainerHelper f = new SimpleContainerHelper(w.furnace);
+        SimpleContainerHelper f = new SimpleContainerHelper(w.furnace, cookType(w.kind));
         // saca lo cocinado a su mochila si se llena
         ItemStack out = w.furnace.getItem(2);
         if (out.getCount() >= 32) {
@@ -475,7 +488,7 @@ public final class WaifuWork {
             int best = -1;
             for (int i = 0; i < w.bag.getContainerSize(); i++) {
                 ItemStack s = w.bag.getItem(i);
-                if (s.isEmpty() || ForgeHooks.getBurnTime(s, RecipeType.SMELTING) <= 0 || s.is(Items.BUCKET)) continue;
+                if (s.isEmpty() || ForgeHooks.getBurnTime(s, cookType(w.kind)) <= 0 || s.is(Items.BUCKET)) continue;
                 if (best < 0 || s.is(Items.COAL) || s.is(Items.CHARCOAL)) best = i;
             }
             if (best >= 0) {
@@ -485,10 +498,14 @@ public final class WaifuWork {
         }
     }
 
-    private record SimpleContainerHelper(net.minecraft.world.SimpleContainer c) {
+    private record SimpleContainerHelper(net.minecraft.world.SimpleContainer c, RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> type) {
         boolean smeltable(net.minecraft.world.level.Level lv, ItemStack s) {
-            return lv.getRecipeManager().getRecipeFor(RecipeType.SMELTING, new net.minecraft.world.SimpleContainer(s.copyWithCount(1)), lv).isPresent();
+            return lv.getRecipeManager().getRecipeFor(type, new net.minecraft.world.SimpleContainer(s.copyWithCount(1)), lv).isPresent();
         }
+    }
+
+    static RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> cookType(WaifuKind k) {
+        return k == WaifuKind.AHUMADOR ? RecipeType.SMOKING : k == WaifuKind.ALTO_HORNO ? RecipeType.BLASTING : RecipeType.SMELTING;
     }
 
     /** El horno de Homura funciona siempre, incluso con el menú cerrado (y el doble de rápido). */
@@ -498,13 +515,13 @@ public final class WaifuWork {
         boolean wasLit = d[0] > 0;
         if (d[0] > 0) d[0]--;
         ItemStack in = c.getItem(0), fuel = c.getItem(1), res = c.getItem(2);
-        SmeltingRecipe r = in.isEmpty() ? null : w.level().getRecipeManager()
-                .getRecipeFor(RecipeType.SMELTING, new net.minecraft.world.SimpleContainer(in.copyWithCount(1)), w.level()).orElse(null);
+        net.minecraft.world.item.crafting.AbstractCookingRecipe r = in.isEmpty() ? null : w.level().getRecipeManager()
+                .getRecipeFor(cookType(w.kind), new net.minecraft.world.SimpleContainer(in.copyWithCount(1)), w.level()).orElse(null);
         ItemStack result = r == null ? ItemStack.EMPTY : r.getResultItem(w.level().registryAccess());
         boolean can = r != null && !result.isEmpty() && (res.isEmpty() || (ItemStack.isSameItemSameTags(res, result)
                 && res.getCount() + result.getCount() <= res.getMaxStackSize()));
         if (d[0] <= 0 && can) {
-            int burn = ForgeHooks.getBurnTime(fuel, RecipeType.SMELTING);
+            int burn = ForgeHooks.getBurnTime(fuel, cookType(w.kind));
             if (burn > 0) {
                 d[0] = d[1] = burn;
                 if (fuel.hasCraftingRemainingItem()) c.setItem(1, fuel.getCraftingRemainingItem());

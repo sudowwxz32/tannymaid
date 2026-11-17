@@ -61,7 +61,16 @@ public enum WaifuKind {
     STRIDER("Brasa", "Strider", null, "§4", "Extra: camina sobre la lava, te da resistencia al fuego en el Nether y te trae hongos", 40, 0.32, 5, 4, 0xA02C36, 0x6E468C, 1.12F),
     SHULKER("Shula", "Shulker", null, "§5", "Extra: proyectiles que hacen levitar a los monstruos; a veces te regala un caparazón", 40, 0.3, 4, 12, 0x9664AA, 0xECD896, 1.0F),
     PHANTOM("Noctis", "Phantom", null, "§9", "Extra: los phantoms huyen de ella; caída lenta y membranas para ti", 34, 0.36, 6, 2, 0x2C4078, 0x5AF0C8, 1.02F),
-    GUARDIAN("Abisa", "Guardián", null, "§3", "Extra: rayo láser contra monstruos y poder del conducto bajo el agua", 50, 0.3, 6, 6, 0x589E92, 0xF08C32, 1.0F);
+    GUARDIAN("Abisa", "Guardián", null, "§3", "Extra: rayo láser contra monstruos y poder del conducto bajo el agua", 50, 0.3, 6, 6, 0x589E92, 0xF08C32, 1.0F),
+    // ---- 6.0: más mesas (reversibles)
+    YUNQUE("Kana", "Yunque", Blocks.ANVIL, "§7", "Yunque que nunca se rompe; repara tu equipo con los lingotes de hierro de su mochila y golpea como un yunque cayendo", 50, 0.3, 9, 8, 0x4A4A50, 0x9A9AA2, 1.0F),
+    MUELA("Togi", "Afiladora", Blocks.GRINDSTONE, "§8", "Quita encantamientos (te da la experiencia), afila tu arma: fuerza cuando está cerca", 40, 0.32, 6, 4, 0x8A8A8A, 0x6A4A2A, 0.97F),
+    TELAR("Hilda", "Telar", Blocks.LOOM, "§d", "Diseña estandartes; teje lana con el hilo de su mochila y esquila ovejas cuando trabaja", 34, 0.32, 3, 2, 0xC89A6A, 0xE0607A, 0.98F),
+    CORTAPIEDRAS("Gema", "Cortapiedras", Blocks.STONECUTTER, "§b", "Corta piedra en cualquier forma; hace brillar las menas cercanas para que las veas", 40, 0.32, 6, 4, 0x7A7A7A, 0x9A6ADA, 0.95F),
+    HERRERIA("Tetsu", "Mesa de herrería", Blocks.SMITHING_TABLE, "§8", "Mejora a netherita y pone adornos; te da resistencia y te regala pepitas de hierro", 50, 0.3, 8, 8, 0x2E2A32, 0x8A6A4A, 1.02F),
+    CARTOGRAFIA("Carta", "Mesa de cartografía", Blocks.CARTOGRAPHY_TABLE, "§6", "Copia y amplía mapas; te dice dónde está la aldea más cercana y te regala brújulas y mapas", 34, 0.34, 3, 2, 0xD8C29A, 0x5A7A3A, 0.96F),
+    AHUMADOR("Kemuri", "Ahumador", Blocks.SMOKER, "§6", "Cocina comida el doble de rápido (solo lo que le pidas) y caza para tener comida", 40, 0.32, 6, 4, 0x5A4630, 0xB0B0B0, 1.0F),
+    ALTO_HORNO("Rekka", "Alto horno", Blocks.BLAST_FURNACE, "§c", "Funde menas y metal el doble de rápido (solo lo que le pidas) y busca menas para ti", 44, 0.32, 7, 5, 0x6A6A70, 0xFF7A2A, 1.02F);
 
     public final String display, role, color, job;
     @Nullable public final Block block;
@@ -90,6 +99,16 @@ public enum WaifuKind {
             ALDEANA, SLIME, ZOMBIE, ESQUELETO, CREEPER, ARANA, BRUJA, ENDERMAN, PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA,
             DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN};
 
+    /** Orden en la colección (las mesas nuevas van junto a las otras mesas). */
+    public static final WaifuKind[] DISPLAY = {KOZUE, HOMURA, KURA, SHIORI, CAMA, YUNQUE, MUELA, TELAR, CORTAPIEDRAS, HERRERIA, CARTOGRAFIA, AHUMADOR, ALTO_HORNO,
+            OVEJA, VACA, CERDO, GALLINA, CONEJO, ABEJA, PANDA, CABALLO, PERRO, GATO, GOLEM, ALDEANA, SLIME, ZOMBIE, ESQUELETO, CREEPER, ARANA, BRUJA, ENDERMAN,
+            PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA, DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN};
+
+    /** Las tres que cocinan/funden (horno, ahumador, alto horno). */
+    public boolean cooker() {
+        return this == HOMURA || this == AHUMADOR || this == ALTO_HORNO;
+    }
+
     public String id() {
         return name().toLowerCase();
     }
@@ -110,7 +129,7 @@ public enum WaifuKind {
     /** Pelean cuerpo a cuerpo (cazan monstruos cuando te siguen o trabajan). */
     public boolean fighter() {
         return switch (this) {
-            case PERRO, GOLEM, ZOMBIE, ENDERMAN, ARANA, PANDA, PIGLIN, WITHER, WARDEN, ZORRO, AJOLOTE, SLIME, DELFIN, OSO -> true;
+            case PERRO, GOLEM, ZOMBIE, ENDERMAN, ARANA, PANDA, PIGLIN, WITHER, WARDEN, ZORRO, AJOLOTE, SLIME, DELFIN, OSO, YUNQUE, HERRERIA -> true;
             default -> false;
         };
     }
@@ -121,7 +140,7 @@ public enum WaifuKind {
     }
 
     public boolean fireproof() {
-        return this == BLAZE || this == WITHER || this == GHAST || this == PIGLIN || this == HOMURA || this == WARDEN || this == STRIDER;
+        return this == BLAZE || this == WITHER || this == GHAST || this == PIGLIN || this == HOMURA || this == WARDEN || this == STRIDER || this == AHUMADOR || this == ALTO_HORNO || this == YUNQUE;
     }
 
     public boolean noFall() {
@@ -143,6 +162,14 @@ public enum WaifuKind {
         if (b == Blocks.CHEST || b == Blocks.TRAPPED_CHEST) return KURA;
         if (b == Blocks.ENCHANTING_TABLE) return SHIORI;
         if (b instanceof net.minecraft.world.level.block.BedBlock) return CAMA;
+        if (b == Blocks.ANVIL || b == Blocks.CHIPPED_ANVIL || b == Blocks.DAMAGED_ANVIL) return YUNQUE;
+        if (b == Blocks.GRINDSTONE) return MUELA;
+        if (b == Blocks.LOOM) return TELAR;
+        if (b == Blocks.STONECUTTER) return CORTAPIEDRAS;
+        if (b == Blocks.SMITHING_TABLE) return HERRERIA;
+        if (b == Blocks.CARTOGRAPHY_TABLE) return CARTOGRAFIA;
+        if (b == Blocks.SMOKER) return AHUMADOR;
+        if (b == Blocks.BLAST_FURNACE) return ALTO_HORNO;
         if (b == Blocks.TNT) return DINA;
         return null;
     }

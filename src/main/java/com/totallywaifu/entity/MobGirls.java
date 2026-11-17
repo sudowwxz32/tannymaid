@@ -115,6 +115,8 @@ final class MobGirls {
             case WARDEN -> le.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 160, 0));
             case ZORRO, PERRO -> le.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0));
             case PANDA -> { Vec3 d = le.position().subtract(w.position()).normalize().scale(1.2); le.setDeltaMovement(d.x, 0.4, d.z); }
+            case YUNQUE -> { le.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2)); w.playSound(SoundEvents.ANVIL_LAND, 0.6F, 1.2F); }
+            case HERRERIA -> w.playSound(SoundEvents.SMITHING_TABLE_USE, 0.8F, 1.0F);
             default -> { }
         }
     }
@@ -489,6 +491,53 @@ final class MobGirls {
             case RANA -> {
                 if (p != null && active && t % 100 == 0) buff(p, MobEffects.JUMP, 160, 1);
             }
+            case YUNQUE -> {
+                if (p != null && t % 100 == 0) repair(w, p);
+            }
+            case MUELA -> {
+                if (p != null && t % 100 == 0) buff(p, MobEffects.DAMAGE_BOOST, 160, 0);
+            }
+            case TELAR -> {
+                if (t % 200 == 0) {
+                    for (int i = 0; i < w.bag.getContainerSize(); i++) {
+                        ItemStack s = w.bag.getItem(i);
+                        if (s.is(Items.STRING) && s.getCount() >= 4) {
+                            s.shrink(4);
+                            ItemStack wool = new ItemStack(Items.WHITE_WOOL);
+                            ItemStack rest = w.bag.addItem(wool);
+                            if (!rest.isEmpty()) w.spawnAtLocation(rest);
+                            break;
+                        }
+                    }
+                }
+            }
+            case CORTAPIEDRAS -> {
+                if (p instanceof net.minecraft.server.level.ServerPlayer sp && t % 100 == 0) {     // menas que brillan (solo para ti)
+                    int shown = 0;
+                    net.minecraft.core.BlockPos c = sp.blockPosition();
+                    for (net.minecraft.core.BlockPos q : net.minecraft.core.BlockPos.betweenClosed(c.offset(-8, -6, -8), c.offset(8, 6, 8))) {
+                        if (!lv.getBlockState(q).is(net.minecraftforge.common.Tags.Blocks.ORES)) continue;
+                        lv.sendParticles(sp, ParticleTypes.GLOW, true, q.getX() + 0.5, q.getY() + 0.5, q.getZ() + 0.5, 4, 0.3, 0.3, 0.3, 0);
+                        if (++shown > 40) break;
+                    }
+                }
+            }
+            case HERRERIA -> {
+                if (p != null && t % 100 == 0) buff(p, MobEffects.DAMAGE_RESISTANCE, 160, 0);
+                if (every(w, "nuggets", 5000)) give(w, new ItemStack(Items.IRON_NUGGET, 6), "pepitas de hierro, recién forjadas");
+            }
+            case CARTOGRAFIA -> {
+                if (p != null && every(w, "village", 6000)) {
+                    net.minecraft.core.BlockPos v = lv.findNearestMapStructure(net.minecraft.tags.StructureTags.VILLAGE, p.blockPosition(), 50, false);
+                    if (v != null) {
+                        double dx = v.getX() - p.getX(), dz = v.getZ() - p.getZ();
+                        String dir = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? "este" : "oeste") : (dz > 0 ? "sur" : "norte");
+                        w.say(p, "Según mis mapas, hay una aldea a " + (int) Math.sqrt(dx * dx + dz * dz) + " bloques al " + dir + " (X " + v.getX() + ", Z " + v.getZ() + ") ♥");
+                    }
+                }
+                if (every(w, "maps", 12000)) give(w, new ItemStack(w.getRandom().nextBoolean() ? Items.COMPASS : Items.MAP), "¡para tus aventuras!");
+            }
+            case AHUMADOR, ALTO_HORNO -> { }
             case DELFIN -> {
                 Player q = near(w, 20);
                 if (q != null && q.isInWater() && t % 60 == 0) { buff(q, MobEffects.DOLPHINS_GRACE, 200, 0); buff(q, MobEffects.WATER_BREATHING, 300, 0); }
@@ -539,6 +588,26 @@ final class MobGirls {
                 if (every(w, "crystal", 6000)) give(w, new ItemStack(Items.PRISMARINE_CRYSTALS, 3), "cristales del océano");
             }
             default -> { }
+        }
+    }
+
+    /** Kana repara la pieza más gastada de tu equipo con un lingote de hierro de su mochila. */
+    private static void repair(WaifuEntity w, Player p) {
+        ItemStack worst = ItemStack.EMPTY;
+        for (net.minecraft.world.entity.EquipmentSlot sl : net.minecraft.world.entity.EquipmentSlot.values()) {
+            ItemStack s = p.getItemBySlot(sl);
+            if (s.isDamageableItem() && s.isDamaged() && (worst.isEmpty() || s.getDamageValue() * 1.0 / s.getMaxDamage() > worst.getDamageValue() * 1.0 / worst.getMaxDamage())) worst = s;
+        }
+        if (worst.isEmpty() || worst.getDamageValue() < worst.getMaxDamage() / 10) return;
+        for (int i = 0; i < w.bag.getContainerSize(); i++) {
+            ItemStack s = w.bag.getItem(i);
+            if (!s.is(Items.IRON_INGOT)) continue;
+            s.shrink(1);
+            worst.setDamageValue(Math.max(0, worst.getDamageValue() - worst.getMaxDamage() / 4));
+            w.playSound(SoundEvents.ANVIL_USE, 0.6F, 1.3F);
+            ((ServerLevel) w.level()).sendParticles(ParticleTypes.CRIT, p.getX(), p.getY() + 1, p.getZ(), 12, 0.4, 0.5, 0.4, 0.1);
+            p.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Kana reparó tu " + worst.getHoverName().getString() + " ♥"), true);
+            return;
         }
     }
 
