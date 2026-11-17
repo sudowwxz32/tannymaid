@@ -1,4 +1,10 @@
-# Totally Waifu? 5.0 (Forge 1.20.1)
+# Totally Waifu? 6.0 (Forge 1.20.1)
+
+## Novedades 6.0
+- **8 chicas de mesas nuevas** (reversibles): Kana (yunque), Togi (afiladora), Hilda (telar), Gema (cortapiedras), Tetsu (mesa de herrería), Carta (mesa de cartografía), Kemuri (ahumador) y Rekka (alto horno). Abren su menú vanilla y tienen habilidades propias.
+- **Ninguna waifu puede morir**: se desmaya un instante y se recupera (si estaba en el vacío o en lava, aparece a tu lado).
+- **La vara nunca se pierde**: si mueres, reapareces con ella.
+- Nueva descripción y logo en la lista de mods.
 
 ## Novedades 5.0
 - **8 waifus extra nuevas** (12 en total): Marina (delfín), Tortu (tortuga), Lori (loro), Nevada (oso polar), Brasa (strider), Shula (shulker), Noctis (phantom) y Abisa (guardián). Se desbloquean al completar la colección.
