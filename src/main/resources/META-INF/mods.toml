@@ -4,7 +4,7 @@ license="All Rights Reserved"
 
 [[mods]]
 modId="totallywaifu"
-version="6.0.0"
+version="6.1.0"
 displayName="Totally Waifu?"
 authors="Totally Waifu"
 logoFile="logo.png"
@@ -24,7 +24,7 @@ Ovejas, vacas, lobos, gatos, gólems, aldeanos, zombis, creepers, endermans, bla
 §b✦ COLECCIÓN ♥ Mis Waifus (tecla K)§r
 Llama, guarda y sigue a todas tus chicas. Complétala para ganar recompensas, la Bendición ♥ y desbloquear 12 waifus EXTRA. ¡Complétalas también para la Bendición ✦ y tesoros legendarios!
 
-§c♥ Ninguna waifu puede morir§r, y tu vara nunca se pierde al morir.
+§c♥ Ninguna waifu puede morir§r, sus flechas, explosiones y hechizos nunca te lastiman, y tu vara nunca se pierde al morir.
 '''
 
 [[dependencies.totallywaifu]]

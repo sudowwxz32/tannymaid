@@ -247,6 +247,34 @@ public final class ForgeEvents {
         if (e.getEntity() instanceof Player p && p.isSleeping() && Sleep.lapOf(p) != null) e.setCanceled(true);
     }
 
+    // ================================================================== fuego amigo: los ataques de las waifus nunca te afectan
+    /** ¿Viene de una waifu (golpe, flecha, bola de fuego, explosivo, magia...)? */
+    private static boolean fromWaifu(net.minecraft.world.damagesource.DamageSource src) {
+        net.minecraft.world.entity.Entity a = src.getEntity(), d = src.getDirectEntity();
+        if (a instanceof WaifuEntity || d instanceof WaifuEntity || d instanceof com.totallywaifu.entity.WaifuShot) return true;
+        return d instanceof net.minecraft.world.entity.projectile.Projectile pr && pr.getOwner() instanceof WaifuEntity;
+    }
+
+    /** A quién nunca deben lastimar: tú (y otros jugadores), otras waifus, tus mascotas y los aldeanos. */
+    private static boolean friendly(net.minecraft.world.entity.Entity e) {
+        return e instanceof Player || e instanceof WaifuEntity || (e instanceof net.minecraft.world.entity.TamableAnimal t && t.isTame())
+                || e instanceof net.minecraft.world.entity.npc.AbstractVillager || e instanceof net.minecraft.world.entity.animal.IronGolem
+                || (e instanceof net.minecraft.world.entity.animal.horse.AbstractHorse h && h.isTamed());
+    }
+
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGHEST)
+    public static void friendlyFire(LivingAttackEvent e) {
+        if (friendly(e.getEntity()) && fromWaifu(e.getSource())) e.setCanceled(true);
+    }
+
+    /** Sus flechas y proyectiles te atraviesan sin tocarte. */
+    @SubscribeEvent
+    public static void projectile(net.minecraftforge.event.entity.ProjectileImpactEvent e) {
+        if (e.getRayTraceResult() instanceof net.minecraft.world.phys.EntityHitResult hit && friendly(hit.getEntity())
+                && (e.getProjectile().getOwner() instanceof WaifuEntity || e.getProjectile() instanceof com.totallywaifu.entity.WaifuShot))
+            e.setCanceled(true);
+    }
+
     @SubscribeEvent
     public static void hurt(LivingHurtEvent e) {
         LivingEntity v = e.getEntity();
