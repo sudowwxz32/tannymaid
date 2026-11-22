@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:golden_apple"
+    },
+    "title": {
+      "text": "✦ La Diosa Zorro Blanca"
+    },
+    "description": {
+      "text": "\"No pensé que lograrías encontrarlas a todas.\" Inari te acompaña"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "totallywaifu:leyendas",
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

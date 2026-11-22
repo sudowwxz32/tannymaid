@@ -149,6 +149,11 @@ public class WandItem extends Item {
             p.displayClientMessage(Component.literal("§d✦ Esta criatura guarda un secreto... completa tu colección de ♥ Mis Waifus para despertarla."), true);
             return true;
         }
+        if (kind.legend() && !Collection.extrasComplete(p)) {
+            lv.sendParticles(ParticleTypes.ENCHANT, mob.getX(), mob.getY() + 1, mob.getZ(), 30, 0.5, 0.5, 0.5, 0.6);
+            p.displayClientMessage(Component.literal("§6☀ Esta criatura es una LEYENDA... completa los extras de ♥ Mis Waifus para despertarla."), true);
+            return true;
+        }
         WaifuEntity w = ModRegistry.TYPES.get(kind).get().create(lv);
         if (w == null) return false;
         if (mob instanceof Villager v) {

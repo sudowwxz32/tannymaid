@@ -10,8 +10,10 @@ import gen_mobgirls as M
 import gen_girls4 as N
 import gen_girls5 as N5
 import gen_girls6 as N6
+import gen_girls7 as N7
 N.LOOK.update(N5.LOOK)
 N.LOOK.update(N6.LOOK)
+N.LOOK.update(N7.LOOK)
 from PIL import Image, ImageDraw
 
 ALL = dict(B.WAIFUS)
@@ -20,6 +22,7 @@ ALL.update(M.GIRLS)
 ALL.update(N.GIRLS)
 ALL.update(N5.GIRLS)
 ALL.update(N6.GIRLS)
+ALL.update(N7.GIRLS)
 DEFAULT_SKIN = (B.SKIN, B.SKIN_SH)
 
 

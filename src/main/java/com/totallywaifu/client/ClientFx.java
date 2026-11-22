@@ -89,8 +89,10 @@ public final class ClientFx {
             }
             case Fx.SURPRISE -> {
                 WaifuKind k = WaifuKind.byId(arg);
-                banner("✦ ¡WAIFU EXTRA! ✦", k.display + " (" + k.role + ") despertó", new ItemStack(ModRegistry.EGGS.get(k).get()));
+                banner(k.legend() ? "☀ ¡WAIFU LEYENDA! ☀" : "✦ ¡WAIFU EXTRA! ✦", k.display + " (" + k.role + ") despertó", new ItemStack(ModRegistry.EGGS.get(k).get()));
             }
+            case Fx.ASCEND -> Ascend.start(arg);
+            case Fx.GODDESS -> banner("☀ ¡DIOSA DESBLOQUEADA! ☀", "Inari, la Diosa Zorro Blanca, te acompaña", new ItemStack(ModRegistry.EGGS.get(WaifuKind.DIOSA).get()));
             case Fx.SLEEP_ON -> sleepGirl = arg;
             case Fx.SLEEP_OFF -> sleepGirl = -1;
             default -> { }
@@ -109,6 +111,7 @@ public final class ClientFx {
     public static void tick(TickEvent.ClientTickEvent e) {
         if (e.phase != TickEvent.Phase.END) return;
         ticks++;
+        Ascend.tick();
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) {
             introAt = -1;
@@ -160,6 +163,7 @@ public final class ClientFx {
         float t = ticks + e.getPartialTick();
         int W = g.guiWidth(), H = g.guiHeight();
         if (sleepGirl >= 0 && mc.player.isSleeping()) sleep(mc, g, W, H, t);
+        if (Ascend.active) Ascend.hud(mc, g, W, H, e.getPartialTick());
         if (introAt >= 0) intro(mc, g, W, H, t - introAt);
         if (falling) wind(g, W, H, t);
         if (flashAt >= 0 && t - flashAt < 25) {
@@ -234,7 +238,7 @@ public final class ClientFx {
     }
 
     /** El ente de luz: halo que gira, rayos, una silueta brillante y destellos. */
-    private static void light(GuiGraphics g, int cx, int base, float grow, float t) {
+    static void light(GuiGraphics g, int cx, int base, float grow, float t) {
         PoseStack ps = g.pose();
         float pulse = 1 + Mth.sin(t * 0.12F) * 0.06F;
         int cy = base - 55;
@@ -326,7 +330,7 @@ public final class ClientFx {
             "junglas", "tierras heladas", "lava del Nether", "ciudades del End", "noches sin dormir", "monumentos marinos"};
 
     /** Fila de recompensas que van apareciendo una a una. */
-    private static void rewards(GuiGraphics g, java.util.List<ItemStack> l, int cx, int y, float t, float from, int ia) {
+    static void rewards(GuiGraphics g, java.util.List<ItemStack> l, int cx, int y, float t, float from, int ia) {
         int n = l.size(), step = 26, x0 = cx - (n * step) / 2;
         for (int i = 0; i < n; i++) {
             float k = Mth.clamp((t - from - i * 6) / 8.0F, 0, 1);

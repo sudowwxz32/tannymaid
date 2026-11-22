@@ -126,19 +126,41 @@ public final class Collection {
 
     private static void newGirl(ServerPlayer p, WaifuKind k) {
         Ach.grant(p, "primera");
-        if (k.surprise()) {
+        if (k.surprise() || k.legend()) {
             Ach.grant(p, "sorpresa");
             com.totallywaifu.network.Fx.send(p, com.totallywaifu.network.Fx.SURPRISE, k.ordinal());
         }
         if (k == WaifuKind.WARDEN) Ach.grant(p, "guardiana");
+        if (k == WaifuKind.DIOSA) {
+            Ach.grant(p, "diosa");
+            return;
+        }
         CompoundTag r = root(p);
-        int got = 0, total = 0, eg = 0, et = 0;
+        int got = 0, total = 0, eg = 0, et = 0, lg = 0, lt = 0;
         for (WaifuKind q : WaifuKind.values()) {
             boolean has = rec(p, q).getBoolean("Got");
-            if (q.surprise()) { et++; if (has) eg++; }
-            else { total++; if (has) got++; }
+            switch (q.tier()) {
+                case 0 -> { total++; if (has) got++; }
+                case 1 -> { et++; if (has) eg++; }
+                case 2 -> { lt++; if (has) lg++; }
+                default -> { }
+            }
         }
         ServerLevel lv = p.serverLevel();
+        if (k.legend()) {
+            if (r.getBoolean("LegendsComplete")) return;
+            if (lg < lt) {
+                p.displayClientMessage(Component.literal("§6☀ Nueva waifu leyenda: " + k.color + k.display + " §7(" + lg + "/" + lt + ")"), true);
+                return;
+            }
+            r.putBoolean("LegendsComplete", true);
+            Ach.grant(p, "leyendas");
+            Rewards.give(p, Rewards.legends(), Rewards.LEGENDS_LEVELS);
+            lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 0.6F);
+            p.sendSystemMessage(Component.literal("§6§l☀ ¡LEYENDAS COMPLETAS! ☀ §r§eRecibiste tesoros divinos y la §6" + Rewards.PERK_LEGENDS + "§e."));
+            com.totallywaifu.event.ForgeEvents.startAscension(p);
+            return;
+        }
         if (!r.getBoolean("Complete")) {
             if (got < total) {
                 p.displayClientMessage(Component.literal("§d♥ Nueva waifu: " + k.color + k.display + " §7(" + got + "/" + total + ")"), true);
@@ -161,6 +183,7 @@ public final class Collection {
             return;
         }
         r.putBoolean("ExtrasComplete", true);
+        r.putBoolean("LegendNotice", true);
         Ach.grant(p, "extras");
         Rewards.give(p, Rewards.extras(), Rewards.EXTRAS_LEVELS);
         r.putBoolean("RewardE", true);
@@ -168,6 +191,11 @@ public final class Collection {
         for (int i = 0; i < 10; i++) Ach.firework(lv, p.position().add(Math.cos(i * 0.628) * 3, 0.5, Math.sin(i * 0.628) * 3), i);
         lv.playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 0.8F);
         p.sendSystemMessage(Component.literal("§5§l✦ ¡EXTRAS COMPLETOS! ✦ §r§dEres la leyenda de las waifus. Recibiste tesoros legendarios y la §b" + Rewards.PERK_EXTRAS + "§d."));
+        p.sendSystemMessage(Component.literal("§6☀ Despertaron " + lt + " waifus LEYENDA: burro, cabra, llama, camello, sniffer, calamar brillante, evocadora y murciélago. ¡Encuéntralas a todas!"));
+    }
+
+    public static boolean legendsComplete(Player p) {
+        return root(p).getBoolean("LegendsComplete");
     }
 
     /** Quien completó la colección antes de que existieran las recompensas, las recibe al entrar. */
@@ -178,6 +206,12 @@ public final class Collection {
             Rewards.give(p, Rewards.collection(), Rewards.COLLECTION_LEVELS);
             p.sendSystemMessage(Component.literal("§6♥ Totally Waifu?: §eya habías completado tu colección: ¡aquí están tus recompensas! §7(y 8 waifus extra nuevas por descubrir)"));
         }
+        if (r.getBoolean("ExtrasComplete") && !r.getBoolean("LegendNotice")) {
+            r.putBoolean("LegendNotice", true);
+            p.sendSystemMessage(Component.literal("§6☀ Totally Waifu? 7.0: §eya completaste los extras... ¡despertaron 8 waifus LEYENDA! §7Burro, cabra, llama, camello, sniffer, calamar brillante, evocadora y murciélago (mira ♥ Mis Waifus → ☀ Leyendas)."));
+        }
+        // se fue antes de recibir a la diosa: la escena se repite
+        if (r.getBoolean("LegendsComplete") && !rec(p, WaifuKind.DIOSA).getBoolean("Got")) com.totallywaifu.event.ForgeEvents.startAscension(p);
     }
 
     public static boolean extrasComplete(Player p) {
@@ -227,6 +261,12 @@ public final class Collection {
         t.remove("Uuid");
         w.say(p, "¡Ay! Me retiré a tu colección ♥. Llámame desde la pestaña del inventario cuando quieras.");
         return true;
+    }
+
+    /** La chica si está cargada en algún mundo (o null). */
+    @Nullable
+    public static WaifuEntity findLoaded(ServerPlayer p, WaifuKind k) {
+        return find(p, k);
     }
 
     @Nullable
@@ -314,7 +354,8 @@ public final class Collection {
         boolean sur = surprisesUnlocked(p);
         for (WaifuKind k : WaifuKind.values()) {
             CompoundTag t = rec(p, k);
-            int status = !t.getBoolean("Got") ? (k.surprise() && !sur ? -1 : 0) : t.contains("Stored") ? 2 : t.hasUUID("Uuid") ? 1 : 3;
+            boolean locked = (k.surprise() && !sur) || (k.legend() && !extrasComplete(p)) || k == WaifuKind.DIOSA;
+            int status = !t.getBoolean("Got") ? (locked ? -1 : 0) : t.contains("Stored") ? 2 : t.hasUUID("Uuid") ? 1 : 3;
             String where = "";
             if (status == 1) {
                 WaifuEntity w = find(p, k);
@@ -330,7 +371,7 @@ public final class Collection {
             }
             out.add(new CollectionData.Entry(k.ordinal(), status, where));
         }
-        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new CollectionData(out, sur, hasHome(p), extrasComplete(p)));
+        Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new CollectionData(out, sur, hasHome(p), extrasComplete(p), legendsComplete(p)));
     }
 
     private static String modeName(int m) {

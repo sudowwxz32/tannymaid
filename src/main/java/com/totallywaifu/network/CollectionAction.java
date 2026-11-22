@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 /** Cliente → servidor: abrir/refrescar la colección, llamar o guardar a una chica. */
 public record CollectionAction(int kind, int action) {
-    public static final int OPEN = 0, SUMMON = 1, STORE = 2, HOME = 3;
+    public static final int OPEN = 0, SUMMON = 1, STORE = 2, HOME = 3, INARI = 4;
 
     public static void write(CollectionAction m, FriendlyByteBuf b) {
         b.writeVarInt(m.kind);
@@ -28,7 +28,10 @@ public record CollectionAction(int kind, int action) {
             WaifuKind k = WaifuKind.byId(m.kind);
             if (m.action == SUMMON) Collection.summon(p, k);
             else if (m.action == STORE) Collection.store(p, k);
-            else if (m.action == HOME) {
+            else if (m.action == INARI) {
+                com.totallywaifu.entity.Inari.order(p, "cambiar");
+                return;
+            } else if (m.action == HOME) {
                 Collection.goHome(p);
                 return;
             }

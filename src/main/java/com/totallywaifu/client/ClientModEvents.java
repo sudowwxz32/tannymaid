@@ -18,11 +18,17 @@ public final class ClientModEvents {
     public static void layers(EntityRenderersEvent.RegisterLayerDefinitions e) {
         e.registerLayerDefinition(WaifuLayers.FACE, WaifuModels::face);
         for (WaifuKind k : WaifuKind.values()) e.registerLayerDefinition(WaifuLayers.body(k), WaifuLayers.bodyDef(k));
+        e.registerLayerDefinition(InariRenderer.GIRL, InariModels::girl);
+        e.registerLayerDefinition(InariRenderer.FOX, InariModels::fox);
+        e.registerLayerDefinition(InariRenderer.FOX_FACE, InariModels::foxFace);
     }
 
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
-        for (WaifuKind k : WaifuKind.values()) e.registerEntityRenderer(ModRegistry.TYPES.get(k).get(), ctx -> new WaifuRenderer(ctx, k));
+        for (WaifuKind k : WaifuKind.values()) {
+            if (k == WaifuKind.DIOSA) e.registerEntityRenderer(ModRegistry.TYPES.get(k).get(), InariRenderer::new);
+            else e.registerEntityRenderer(ModRegistry.TYPES.get(k).get(), ctx -> new WaifuRenderer(ctx, k));
+        }
         e.registerEntityRenderer(ModRegistry.SHOT.get(), ctx -> new net.minecraft.client.renderer.entity.ThrownItemRenderer<>(ctx, 1.4F, true));
     }
 

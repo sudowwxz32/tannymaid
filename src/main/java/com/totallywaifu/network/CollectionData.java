@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /** Servidor → cliente: estado de "Mis Waifus" (0 no la tienes, 1 en el mundo, 2 guardada). */
-public record CollectionData(List<Entry> entries, boolean surprise, boolean home, boolean extras) {
+public record CollectionData(List<Entry> entries, boolean surprise, boolean home, boolean extras, boolean legends) {
     public record Entry(int kind, int status, String where) {}
 
     public static void write(CollectionData m, FriendlyByteBuf b) {
@@ -23,13 +23,14 @@ public record CollectionData(List<Entry> entries, boolean surprise, boolean home
         b.writeBoolean(m.surprise);
         b.writeBoolean(m.home);
         b.writeBoolean(m.extras);
+        b.writeBoolean(m.legends);
     }
 
     public static CollectionData read(FriendlyByteBuf b) {
         int n = b.readVarInt();
         List<Entry> l = new ArrayList<>();
         for (int i = 0; i < n; i++) l.add(new Entry(b.readVarInt(), b.readVarInt() - 1, b.readUtf()));
-        return new CollectionData(l, b.readBoolean(), b.readBoolean(), b.readBoolean());
+        return new CollectionData(l, b.readBoolean(), b.readBoolean(), b.readBoolean(), b.readBoolean());
     }
 
     public static void handle(CollectionData m, Supplier<NetworkEvent.Context> ctx) {

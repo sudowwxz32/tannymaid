@@ -117,6 +117,21 @@ final class MobGirls {
             case PANDA -> { Vec3 d = le.position().subtract(w.position()).normalize().scale(1.2); le.setDeltaMovement(d.x, 0.4, d.z); }
             case YUNQUE -> { le.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2)); w.playSound(SoundEvents.ANVIL_LAND, 0.6F, 1.2F); }
             case HERRERIA -> w.playSound(SoundEvents.SMITHING_TABLE_USE, 0.8F, 1.0F);
+            case BURRO -> {                                       // ¡patada de burra!
+                Vec3 d = le.position().subtract(w.position()).normalize().scale(2.2);
+                le.setDeltaMovement(d.x, 0.5, d.z);
+                le.hurtMarked = true;
+                w.playSound(SoundEvents.DONKEY_ANGRY, 1.0F, 1.3F);
+            }
+            case CABRA -> {                                       // embestida: por los aires
+                Vec3 d = le.position().subtract(w.position()).normalize().scale(1.4);
+                le.setDeltaMovement(d.x, 1.1, d.z);
+                le.hurtMarked = true;
+                w.playSound(SoundEvents.GOAT_RAM_IMPACT, 1.0F, 1.2F);
+            }
+            case CAMELLO -> le.setDeltaMovement(le.getDeltaMovement().add(0, 0.5, 0));
+            case SNIFFER -> le.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0));
+            case MURCIELAGO -> le.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0));
             default -> { }
         }
     }
@@ -332,6 +347,46 @@ final class MobGirls {
                 m.hurt(w.damageSources().indirectMagic(w, w), 12.0F);
                 w.playSound(SoundEvents.GUARDIAN_ATTACK, 1.0F, 1.2F);
                 work.cooldown(60);
+            }
+            case LLAMA -> {                                       // escupitajo de llama
+                if (!active || work.cooldown() > 0) return;
+                Mob m = target(w, 12);
+                if (m == null) return;
+                w.getLookControl().setLookAt(m, 30, 30);
+                line(lv, w.position().add(0, 1.5, 0), m.position().add(0, m.getBbHeight() * 0.6, 0), ParticleTypes.SPIT, 10);
+                m.hurt(w.damageSources().indirectMagic(w, w), 6.0F);
+                m.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
+                w.playSound(SoundEvents.LLAMA_SPIT, 1.0F, 1.1F);
+                work.cooldown(30);
+            }
+            case EVOCADORA -> {                                   // colmillos mágicos bajo los monstruos
+                if (!active || work.cooldown() > 0) return;
+                Mob m = target(w, 14);
+                if (m == null) return;
+                w.getLookControl().setLookAt(m, 30, 30);
+                Vec3 a = w.position(), b = m.position();
+                for (int i = 1; i <= 6; i++) {
+                    Vec3 q = a.lerp(b, i / 6.0);
+                    lv.addFreshEntity(new net.minecraft.world.entity.projectile.EvokerFangs(lv, q.x, Math.floor(b.y), q.z, w.getYRot(), i * 2, w));
+                }
+                for (int i = 0; i < 4; i++) {
+                    double an = i * Math.PI / 2;
+                    lv.addFreshEntity(new net.minecraft.world.entity.projectile.EvokerFangs(lv, b.x + Math.cos(an) * 1.2, Math.floor(b.y), b.z + Math.sin(an) * 1.2, w.getYRot(), 14, w));
+                }
+                w.playSound(SoundEvents.EVOKER_CAST_SPELL, 1.0F, 1.2F);
+                lv.sendParticles(ParticleTypes.ENCHANTED_HIT, w.getX(), w.getY() + 2, w.getZ(), 10, 0.4, 0.3, 0.4, 0.1);
+                work.cooldown(50);
+            }
+            case CALAMAR -> {                                     // chorro de tinta brillante
+                if (!active || work.cooldown() > 0) return;
+                Mob m = target(w, 10);
+                if (m == null) return;
+                line(lv, w.position().add(0, 1.2, 0), m.position().add(0, m.getBbHeight() * 0.5, 0), ParticleTypes.GLOW_SQUID_INK, 10);
+                m.hurt(w.damageSources().indirectMagic(w, w), 4.0F);
+                m.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0));
+                m.addEffect(new MobEffectInstance(MobEffects.GLOWING, 160, 0));
+                w.playSound(SoundEvents.GLOW_SQUID_SQUIRT, 1.0F, 1.2F);
+                work.cooldown(40);
             }
             case RANA -> {
                 if (!active || work.cooldown() > 0 || t % 10 != 0) return;
@@ -582,6 +637,56 @@ final class MobGirls {
                 if (t % 20 == 0) for (Phantom ph : lv.getEntitiesOfClass(Phantom.class, w.getBoundingBox().inflate(24))) ph.setTarget(null);
                 if (every(w, "membrane", 6000)) give(w, new ItemStack(Items.PHANTOM_MEMBRANE, 2), "membranas para ti");
             }
+            case BURRO -> {
+                if (t % 10 == 0) magnet(w, lv, 6, null);
+                if (p != null && t % 100 == 0) buff(p, MobEffects.DIG_SPEED, 160, 0);
+                if (every(w, "hay", 6000)) give(w, new ItemStack(Items.HAY_BLOCK, 2), "¡paja para el invierno! Hi-haaa ♥");
+            }
+            case CABRA -> {
+                if (p != null && active && t % 100 == 0) buff(p, MobEffects.JUMP, 160, 2);
+                if (every(w, "horn", 24000)) give(w, new ItemStack(Items.GOAT_HORN), "un cuerno de cabra... ¡tócalo fuerte!");
+            }
+            case LLAMA -> {
+                if (every(w, "carpet", 5000)) {
+                    net.minecraft.world.item.Item[] cs = {Items.RED_CARPET, Items.YELLOW_CARPET, Items.GREEN_CARPET, Items.BLUE_CARPET, Items.ORANGE_WOOL, Items.LIME_WOOL};
+                    give(w, new ItemStack(cs[w.getRandom().nextInt(cs.length)], 4), "¡colores de los Andes para ti!");
+                }
+            }
+            case CAMELLO -> {
+                if (p != null && t % 100 == 0 && lv.dimensionType().ultraWarm()) buff(p, MobEffects.FIRE_RESISTANCE, 200, 0);
+                if (w.isVehicle() && t % 40 == 0 && w.getFirstPassenger() instanceof Player r) buff(r, MobEffects.JUMP, 80, 1);
+                if (every(w, "cactus", 6000)) give(w, new ItemStack(Items.CACTUS, 3), "cactus del desierto (¡cuidado, pica!)");
+            }
+            case SNIFFER -> {
+                if (every(w, "sniff", 3600)) {
+                    int r = w.getRandom().nextInt(100);
+                    ItemStack st = r < 4 ? new ItemStack(Items.DIAMOND) : r < 20 ? new ItemStack(Items.EMERALD, 2) : r < 45 ? new ItemStack(Items.TORCHFLOWER_SEEDS)
+                            : r < 65 ? new ItemStack(Items.PITCHER_POD) : r < 85 ? new ItemStack(Items.BONE, 3) : new ItemStack(Items.MOSS_BLOCK, 4);
+                    lv.sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, net.minecraft.world.level.block.Blocks.DIRT.defaultBlockState()),
+                            w.getX(), w.getY() + 0.2, w.getZ(), 30, 0.4, 0.1, 0.4, 0.1);
+                    w.playSound(SoundEvents.SNIFFER_DIGGING, 1.0F, 1.0F);
+                    give(w, st, r < 4 ? "¡¡OLÍ UN DIAMANTE!! ♥" : "*snif snif* ¡encontré algo!");
+                }
+            }
+            case CALAMAR -> {
+                Player q = near(w, 16);
+                if (q != null && t % 100 == 0) {
+                    buff(q, MobEffects.NIGHT_VISION, 400, 0);
+                    if (q.isInWater()) buff(q, MobEffects.WATER_BREATHING, 300, 0);
+                }
+                if (every(w, "ink", 5000)) give(w, new ItemStack(Items.GLOW_INK_SAC, 3), "tinta que brilla, como yo ♥");
+            }
+            case EVOCADORA -> {
+                if (every(w, "totem", 36000)) give(w, new ItemStack(Items.TOTEM_OF_UNDYING), "un tótem... para que nunca me faltes ♥");
+            }
+            case MURCIELAGO -> {
+                Player q = near(w, 24);
+                if (q != null && t % 100 == 0) {
+                    for (Mob m : lv.getEntitiesOfClass(Mob.class, q.getBoundingBox().inflate(24, 12, 24), x -> x instanceof Enemy && x.isAlive()))
+                        m.addEffect(new MobEffectInstance(MobEffects.GLOWING, 120, 0, true, false));
+                    if (!lv.canSeeSky(q.blockPosition())) buff(q, MobEffects.NIGHT_VISION, 400, 0);
+                }
+            }
             case GUARDIAN -> {
                 Player q = near(w, 20);
                 if (q != null && q.isInWater() && t % 60 == 0) buff(q, MobEffects.CONDUIT_POWER, 300, 0);
@@ -662,7 +767,7 @@ final class MobGirls {
                     return InteractionResult.CONSUME;
                 }
             }
-            case CABALLO -> {
+            case CABALLO, CAMELLO -> {
                 if (held.isEmpty() && !w.isVehicle() && !p.isPassenger()) {
                     w.getNavigation().stop();
                     p.startRiding(w);

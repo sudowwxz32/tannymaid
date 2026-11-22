@@ -51,6 +51,11 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     private static final EntityDataAccessor<Boolean> LIT = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BUSY = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SITTING = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.BOOLEAN);
+    /** Inari: 0 chica, 1 zorro dios gigante; y el tiempo que le queda a la transformación (efectos). */
+    private static final EntityDataAccessor<Integer> FORM = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> TRANSFORM = SynchedEntityData.defineId(WaifuEntity.class, EntityDataSerializers.INT);
+    /** Actriz de la escena del cielo (solo existe en el cliente). */
+    public boolean actor;
     /** Yume: quién duerme en sus piernas ahora mismo. */
     @Nullable public UUID sleeper;
     int modeBeforeSleep = FOLLOW;
@@ -90,7 +95,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     public static AttributeSupplier.Builder attributes(WaifuKind k) {
         AttributeSupplier.Builder b = PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, k.health).add(Attributes.MOVEMENT_SPEED, k.speed)
                 .add(Attributes.ATTACK_DAMAGE, k.attack).add(Attributes.FOLLOW_RANGE, 32.0).add(Attributes.ARMOR, k.armor);
-        if (k == WaifuKind.GOLEM || k == WaifuKind.WARDEN) b.add(Attributes.KNOCKBACK_RESISTANCE, 1.0).add(Attributes.ATTACK_KNOCKBACK, 1.5);
+        if (k == WaifuKind.GOLEM || k == WaifuKind.WARDEN || k == WaifuKind.DIOSA) b.add(Attributes.KNOCKBACK_RESISTANCE, 1.0).add(Attributes.ATTACK_KNOCKBACK, 1.5);
         if (k == WaifuKind.PANDA || k == WaifuKind.SLIME) b.add(Attributes.ATTACK_KNOCKBACK, 1.2);
         return b;
     }
@@ -150,6 +155,41 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         entityData.define(LIT, false);
         entityData.define(BUSY, false);
         entityData.define(SITTING, false);
+        entityData.define(FORM, 0);
+        entityData.define(TRANSFORM, 0);
+    }
+
+    // ------------------------------------------------------------------ Inari: chica ↔ zorro dios gigante
+    public boolean isFox() { return kind == WaifuKind.DIOSA && entityData.get(FORM) == 1; }
+    public int transform() { return entityData.get(TRANSFORM); }
+    public void setTransformTicks(int t) { entityData.set(TRANSFORM, t); }
+
+    /** Cambia de forma (con o sin efectos). */
+    public void setFox(boolean fox, boolean fx) {
+        if (kind != WaifuKind.DIOSA || isFox() == fox) return;
+        entityData.set(FORM, fox ? 1 : 0);
+        if (fx) entityData.set(TRANSFORM, 30);
+        setNoGravity(fox);
+        if (!fox) ejectPassengers();
+        refreshDimensions();
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (FORM.equals(key)) refreshDimensions();
+    }
+
+    @Override
+    public EntityDimensions getDimensions(Pose pose) {
+        if (isFox()) return EntityDimensions.scalable(2.2F, 2.9F);
+        return super.getDimensions(pose);
+    }
+
+    @Override
+    public void travel(net.minecraft.world.phys.Vec3 in) {
+        if (isFox() && Inari.travel(this, in)) return;
+        super.travel(in);
     }
 
     @Override
@@ -157,7 +197,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.15, true) {
             @Override public boolean canUse() {
-                return !kind.ranged() && getMode() != STAY && !isSitting() && !isVehicle() && super.canUse();
+                return !kind.ranged() && !isFox() && getMode() != STAY && !isSitting() && !isVehicle() && super.canUse();
             }
         });
         goalSelector.addGoal(3, new WaifuGoals.Work(this));
@@ -224,7 +264,14 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
 
     @Override
     public void tick() {
+        if (actor) {                                // la actriz de la escena: solo se anima
+            tickCount++;
+            if (transform() > 0) entityData.set(TRANSFORM, transform() - 1);
+            walkAnimation.update(0, 0.4F);
+            return;
+        }
         super.tick();
+        if (kind == WaifuKind.DIOSA) Inari.tick(this);
         if (level().isClientSide) {
             if (kind == WaifuKind.HOMURA && isLit() && random.nextInt(4) == 0) {
                 level().addParticle(ParticleTypes.FLAME, getX() + (random.nextDouble() - 0.5) * 0.6, getY() + 1.0 + random.nextDouble() * 0.4,
@@ -352,13 +399,19 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
         return hit;
     }
 
-    private static final UUID BLESS_HP = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b01"), BLESS_ATK = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b02");
+    private static final UUID BLESS_HP = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b01"), BLESS_ATK = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b02"),
+            BLESS_HP2 = UUID.fromString("7a1e5c3e-5b8f-4b7e-9a1d-3f2c6e8a9b03");
 
     /** Bendición ♥ (colección completa): +20 de vida y +4 de ataque. */
     private void bless() {
         var hp = getAttribute(Attributes.MAX_HEALTH);
         if (hp != null && hp.getModifier(BLESS_HP) == null) {
             hp.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(BLESS_HP, "Bendición", 20.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+            heal(20.0F);
+        }
+        if (hp != null && hp.getModifier(BLESS_HP2) == null && ownerPlayer() != null && com.totallywaifu.data.Collection.legendsComplete(ownerPlayer())) {
+            hp.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(BLESS_HP2, "Bendición ☀", 20.0,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
             heal(20.0F);
         }
@@ -376,14 +429,14 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
 
     @Override
     public boolean isPushable() {
-        return !isSitting() && super.isPushable();
+        return !isSitting() && !isFox() && super.isPushable();
     }
 
     // ------------------------------------------------------------------ Brisa se puede montar
     @Nullable
     @Override
     public LivingEntity getControllingPassenger() {
-        if (kind == WaifuKind.CABALLO && getFirstPassenger() instanceof Player p) return p;
+        if ((kind == WaifuKind.CABALLO || kind == WaifuKind.CAMELLO || (kind == WaifuKind.DIOSA && isFox())) && getFirstPassenger() instanceof Player p) return p;
         return super.getControllingPassenger();
     }
 
@@ -408,6 +461,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
 
     @Override
     public double getPassengersRidingOffset() {
+        if (isFox()) return getBbHeight() * 0.74;
         return getBbHeight() * 0.72;
     }
 
@@ -449,6 +503,10 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
             return InteractionResult.CONSUME;
         }
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
+        if (kind == WaifuKind.DIOSA && !p.isShiftKeyDown() && isOwner(p)) {
+            InteractionResult r = Inari.interact(this, sp, held);
+            if (r != null) return r;
+        }
         if (!p.isShiftKeyDown() && isOwner(p)) {
             InteractionResult r = WaifuWork.interact(this, sp, held);
             if (r != null) return r;
@@ -512,6 +570,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     public void addAdditionalSaveData(CompoundTag t) {
         super.addAdditionalSaveData(t);
         t.putInt("Mode", getMode());
+        if (kind == WaifuKind.DIOSA) t.putBoolean("Fox", isFox());
         if (offers != null && !offers.isEmpty()) t.put("Offers", offers.createTag());
         t.putInt("MerchantXp", merchantXp);
         if (owner != null) t.putUUID("Owner", owner);
@@ -530,6 +589,7 @@ public class WaifuEntity extends PathfinderMob implements net.minecraft.world.it
     public void readAdditionalSaveData(CompoundTag t) {
         super.readAdditionalSaveData(t);
         entityData.set(MODE, t.getInt("Mode"));
+        if (kind == WaifuKind.DIOSA) setFox(t.getBoolean("Fox"), false);
         if (t.contains("Offers")) offers = new net.minecraft.world.item.trading.MerchantOffers(t.getCompound("Offers"));
         merchantXp = t.getInt("MerchantXp");
         owner = t.hasUUID("Owner") ? t.getUUID("Owner") : null;

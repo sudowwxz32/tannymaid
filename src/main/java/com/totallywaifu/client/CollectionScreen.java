@@ -42,7 +42,9 @@ public class CollectionScreen extends Screen {
             new Cat("Nether", WaifuKind.PIGLIN, WaifuKind.WITHER, WaifuKind.BLAZE, WaifuKind.GHAST),
             new Cat("TNT", WaifuKind.DINA, WaifuKind.MITA),
             new Cat("✦ Extras", WaifuKind.ZORRO, WaifuKind.AJOLOTE, WaifuKind.ALLAY, WaifuKind.RANA, WaifuKind.DELFIN, WaifuKind.TORTUGA, WaifuKind.LORO,
-                    WaifuKind.OSO, WaifuKind.STRIDER, WaifuKind.SHULKER, WaifuKind.PHANTOM, WaifuKind.GUARDIAN)};
+                    WaifuKind.OSO, WaifuKind.STRIDER, WaifuKind.SHULKER, WaifuKind.PHANTOM, WaifuKind.GUARDIAN),
+            new Cat("☀ Leyendas", WaifuKind.BURRO, WaifuKind.CABRA, WaifuKind.LLAMA, WaifuKind.CAMELLO, WaifuKind.SNIFFER, WaifuKind.CALAMAR,
+                    WaifuKind.EVOCADORA, WaifuKind.MURCIELAGO, WaifuKind.DIOSA)};
 
     private static final Map<WaifuKind, String> HOW = new EnumMap<>(WaifuKind.class);
 
@@ -64,11 +66,16 @@ public class CollectionScreen extends Screen {
                 {"ALLAY", "un allay (puestos de saqueadores y mansiones)."}, {"RANA", "una rana (pantanos)."},
                 {"DELFIN", "un delfín (océanos)."}, {"TORTUGA", "una tortuga (playas)."}, {"LORO", "un loro (junglas)."},
                 {"OSO", "un oso polar (tierras heladas)."}, {"STRIDER", "un strider (lagos de lava del Nether)."}, {"SHULKER", "un shulker (ciudades del End)."},
-                {"PHANTOM", "un phantom (aparecen si pasas noches sin dormir)."}, {"GUARDIAN", "un guardián (monumentos oceánicos)."}};
+                {"PHANTOM", "un phantom (aparecen si pasas noches sin dormir)."}, {"GUARDIAN", "un guardián (monumentos oceánicos)."},
+                {"BURRO", "un burro o una mula (llanuras, aldeas)."}, {"CABRA", "una cabra (picos de las montañas)."},
+                {"LLAMA", "una llama (sabanas y colinas ventosas, o la del comerciante)."}, {"CAMELLO", "un camello (aldeas del desierto)."},
+                {"SNIFFER", "un sniffer (nace de un huevo de sniffer de las ruinas del océano)."}, {"CALAMAR", "un calamar brillante (cuevas con agua, en lo profundo)."},
+                {"EVOCADORA", "un evocador (mansiones del bosque y asaltos)."}, {"MURCIELAGO", "un murciélago (cuevas oscuras)."}};
         for (String[] e : h) {
             WaifuKind k = WaifuKind.valueOf(e[0]);
             HOW.put(k, WAND + e[1] + (k.station() ? "" : " Se queda así para siempre."));
         }
+        HOW.put(WaifuKind.DIOSA, "La recompensa final: despierta a las 8 leyendas y el ente de luz te la presentará.");
     }
 
     private static int cat, page;
@@ -163,7 +170,7 @@ public class CollectionScreen extends Screen {
         int tx = px + 8;
         for (int i = 0; i < CATS.length; i++) {
             final int ci = i;
-            String label = pw < 400 ? CATS[i].name.replace("Monstruos", "Monstr.") : CATS[i].name;
+            String label = pw < 440 ? CATS[i].name.replace("Monstruos", "Monstr.").replace("Leyendas", "Leyend.") : CATS[i].name;
             int w = font.width(label) + 8;
             boolean full = i > 0 && count(CATS[i].kinds) == CATS[i].kinds.length;
             Button b = Button.builder(Component.literal((i == cat ? "§d" : full ? "§6" : "") + label), x -> {
@@ -247,19 +254,34 @@ public class CollectionScreen extends Screen {
         // título y progreso
         int got = 0, total = 0;
         for (WaifuKind k : WaifuKind.values()) {
-            if (k.surprise()) continue;
+            if (k.tier() != 0) continue;
             total++;
             if (status(k) > 0) got++;
         }
         g.drawString(font, "§d§l♥ Mis Waifus", px + 8, py + 6, 0xFFFFFFFF, true);
         int eg = 0, et = 0;
-        for (WaifuKind k : WaifuKind.values()) if (k.surprise()) { et++; if (status(k) > 0) eg++; }
+        int lg = 0, lt = 0;
+        for (WaifuKind k : WaifuKind.values()) {
+            if (k.tier() == 1) { et++; if (status(k) > 0) eg++; }
+            if (k.tier() == 2) { lt++; if (status(k) > 0) lg++; }
+        }
         String t1 = (data.surprise() ? "§6★ ♥ " : "§7★ ♥ ") + got + "/" + total, t2 = (data.extras() ? "§b★ ✦ " : data.surprise() ? "§7★ ✦ " : "§8★ ✦ ") + eg + "/" + et;
-        int x2 = px + pw - 8 - font.width(t2), x1 = x2 - 10 - font.width(t1);
+        String t3 = (data.legends() ? "§e★ ☀ " : data.extras() ? "§7★ ☀ " : "§8★ ☀ ") + lg + "/" + lt;
+        int x3 = px + pw - 8 - font.width(t3), x2 = x3 - 10 - font.width(t2), x1 = x2 - 10 - font.width(t1);
         g.drawString(font, t1, x1, py + 6, 0xFFFFFFFF, true);
         g.drawString(font, t2, x2, py + 6, 0xFFFFFFFF, true);
+        g.drawString(font, t3, x3, py + 6, 0xFFFFFFFF, true);
         List<Component> trophyTip = null;
-        if (my >= py + 4 && my < py + 16 && mx >= x1 && mx < x2 + font.width(t2)) {
+        if (my >= py + 4 && my < py + 16 && mx >= x3 - 5) {
+            trophyTip = new ArrayList<>();
+            trophyTip.add(Component.literal("§e§lRecompensa: leyendas completas"));
+            trophyTip.add(Component.literal(data.legends() ? "§a✓ ¡Conseguida!" : data.extras() ? "§7Consigue a las " + lt + " leyendas" : "§8Completa los extras para despertarlas"));
+            for (net.minecraft.world.item.ItemStack st : com.totallywaifu.data.Rewards.legends())
+                trophyTip.add(Component.literal("§f• " + st.getCount() + "× " + st.getHoverName().getString()));
+            trophyTip.add(Component.literal("§a• +" + com.totallywaifu.data.Rewards.LEGENDS_LEVELS + " niveles"));
+            trophyTip.add(Component.literal("§6• " + com.totallywaifu.data.Rewards.PERK_LEGENDS));
+            trophyTip.add(Component.literal("§e• ☀ ...y alguien muy especial te espera en el cielo"));
+        } else if (my >= py + 4 && my < py + 16 && mx >= x1 && mx < x2 + font.width(t2)) {
             boolean first = mx < x2 - 5;
             trophyTip = new ArrayList<>();
             trophyTip.add(Component.literal(first ? "§6§lRecompensa: colección completa" : "§b§lRecompensa: extras completos"));
@@ -311,13 +333,14 @@ public class CollectionScreen extends Screen {
                 ps.pushPose();
                 ps.translate(x + CW / 2.0F, y + 20 - lift, 0);
                 ps.scale(2, 2, 1);
-                g.drawCenteredString(font, st == -1 ? "§5✦" : "§8?", 0, -4, 0xFFFFFFFF);
+                g.drawCenteredString(font, st == -1 ? (k == WaifuKind.DIOSA ? "§e✦" : k.legend() ? "§6☀" : "§5✦") : "§8?", 0, -4, 0xFFFFFFFF);
                 ps.popPose();
             }
             String name = st == -1 ? "???" : k.display;
             g.fill(x, y + CH - 11 - lift, x + CW, y + CH - lift, 0x90000000);
             g.drawCenteredString(font, (st > 0 ? k.color : "§7") + trim(name, CW - 2), x + CW / 2, y + CH - 10 - lift, 0xFFFFFFFF);
-            if (hover) tip = st == -1 ? "§5Extra: completa tu colección para desbloquearla" : (st > 0 ? k.color : "§7") + k.display + " §8· §7" + k.role;
+            if (hover) tip = st == -1 ? (k == WaifuKind.DIOSA ? "§e✦ La recompensa final: despierta a las 8 leyendas"
+                    : k.legend() ? "§6☀ Leyenda: completa los extras para despertarla" : "§5Extra: completa tu colección para desbloquearla") : (st > 0 ? k.color : "§7") + k.display + " §8· §7" + k.role;
         }
         if (l.length > PER) g.drawCenteredString(font, "§7" + (page + 1) + " / " + pages(), gx() + (COLS * (CW + GAP) - GAP) / 2, gy() + ROWS * (CH + GAP) + 4, 0xFFFFFFFF);
         detail(g, mx, my, t);
@@ -358,7 +381,7 @@ public class CollectionScreen extends Screen {
             ps.pushPose();
             ps.translate(x + w / 2.0F, y + 44, 0);
             ps.scale(4, 4, 1);
-            g.drawCenteredString(font, locked ? "§5✦" : "§8?", 0, -4, 0xFFFFFFFF);
+            g.drawCenteredString(font, locked ? (k == WaifuKind.DIOSA ? "§e✦" : k.legend() ? "§6☀" : "§5✦") : "§8?", 0, -4, 0xFFFFFFFF);
             ps.popPose();
         }
         int ty = y + portraitH + 2;
@@ -374,7 +397,7 @@ public class CollectionScreen extends Screen {
             ty += 11;
         }
         String state = switch (st) {
-            case -1 -> "§5Waifu extra";
+            case -1 -> k == WaifuKind.DIOSA ? "§e✦ Diosa" : k.legend() ? "§6☀ Waifu leyenda" : "§5Waifu extra";
             case 1 -> "§a● En el mundo";
             case 2 -> "§b● Guardada en tu colección";
             case 3 -> "§6● Ahora es un bloque";
@@ -403,7 +426,8 @@ public class CollectionScreen extends Screen {
             }
             ty += 2;
         }
-        String text = locked ? "Completa tu colección para descubrir quién es."
+        String text = locked ? (k == WaifuKind.DIOSA ? "Despierta a las 8 leyendas... y alguien te esperará en el cielo."
+                : k.legend() ? "Completa los extras para despertar a esta leyenda." : "Completa tu colección para descubrir quién es.")
                 : st > 0 ? k.job + "." + (st == 3 ? " §6Usa la vara sobre su bloque para despertarla (con todas sus cosas)." : "")
                 : HOW.getOrDefault(k, "");
         int limit = bottom - (k == WaifuKind.CAMA && data.home() ? 18 : 0) - 2;

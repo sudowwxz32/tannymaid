@@ -21,6 +21,10 @@ public final class Keys {
     public static final KeyMapping COLLECTION = new KeyMapping("key.totallywaifu.coleccion", KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "key.categories.totallywaifu");
 
+    /** Inari: chica ↔ zorro dios gigante (por defecto V). */
+    public static final KeyMapping INARI = new KeyMapping("key.totallywaifu.inari", KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.totallywaifu");
+
     @Mod.EventBusSubscriber(modid = TotallyWaifu.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static final class Register {
         private Register() {}
@@ -28,6 +32,7 @@ public final class Keys {
         @SubscribeEvent
         public static void keys(RegisterKeyMappingsEvent e) {
             e.register(COLLECTION);
+            e.register(INARI);
         }
     }
 
@@ -41,6 +46,10 @@ public final class Keys {
             Minecraft mc = Minecraft.getInstance();
             while (COLLECTION.consumeClick()) {
                 if (mc.player != null && mc.screen == null) Net.CHANNEL.sendToServer(new CollectionAction(0, CollectionAction.OPEN));
+            }
+            while (INARI.consumeClick()) {
+                if (mc.player != null && mc.screen == null && !Ascend.active)
+                    Net.CHANNEL.sendToServer(new CollectionAction(com.totallywaifu.entity.WaifuKind.DIOSA.ordinal(), CollectionAction.INARI));
             }
         }
     }

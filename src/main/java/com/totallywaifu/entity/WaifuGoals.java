@@ -62,7 +62,7 @@ public final class WaifuGoals {
 
         @Override
         public boolean canUse() {
-            if (w.getMode() != WaifuEntity.FOLLOW) return false;
+            if (w.getMode() != WaifuEntity.FOLLOW || w.isFox()) return false;
             Player p = w.ownerPlayer();
             if (p == null || p.isSpectator() || w.distanceToSqr(p) < 4.5 * 4.5) return false;
             owner = p;

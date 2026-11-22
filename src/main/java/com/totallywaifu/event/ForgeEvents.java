@@ -5,6 +5,7 @@ import com.totallywaifu.data.Ach;
 import com.totallywaifu.data.Collection;
 import com.totallywaifu.entity.Sleep;
 import com.totallywaifu.entity.WaifuEntity;
+import com.totallywaifu.entity.Inari;
 import com.totallywaifu.entity.WaifuKind;
 import com.totallywaifu.network.Fx;
 import com.totallywaifu.registry.ModRegistry;
@@ -45,12 +46,120 @@ public final class ForgeEvents {
     /** Duración de la escena en el cielo (ticks). Debe coincidir con ClientFx. */
     public static final int INTRO_LEN = 170;
 
+    // ================================================================== la ascensión: leyendas completas → el ente de luz → Inari
+    private static final String ASC = "TW_Asc", ASC_T = "TW_AscT", ASC_INV = "TW_AscInv";
+    /** Duración de la escena (ticks). Debe coincidir con Ascend en el cliente. */
+    public static final int ASC_LEN = 640;
+
+    public static void startAscension(ServerPlayer p) {
+        CompoundTag d = p.getPersistentData();
+        if (d.getInt(ASC) > 0) return;
+        d.putInt(ASC, 1);
+        d.putInt(ASC_T, 0);
+    }
+
+    private static void ascensionTick(ServerPlayer p, CompoundTag d) {
+        int stage = d.getInt(ASC);
+        int t = d.getInt(ASC_T) + 1;
+        d.putInt(ASC_T, t);
+        ServerLevel lv = p.serverLevel();
+        if (stage == 1) {
+            if (t < 30) return;
+            if (!p.isInvulnerable()) {
+                p.setInvulnerable(true);                          // te vuelves intangible
+                d.putBoolean(ASC_INV, true);
+            }
+            Fx.send(p, Fx.ASCEND, ASC_LEN);
+            lv.playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.4F);
+            d.putInt(ASC, 2);
+            d.putInt(ASC_T, 0);
+            return;
+        }
+        p.setDeltaMovement(Vec3.ZERO);
+        p.fallDistance = 0;
+        if (t % 10 == 0) {
+            for (Mob m : lv.getEntitiesOfClass(Mob.class, p.getBoundingBox().inflate(32), m -> m.getTarget() == p)) m.setTarget(null);
+            if (t < 260) lv.sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 1, p.getZ(), 8, 0.6, 1.0, 0.6, 0.06);
+        }
+        if (t < ASC_LEN) return;
+        // regresa... y la diosa aparece a tu lado
+        if (d.getBoolean(ASC_INV)) p.setInvulnerable(false);
+        d.remove(ASC_INV);
+        d.remove(ASC);
+        d.remove(ASC_T);
+        if (Collection.has(p, WaifuKind.DIOSA)) return;
+        WaifuEntity w = ModRegistry.TYPES.get(WaifuKind.DIOSA).get().create(lv);
+        if (w == null) return;
+        Vec3 f = Vec3.directionFromRotation(0, p.getYRot());
+        Vec3 at = p.position().add(f.scale(2.4));
+        if (!lv.noCollision(w, w.getBoundingBox().move(at.subtract(w.position())))) at = p.position().add(f.scale(1.2));
+        float yaw = p.getYRot() + 180;
+        w.moveTo(at.x, at.y, at.z, yaw, 0);
+        w.setYHeadRot(yaw);
+        w.setYBodyRot(yaw);
+        w.setOwner(p.getUUID());
+        lv.addFreshEntity(w);
+        Collection.track(p, w);
+        lv.sendParticles(ParticleTypes.FLASH, at.x, at.y + 1, at.z, 1, 0, 0, 0, 0);
+        lv.sendParticles(ParticleTypes.END_ROD, at.x, at.y + 1, at.z, 80, 0.6, 1.2, 0.6, 0.12);
+        lv.sendParticles(ParticleTypes.CHERRY_LEAVES, at.x, at.y + 2.5, at.z, 50, 1.5, 1.0, 1.5, 0);
+        lv.playSound(null, w.blockPosition(), SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0F, 1.2F);
+        lv.playSound(null, w.blockPosition(), SoundEvents.ILLUSIONER_CAST_SPELL, SoundSource.PLAYERS, 1.2F, 1.0F);
+        for (int i = 0; i < 8; i++) Ach.firework(lv, p.position().add(Math.cos(i * 0.785) * 4, 0.5, Math.sin(i * 0.785) * 4), i);
+        Fx.send(p, Fx.GODDESS, 0);
+        w.cheer(200);
+        w.say(p, "Encantada de conocerle. Soy Inari. Desde hoy, le cuidaré... para siempre. *hace una reverencia*");
+        p.sendSystemMessage(Component.literal("§e☀ §fInari, la §eDiosa Zorro Blanca§f, ahora te acompaña."));
+        p.sendSystemMessage(Component.literal("§7  Pídele que se transforme: §e/inari zorro§7, §e/inari chica§7, §e/inari montar§7, §e/inari llamar§7 (o la tecla §eV§7)."));
+        p.sendSystemMessage(Component.literal("§7  Como zorro gigante vuela y corre por los cielos: clic derecho para montarla y mira hacia donde quieras ir."));
+    }
+
+    @SubscribeEvent
+    public static void commands(net.minecraftforge.event.RegisterCommandsEvent e) {
+        var root = net.minecraft.commands.Commands.literal("inari");
+        for (String w : new String[]{"zorro", "chica", "llamar", "montar", "cambiar"}) {
+            root.then(net.minecraft.commands.Commands.literal(w).executes(c -> {
+                Inari.order(c.getSource().getPlayerOrException(), w);
+                return 1;
+            }));
+        }
+        e.getDispatcher().register(root);
+    }
+
+    /** Inari: nunca dejará que nadie te lastime (golpes, flechas, explosiones, caídas). */
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
+    public static void inariShield(LivingAttackEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p) || e.isCanceled()) return;
+        if (p.getPersistentData().getInt(ASC) >= 2) {
+            e.setCanceled(true);
+            return;
+        }
+        net.minecraft.world.damagesource.DamageSource src = e.getSource();
+        net.minecraft.world.entity.Entity a = src.getEntity();
+        boolean other = a != null && a != p;
+        boolean fall = src.is(net.minecraft.world.damagesource.DamageTypes.FALL) || src.is(net.minecraft.world.damagesource.DamageTypes.FLY_INTO_WALL);
+        boolean boom = src.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION) || src.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE);
+        if (!(other || fall || boom)) return;
+        WaifuEntity g = Inari.guardian(p);
+        if (g == null) return;
+        e.setCanceled(true);
+        if (!fall) Inari.defended(g, p, a);
+    }
+
     // ================================================================== bienvenida: escena + caída con explosión
     @SubscribeEvent
     public static void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
-        Collection.catchUp(p);
         CompoundTag d = p.getPersistentData();
+        if (d.getBoolean(ASC_INV)) {                              // se fue a mitad de la ascensión
+            p.setInvulnerable(false);
+            d.remove(ASC_INV);
+        }
+        if (d.getInt(ASC) > 0) {
+            d.putInt(ASC, 1);
+            d.putInt(ASC_T, 0);
+        }
+        Collection.catchUp(p);
         if (Collection.takeGift(p)) {
             d.putInt(INTRO, 1);
             d.putInt(INTRO_T, 0);
@@ -71,7 +180,10 @@ public final class ForgeEvents {
             if (p.level().getEntitiesOfClass(WaifuEntity.class, p.getBoundingBox().inflate(16), w -> w.isOwner(p)).size() >= 3)
                 p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 120, 0, true, false, true));
         }
+        if (p.tickCount % 100 == 0 && Collection.legendsComplete(p))             // Bendición ☀
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.ABSORPTION, 260, 0, true, false, true));
         CompoundTag d = p.getPersistentData();
+        if (d.getInt(ASC) > 0) ascensionTick(p, d);
         int stage = d.getInt(INTRO);
         if (stage == 0) return;
         int t = d.getInt(INTRO_T) + 1;
@@ -144,7 +256,7 @@ public final class ForgeEvents {
 
     @SubscribeEvent
     public static void fall(LivingFallEvent e) {
-        if (e.getEntity() instanceof Player p && p.getPersistentData().getInt(INTRO) >= 2) e.setCanceled(true);
+        if (e.getEntity() instanceof Player p && (p.getPersistentData().getInt(INTRO) >= 2 || p.getPersistentData().getInt(ASC) >= 1)) e.setCanceled(true);
         // Gela (slime) y Pía (gallina) te protegen de las caídas
         if (e.getEntity() instanceof Player p && !e.isCanceled()) {
             for (WaifuEntity w : p.level().getEntitiesOfClass(WaifuEntity.class, p.getBoundingBox().inflate(10),

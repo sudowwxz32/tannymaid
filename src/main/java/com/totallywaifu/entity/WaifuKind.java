@@ -70,7 +70,18 @@ public enum WaifuKind {
     HERRERIA("Tetsu", "Mesa de herrería", Blocks.SMITHING_TABLE, "§8", "Mejora a netherita y pone adornos; te da resistencia y te regala pepitas de hierro", 50, 0.3, 8, 8, 0x2E2A32, 0x8A6A4A, 1.02F),
     CARTOGRAFIA("Carta", "Mesa de cartografía", Blocks.CARTOGRAPHY_TABLE, "§6", "Copia y amplía mapas; te dice dónde está la aldea más cercana y te regala brújulas y mapas", 34, 0.34, 3, 2, 0xD8C29A, 0x5A7A3A, 0.96F),
     AHUMADOR("Kemuri", "Ahumador", Blocks.SMOKER, "§6", "Cocina comida el doble de rápido (solo lo que le pidas) y caza para tener comida", 40, 0.32, 6, 4, 0x5A4630, 0xB0B0B0, 1.0F),
-    ALTO_HORNO("Rekka", "Alto horno", Blocks.BLAST_FURNACE, "§c", "Funde menas y metal el doble de rápido (solo lo que le pidas) y busca menas para ti", 44, 0.32, 7, 5, 0x6A6A70, 0xFF7A2A, 1.02F);
+    ALTO_HORNO("Rekka", "Alto horno", Blocks.BLAST_FURNACE, "§c", "Funde menas y metal el doble de rápido (solo lo que le pidas) y busca menas para ti", 44, 0.32, 7, 5, 0x6A6A70, 0xFF7A2A, 1.02F),
+    // ---- 7.0: leyendas (se desbloquean al completar los extras)
+    BURRO("Bruna", "Burro", null, "§7", "Leyenda: patada que lanza lejos a los monstruos, recoge las cosas del suelo y te da prisa minera", 60, 0.32, 8, 4, 0x8A7A6C, 0x544840, 1.0F),
+    CABRA("Chivi", "Cabra", null, "§f", "Leyenda: embestida que manda a los monstruos por los aires; te da supersalto y te regala cuernos de cabra", 40, 0.36, 7, 3, 0xF0ECE0, 0x968C80, 0.92F),
+    LLAMA("Kusi", "Llama", null, "§e", "Leyenda: escupe a los monstruos (daño y lentitud) y te regala lana y alfombras de colores", 44, 0.32, 4, 3, 0xECDCBA, 0xD23C3C, 0.98F),
+    CAMELLO("Duna", "Camello", null, "§6", "Leyenda: ¡puedes montarla! (clic derecho) muy rápida y salta alto; te protege del calor del Nether", 60, 0.36, 6, 4, 0xD6B078, 0x28969A, 1.12F),
+    SNIFFER("Olfa", "Sniffer", null, "§c", "Leyenda: olfatea y desentierra semillas antiguas, huesos, esmeraldas... ¡y a veces diamantes!", 50, 0.28, 5, 4, 0xB44632, 0x5A8C3C, 1.05F),
+    CALAMAR("Lucía", "Calamar brillante", null, "§b", "Leyenda: brilla en la oscuridad: te da visión nocturna y respiración acuática; te regala tinta brillante", 34, 0.34, 4, 2, 0x1E6E78, 0x50E6DC, 0.95F),
+    EVOCADORA("Evoka", "Evocadora", null, "§8", "Leyenda: invoca colmillos mágicos contra los monstruos y, muy de vez en cuando, te regala un tótem", 40, 0.3, 6, 2, 0x28282E, 0xDCB43C, 1.0F),
+    MURCIELAGO("Noctula", "Murciélago", null, "§4", "Leyenda: su eco revela a los monstruos cercanos (brillan) y te da visión nocturna en las cuevas", 28, 0.38, 4, 1, 0x46342C, 0xB4283C, 0.88F),
+    // ---- la recompensa final
+    DIOSA("Inari", "Diosa Zorro Blanca", null, "§e", "Diosa: se convierte en un zorro dios gigante que vuela y corre por los cielos (clic derecho para montarla); nunca dejará que nadie te lastime", 400, 0.42, 30, 20, 0xFAFAFF, 0xEEBE46, 1.05F);
 
     public final String display, role, color, job;
     @Nullable public final Block block;
@@ -97,12 +108,30 @@ public enum WaifuKind {
     /** Orden en la colección: mesas y cama primero, luego granja, compañeras, monstruos, Nether, especiales y sorpresas. */
     public static final WaifuKind[] ORDER = {KOZUE, HOMURA, KURA, SHIORI, CAMA, OVEJA, VACA, CERDO, GALLINA, CONEJO, ABEJA, PANDA, CABALLO, PERRO, GATO, GOLEM,
             ALDEANA, SLIME, ZOMBIE, ESQUELETO, CREEPER, ARANA, BRUJA, ENDERMAN, PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA,
-            DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN};
+            DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN, BURRO, CABRA, LLAMA, CAMELLO, SNIFFER, CALAMAR, EVOCADORA, MURCIELAGO, DIOSA};
 
     /** Orden en la colección (las mesas nuevas van junto a las otras mesas). */
     public static final WaifuKind[] DISPLAY = {KOZUE, HOMURA, KURA, SHIORI, CAMA, YUNQUE, MUELA, TELAR, CORTAPIEDRAS, HERRERIA, CARTOGRAFIA, AHUMADOR, ALTO_HORNO,
             OVEJA, VACA, CERDO, GALLINA, CONEJO, ABEJA, PANDA, CABALLO, PERRO, GATO, GOLEM, ALDEANA, SLIME, ZOMBIE, ESQUELETO, CREEPER, ARANA, BRUJA, ENDERMAN,
-            PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA, DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN};
+            PIGLIN, WITHER, BLAZE, GHAST, DINA, MITA, WARDEN, ZORRO, AJOLOTE, ALLAY, RANA, DELFIN, TORTUGA, LORO, OSO, STRIDER, SHULKER, PHANTOM, GUARDIAN,
+            BURRO, CABRA, LLAMA, CAMELLO, SNIFFER, CALAMAR, EVOCADORA, MURCIELAGO, DIOSA};
+
+    /** Las 8 leyendas (se desbloquean al completar los extras). */
+    public static final WaifuKind[] LEGENDS = {BURRO, CABRA, LLAMA, CAMELLO, SNIFFER, CALAMAR, EVOCADORA, MURCIELAGO};
+
+    public boolean legend() {
+        return switch (this) {
+            case BURRO, CABRA, LLAMA, CAMELLO, SNIFFER, CALAMAR, EVOCADORA, MURCIELAGO -> true;
+            default -> false;
+        };
+    }
+
+    /** 0 colección, 1 extras, 2 leyendas, 3 la diosa. */
+    public int tier() {
+        if (this == DIOSA) return 3;
+        if (legend()) return 2;
+        return surprise() ? 1 : 0;
+    }
 
     /** Las tres que cocinan/funden (horno, ahumador, alto horno). */
     public boolean cooker() {
@@ -129,23 +158,26 @@ public enum WaifuKind {
     /** Pelean cuerpo a cuerpo (cazan monstruos cuando te siguen o trabajan). */
     public boolean fighter() {
         return switch (this) {
-            case PERRO, GOLEM, ZOMBIE, ENDERMAN, ARANA, PANDA, PIGLIN, WITHER, WARDEN, ZORRO, AJOLOTE, SLIME, DELFIN, OSO, YUNQUE, HERRERIA -> true;
+            case PERRO, GOLEM, ZOMBIE, ENDERMAN, ARANA, PANDA, PIGLIN, WITHER, WARDEN, ZORRO, AJOLOTE, SLIME, DELFIN, OSO, YUNQUE, HERRERIA,
+                 BURRO, CABRA, CAMELLO, SNIFFER, MURCIELAGO, DIOSA -> true;
             default -> false;
         };
     }
 
     /** Atacan desde lejos (no persiguen cuerpo a cuerpo). */
     public boolean ranged() {
-        return this == SHIORI || this == ESQUELETO || this == BRUJA || this == BLAZE || this == GHAST || this == DINA || this == MITA || this == SHULKER || this == GUARDIAN;
+        return this == SHIORI || this == ESQUELETO || this == BRUJA || this == BLAZE || this == GHAST || this == DINA || this == MITA || this == SHULKER || this == GUARDIAN
+                || this == LLAMA || this == EVOCADORA || this == CALAMAR;
     }
 
     public boolean fireproof() {
-        return this == BLAZE || this == WITHER || this == GHAST || this == PIGLIN || this == HOMURA || this == WARDEN || this == STRIDER || this == AHUMADOR || this == ALTO_HORNO || this == YUNQUE;
+        return this == BLAZE || this == WITHER || this == GHAST || this == PIGLIN || this == HOMURA || this == WARDEN || this == STRIDER || this == AHUMADOR || this == ALTO_HORNO || this == YUNQUE || this == DIOSA || this == CAMELLO;
     }
 
     public boolean noFall() {
         return switch (this) {
-            case GALLINA, GATO, ARANA, ENDERMAN, SLIME, CONEJO, BLAZE, GHAST, ALLAY, RANA, ZORRO, WARDEN, GOLEM, SHULKER, PHANTOM, LORO -> true;
+            case GALLINA, GATO, ARANA, ENDERMAN, SLIME, CONEJO, BLAZE, GHAST, ALLAY, RANA, ZORRO, WARDEN, GOLEM, SHULKER, PHANTOM, LORO,
+                 CABRA, MURCIELAGO, CALAMAR, DIOSA, CAMELLO -> true;
             default -> false;
         };
     }
@@ -177,6 +209,14 @@ public enum WaifuKind {
     @Nullable
     public static WaifuKind fromEntity(Entity e) {
         if (e instanceof net.minecraft.world.entity.monster.warden.Warden) return WARDEN;
+        if (e instanceof net.minecraft.world.entity.animal.camel.Camel) return CAMELLO;
+        if (e instanceof net.minecraft.world.entity.animal.horse.Llama) return LLAMA;
+        if (e instanceof net.minecraft.world.entity.animal.horse.Donkey || e instanceof net.minecraft.world.entity.animal.horse.Mule) return BURRO;
+        if (e instanceof net.minecraft.world.entity.animal.goat.Goat) return CABRA;
+        if (e instanceof net.minecraft.world.entity.animal.sniffer.Sniffer) return SNIFFER;
+        if (e instanceof net.minecraft.world.entity.GlowSquid || e instanceof Squid) return CALAMAR;
+        if (e instanceof Evoker) return EVOCADORA;
+        if (e instanceof net.minecraft.world.entity.ambient.Bat) return MURCIELAGO;
         if (e instanceof Dolphin) return DELFIN;
         if (e instanceof Turtle) return TORTUGA;
         if (e instanceof Parrot) return LORO;
